@@ -1,0 +1,691 @@
+/* Auth3DBook - 3D Book-Turning Authentication Interface */
+
+/* ============================================
+   CONTAINER LAYOUT
+   ============================================ */
+
+.auth3DBookContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  padding: 0;
+  background-color: #0f0f0f;
+}
+
+.bookViewport {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* ============================================
+   LOGIN FLOW
+   ============================================ */
+
+.loginContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.loginBook {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 13 / 9;
+  perspective: 1200px;
+}
+
+/* ============================================
+   SIGNUP FLOW
+   ============================================ */
+
+.signupContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.signupBook {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  aspect-ratio: 13 / 9;
+  perspective: 1200px;
+}
+
+/* ============================================
+   BOOK PAGES - SHARED
+   ============================================ */
+
+.bookPage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  background-color: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.2s ease-in-out;
+  overflow-y: auto;
+}
+
+.bookPageHidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* ============================================
+   PAGE SPECIFIC STYLES
+   ============================================ */
+
+.emailPage {
+  gap: 24px;
+}
+
+.passwordPage {
+  gap: 24px;
+}
+
+.roleSelectionPage {
+  gap: 28px;
+}
+
+.formPage {
+  gap: 24px;
+}
+
+/* ============================================
+   PROGRESS INDICATOR
+   ============================================ */
+
+.progressContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background-color: #3d3d3d;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #5c5c8f 0%, #d4933e 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease-in-out;
+  box-shadow: 0 0 12px rgba(92, 92, 143, 0.4);
+}
+
+.progressText {
+  font-size: 11px;
+  color: #a8a8a8;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progressDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #3d3d3d;
+  transition: all 0.3s ease;
+}
+
+.progressDot.active {
+  background: linear-gradient(135deg, #5c5c8f 0%, #d4933e 100%);
+  box-shadow: 0 0 8px rgba(212, 147, 62, 0.5);
+}
+
+.progressDotContainer {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+
+/* ============================================
+   PAGE ANIMATION - BOOK FLIP
+   ============================================ */
+
+/* ============================================
+   PAGE ANIMATION - BOOK FLIP
+   ============================================ */
+
+@keyframes bookFlipLeft {
+  0% {
+    transform: perspective(1200px) rotateY(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: perspective(1200px) rotateY(-90deg);
+    opacity: 0.5;
+  }
+  100% {
+    transform: perspective(1200px) rotateY(-180deg);
+    opacity: 1;
+  }
+}
+
+@keyframes pageFlipSignup {
+  0% {
+    transform: perspective(1200px) rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: perspective(1200px) rotateY(-90deg) scale(0.95);
+    opacity: 0.3;
+  }
+  100% {
+    transform: perspective(1200px) rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.bookFlip5 {
+  animation: bookFlipLeft 0.8s ease-in-out forwards;
+  will-change: transform;
+}
+
+.bookFlip8 {
+  animation: bookFlipLeft 0.9s ease-in-out forwards;
+  will-change: transform;
+}
+
+.bookFlip10 {
+  animation: bookFlipLeft 1.0s ease-in-out forwards;
+  will-change: transform;
+}
+
+.pageFlipSignupTransition {
+  animation: pageFlipSignup 0.5s ease-in-out forwards;
+  will-change: transform;
+}
+
+.pageAnimation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(15, 15, 15, 0.95);
+  z-index: 9999;
+  perspective: 1200px;
+}
+
+.bookFlipContainer {
+  width: 500px;
+  aspect-ratio: 16 / 9;
+  perspective: 1200px;
+}
+
+.bookFlipContainer.signup {
+  width: 400px;
+  aspect-ratio: 9 / 16;
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
+
+.formInput {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #0f0f0f;
+  border: 1px solid #3d3d3d;
+  border-radius: 6px;
+  color: #e8e8e8;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #5c5c8f;
+  box-shadow: 0 0 0 3px rgba(92, 92, 143, 0.1);
+}
+
+.formInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.formInput::placeholder {
+  color: #767676;
+}
+
+.formInputError {
+  border-color: #d48080;
+  box-shadow: 0 0 0 3px rgba(212, 128, 128, 0.1);
+}
+
+.formLabel {
+  display: block;
+  margin-bottom: 8px;
+  color: #e8e8e8;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.formError {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #d48080;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.formField {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.formButton {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #5c5c8f 0%, #d4933e 100%);
+  border: none;
+  border-radius: 6px;
+  color: #0f0f0f;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.formButton:hover:not(:disabled) {
+  box-shadow: 0 8px 24px rgba(92, 92, 143, 0.3);
+  transform: translateY(-2px);
+}
+
+.formButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.formButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buttonGroup {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.previousButton {
+  flex: 1;
+  padding: 12px 20px;
+  background-color: #1a1a1a;
+  border: 1px solid #3d3d3d;
+  border-radius: 6px;
+  color: #e8e8e8;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.previousButton:hover:not(:disabled) {
+  background-color: #2a2a2a;
+  border-color: #5c5c8f;
+}
+
+.previousButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.nextButton {
+  flex: 1;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #5c5c8f 0%, #d4933e 100%);
+  border: none;
+  border-radius: 6px;
+  color: #0f0f0f;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.nextButton:hover:not(:disabled) {
+  box-shadow: 0 8px 24px rgba(92, 92, 143, 0.3);
+}
+
+.nextButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   HEADINGS & TEXT
+   ============================================ */
+
+.pageHeading {
+  margin: 0;
+  color: #e8e8e8;
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.pageSubheading {
+  margin: 0;
+  color: #a8a8a8;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: center;
+}
+
+.pageIndicator {
+  font-size: 12px;
+  color: #a8a8a8;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.pageNumber {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: #767676;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================
+   LINKS
+   ============================================ */
+
+.linkPrimary {
+  color: #d4933e;
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 14px;
+  padding: 0;
+}
+
+.linkPrimary:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.linkSecondary {
+  color: #a8a8a8;
+  text-decoration: none;
+  font-weight: 400;
+  font-size: 13px;
+  transition: color 0.2s ease;
+  cursor: pointer;
+}
+
+.linkSecondary:hover {
+  color: #e8e8e8;
+}
+
+/* ============================================
+   CHECKBOX
+   ============================================ */
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.checkboxInput {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #d4933e;
+}
+
+.checkboxLabel {
+  color: #a8a8a8;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 900px) {
+  .loginBook {
+    max-width: 90vw;
+  }
+
+  .signupBook {
+    max-width: 90vw;
+  }
+
+  .bookPage {
+    padding: 32px 24px;
+  }
+
+  .bookFlipContainer {
+    max-width: 90vw;
+  }
+
+  .bookFlipContainer.signup {
+    max-width: 90vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .bookViewport {
+    padding: 16px;
+  }
+
+  .loginBook {
+    max-width: 100%;
+  }
+
+  .signupBook {
+    max-width: 100%;
+  }
+
+  .bookPage {
+    padding: 28px 20px;
+    border-radius: 10px;
+  }
+
+  .pageHeading {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  .pageSubheading {
+    font-size: 13px;
+  }
+
+  .formInput {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 12px 14px;
+  }
+
+  .formLabel {
+    font-size: 13px;
+  }
+
+  .formButton,
+  .nextButton,
+  .previousButton {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .buttonGroup {
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .bookFlipContainer,
+  .bookFlipContainer.signup {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .bookViewport {
+    padding: 12px;
+  }
+
+  .bookPage {
+    padding: 24px 16px;
+    border-radius: 8px;
+  }
+
+  .pageHeading {
+    font-size: 20px;
+  }
+
+  .pageSubheading {
+    font-size: 12px;
+  }
+
+  .formField {
+    width: 100%;
+  }
+
+  .formInput {
+    font-size: 16px;
+    padding: 11px 12px;
+  }
+
+  .formLabel {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .formButton,
+  .nextButton,
+  .previousButton {
+    min-height: 42px;
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+
+  .buttonGroup {
+    gap: 8px;
+  }
+
+  .pageNumber {
+    font-size: 10px;
+    margin-bottom: 12px;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .bookFlip5,
+  .bookFlip8,
+  .bookFlip10 {
+    animation: none !important;
+    transform: perspective(1200px) rotateY(0deg);
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.fullWidth {
+  width: 100%;
+}
+
+.centerContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gap16 {
+  gap: 16px;
+}
+
+.gap24 {
+  gap: 24px;
+}
+
+.textCenter {
+  text-align: center;
+}
+
+.mt12 {
+  margin-top: 12px;
+}
+
+.mt16 {
+  margin-top: 16px;
+}
+
+.mt20 {
+  margin-top: 20px;
+}
