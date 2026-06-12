@@ -1,5 +1,5 @@
-import React, { Suspense, useState } from 'react';
-import { LayoutGrid, Box, BookMarked, AlertCircle } from 'lucide-react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
+import { LayoutGrid, Box, BookMarked, AlertCircle, Search, SlidersHorizontal, X } from 'lucide-react';
 import useViewport from '../../hooks/useViewport';
 import useBookshelf from '../../hooks/useBookshelf';
 import BookshelfErrorBoundary from '../../components/Bookshelf/BookshelfErrorBoundary';
@@ -8,14 +8,14 @@ import FallbackGrid from '../../components/FallbackGrid/FallbackGrid';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
-import Badge from '../../components/ui/Badge';
 import COLORS from '../../constants/colors';
 
 const BookshelfScene = React.lazy(() => import('../../components/Bookshelf/BookshelfScene'));
 
 /**
- * BooksPage — browse the full catalog as an interactive 3D bookshelf or a
- * responsive grid. Paginated through all books in the database, with search.
+ * BooksPage — browse the catalog as a 3D shelf or grid.
+ * The header (title + search + view toggle) shows only at the top of the page;
+ * scrolling down hides it and reveals a floating control tab on the right.
  */
 function BooksPage() {
   const { isMobile, hasWebGL } = useViewport();
@@ -25,7 +25,6 @@ function BooksPage() {
     selectBook,
     clearSelection,
     loading,
-    error,
     usingMockData,
     pagination,
     goToPage,
@@ -33,19 +32,40 @@ function BooksPage() {
     search,
   } = useBookshelf();
 
-  // Default to grid on mobile / no WebGL, otherwise 3D shelf
   const [viewMode, setViewMode] = useState(isMobile || !hasWebGL ? 'grid' : 'shelf');
   const effectiveView = isMobile || !hasWebGL ? 'grid' : viewMode;
+
+  const [atTop, setAtTop] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
+
+  // Track scroll position to toggle header vs floating tab
+  useEffect(() => {
+    const handleScroll = () => {
+      const top = window.scrollY < 40;
+      setAtTop(top);
+      if (top) setPanelOpen(false);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const showToggle = !isMobile && hasWebGL;
 
   return (
     <div
       className="relative flex flex-col"
-      style={{ backgroundColor: COLORS.background, color: COLORS.text.primary, minHeight: 'calc(100vh - 72px)' }}
+      style={{ backgroundColor: COLORS.background, color: COLORS.text.primary, minHeight: 'calc(100vh - 90px)' }}
     >
-      {/* Header */}
+      {/* ── Top Header — visible only at top of page ── */}
       <div
-        className="sticky z-20 px-6 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b backdrop-blur"
-        style={{ top: '90px', backgroundColor: `${COLORS.background}e6`, borderColor: COLORS.border }}
+        className="px-6 py-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between transition-all duration-300"
+        style={{
+          opacity: atTop ? 1 : 0,
+          transform: atTop ? 'translateY(0)' : 'translateY(-16px)',
+          pointerEvents: atTop ? 'auto' : 'none',
+          maxHeight: atTop ? '200px' : '0',
+        }}
       >
         <div className="flex items-center gap-3">
           <BookMarked style={{ color: COLORS.secondary[500] }} size={26} />
@@ -58,32 +78,61 @@ function BooksPage() {
           </div>
         </div>
 
+        {/* Search + toggle side by side */}
         <div className="flex items-center gap-3 flex-wrap">
           <SearchBar value={search} onSearch={runSearch} />
-
-          {!isMobile && hasWebGL && (
-            <div
-              className="flex items-center rounded-lg p-1"
-              style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
-            >
-              <ToggleBtn
-                active={effectiveView === 'shelf'}
-                onClick={() => setViewMode('shelf')}
-                icon={<Box size={16} />}
-                label="3D"
-              />
-              <ToggleBtn
-                active={effectiveView === 'grid'}
-                onClick={() => setViewMode('grid')}
-                icon={<LayoutGrid size={16} />}
-                label="Grid"
-              />
-            </div>
+          {showToggle && (
+            <ViewToggle viewMode={effectiveView} setViewMode={setViewMode} />
           )}
         </div>
       </div>
 
-      {/* Offline / error banner */}
+      {/* ── Floating control tab — visible when scrolled down ── */}
+      {!atTop && (
+        <>
+          {/* Slide-out panel */}
+          <div
+            className="fixed z-40 flex items-center gap-3 px-4 py-3 rounded-l-2xl transition-transform duration-300"
+            style={{
+              top: '120px',
+              right: 0,
+              transform: panelOpen ? 'translateX(0)' : 'translateX(calc(100% + 4px))',
+              backgroundColor: COLORS.surface,
+              border: `1px solid ${COLORS.border}`,
+              borderRight: 'none',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            }}
+          >
+            <div style={{ width: '230px' }}>
+              <SearchBar value={search} onSearch={runSearch} placeholder="Search…" />
+            </div>
+            {showToggle && <ViewToggle viewMode={effectiveView} setViewMode={setViewMode} />}
+          </div>
+
+          {/* Tab handle */}
+          <button
+            onClick={() => setPanelOpen((o) => !o)}
+            className="fixed z-50 flex items-center justify-center transition-all duration-300 hover:brightness-110"
+            style={{
+              top: '120px',
+              right: panelOpen ? 'calc(min(100vw, 320px))' : '0',
+              width: '40px',
+              height: '46px',
+              borderRadius: '12px 0 0 12px',
+              background: COLORS.gradient.primary,
+              color: '#fff',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(92,92,143,0.4)',
+            }}
+            aria-label={panelOpen ? 'Close controls' : 'Open controls'}
+          >
+            {panelOpen ? <X size={18} /> : <SlidersHorizontal size={18} />}
+          </button>
+        </>
+      )}
+
+      {/* Offline banner */}
       {usingMockData && (
         <div
           className="px-6 py-2 flex items-center gap-2 text-sm"
@@ -94,7 +143,7 @@ function BooksPage() {
         </div>
       )}
 
-      {/* Content */}
+      {/* ── Content ── */}
       <div className="flex-1 relative min-h-0">
         {effectiveView === 'shelf' ? (
           <div className="relative" style={{ height: 'calc(100vh - 200px)' }}>
@@ -123,11 +172,9 @@ function BooksPage() {
             )}
           </div>
         )}
-
-        {selectedBook && <BookDetailCard book={selectedBook} onClose={clearSelection} />}
       </div>
 
-      {/* Pagination footer */}
+      {/* Pagination */}
       {!usingMockData && (
         <div
           className="px-6 py-4 border-t flex items-center justify-center"
@@ -143,6 +190,21 @@ function BooksPage() {
           />
         </div>
       )}
+
+      {/* Detail popup — rendered at page level (fixed full-screen) */}
+      {selectedBook && <BookDetailCard book={selectedBook} onClose={clearSelection} />}
+    </div>
+  );
+}
+
+function ViewToggle({ viewMode, setViewMode }) {
+  return (
+    <div
+      className="flex items-center rounded-lg p-1"
+      style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
+    >
+      <ToggleBtn active={viewMode === 'shelf'} onClick={() => setViewMode('shelf')} icon={<Box size={16} />} label="3D" />
+      <ToggleBtn active={viewMode === 'grid'} onClick={() => setViewMode('grid')} icon={<LayoutGrid size={16} />} label="Grid" />
     </div>
   );
 }
