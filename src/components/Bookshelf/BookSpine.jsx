@@ -1,18 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Text } from '@react-three/drei';
 import { computeSpineThickness, assignSpineColor } from '../../utils/bookshelfUtils.js';
+import { createSpineTexture } from '../../utils/textureGenerators.js';
 
 /**
- * BookSpine — A single 3D book mesh on the shelf.
- * Renders a box geometry with thickness proportional to page count,
- * colored from the spine palette, with title text on the front face.
- *
- * @param {Object} props
- * @param {Object} props.book - Book data object with title, pageCount, etc.
- * @param {number} props.index - Index used for color assignment
- * @param {[number, number, number]} props.position - 3D position [x, y, z]
- * @param {boolean} props.interactive - Whether hover/click interactions are enabled
- * @param {function} props.onSelect - Callback when book is clicked (receives book)
+ * BookSpine — A single 3D book on the shelf with textured leather-like material.
+ * Features spine decoration, gold text, and interactive hover glow.
  */
 function BookSpine({ book, index, position, interactive, onSelect }) {
   const [hovered, setHovered] = useState(false);
@@ -20,19 +13,24 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
 
   const thickness = computeSpineThickness(book.pageCount);
   const height = 2;
-  const depth = 1.2; // Real book depth — visible from the angled camera
+  const depth = 1.2;
   const color = assignSpineColor(index);
+
+  // Generate a spine texture for this book
+  const spineTexture = useMemo(() => createSpineTexture(128, 256, color), [color]);
 
   const handlePointerOver = (e) => {
     if (!interactive) return;
     e.stopPropagation();
     setHovered(true);
+    document.body.style.cursor = 'pointer';
   };
 
   const handlePointerOut = (e) => {
     if (!interactive) return;
     e.stopPropagation();
     setHovered(false);
+    document.body.style.cursor = 'auto';
   };
 
   const handleClick = (e) => {
@@ -41,30 +39,46 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
     onSelect(book);
   };
 
+  // Slightly varied height per book for realism
+  const heightVariation = height + (book.pageCount % 7) * 0.03 - 0.1;
+
   return (
-    <group position={position} scale={hovered ? [1.05, 1.05, 1.05] : [1, 1, 1]}>
+    <group position={position} scale={hovered ? [1.04, 1.04, 1.04] : [1, 1, 1]}>
+      {/* Main book body */}
       <mesh
         ref={meshRef}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
         onClick={handleClick}
       >
-        <boxGeometry args={[thickness, height, depth]} />
+        <boxGeometry args={[thickness, heightVariation, depth]} />
         <meshStandardMaterial
+          map={spineTexture}
           color={color}
-          emissive={hovered ? color : '#000000'}
-          emissiveIntensity={hovered ? 0.3 : 0}
+          roughness={0.65}
+          metalness={0.05}
+          emissive={hovered ? '#d4933e' : '#000000'}
+          emissiveIntensity={hovered ? 0.25 : 0}
         />
       </mesh>
+
+      {/* Page edges — visible on the top, a lighter cream color */}
+      <mesh position={[0, heightVariation / 2 + 0.01, 0]}>
+        <boxGeometry args={[thickness - 0.02, 0.02, depth - 0.04]} />
+        <meshStandardMaterial color="#e8dcc8" roughness={0.9} metalness={0} />
+      </mesh>
+
+      {/* Spine title text — warm gold like site's secondary accent */}
       <Text
         position={[0, 0, depth / 2 + 0.01]}
         rotation={[0, 0, Math.PI / 2]}
-        fontSize={0.12}
-        maxWidth={height * 0.85}
-        color="#ffffff"
+        fontSize={0.1}
+        maxWidth={heightVariation * 0.8}
+        color={hovered ? '#f0b870' : '#e6a657'}
         anchorX="center"
         anchorY="middle"
         textAlign="center"
+        fontWeight="bold"
       >
         {book.title}
       </Text>

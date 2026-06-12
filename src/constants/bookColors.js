@@ -1,23 +1,26 @@
 /**
  * Spine color palette for the 3D bookshelf.
- * Each book spine is assigned a color from this array based on its index.
- * Colors are chosen for a warm, vintage library aesthetic with good contrast.
+ * Colors chosen to match the dark library theme:
+ * - Deep indigo/navy (primary palette)
+ * - Warm gold/amber (secondary palette)
+ * - Copper/rose (accent palette)
+ * - Dark earth tones (vintage leather)
  */
 export const SPINE_COLORS = [
-  '#8B4513', // Saddle Brown
-  '#2E4057', // Dark Slate Blue
-  '#6B3A2A', // Dark Sienna
-  '#4A5568', // Cool Gray
-  '#9B2335', // Deep Crimson
-  '#2D5016', // Forest Green
-  '#5B3A6A', // Dark Purple
-  '#B8860B', // Dark Goldenrod
-  '#1E3A5F', // Navy Blue
-  '#704214', // Sepia Brown
-  '#3D5C3A', // Hunter Green
-  '#8B1A4A', // Dark Magenta
+  '#2d2d54', // Deep Indigo (primary-200)
+  '#5a3d14', // Dark Amber (secondary-100)
+  '#4a4a7a', // Muted Indigo (primary-400)
+  '#5a3434', // Deep Copper (accent-100)
+  '#363666', // Royal Indigo (primary-300)
+  '#875c1f', // Warm Bronze (secondary-200)
+  '#2d1a1a', // Dark Burgundy (accent-50)
+  '#1E3A5F', // Deep Navy
+  '#b47a29', // Rich Gold (secondary-300)
+  '#874d4d', // Weathered Rose (accent-200)
+  '#252541', // Midnight Indigo (primary-100)
+  '#704214', // Antique Brown
+  '#5c5c8f', // Soft Indigo (primary-500)
+  '#3D2817', // Dark Walnut
+  '#d4933e', // Gold Accent (secondary-400)
   '#4A3728', // Espresso
-  '#2C5F7C', // Teal Blue
-  '#7B3F00', // Chocolate
-  '#5D4E37', // Umber
 ];
