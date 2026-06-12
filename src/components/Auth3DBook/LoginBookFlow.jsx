@@ -74,6 +74,7 @@ function LoginBookFlow({ toast }) {
       }
 
       toast.info(`OTP sent to ${email} — check your inbox`);
+      setIsLoading(false);
       setPage('animating-to-otp');
     } catch {
       toast.error('Connection error. Please check your network and try again.');
