@@ -1,119 +1,76 @@
 import { Users, PenTool } from 'lucide-react';
 import styles from '../../Auth3DBook.module.css';
 
-/**
- * RoleSelectionPage — Page 1 of signup book
- * Allows user to select between Customer or Author role
- */
 function RoleSelectionPage({ onRoleSelect, onBackToLogin }) {
+  const roles = [
+    {
+      id: 'CUSTOMER',
+      icon: <Users size={22} />,
+      iconColor: '#d4933e',
+      title: 'Browse & Buy Books',
+      desc: 'Discover books and build your personal library',
+      accent: 'rgba(212,147,62,0.12)',
+      border: 'rgba(212,147,62,0.25)',
+    },
+    {
+      id: 'AUTHOR',
+      icon: <PenTool size={22} />,
+      iconColor: '#d48080',
+      title: 'Publish Your Books',
+      desc: 'Share your stories with readers worldwide',
+      accent: 'rgba(212,128,128,0.12)',
+      border: 'rgba(212,128,128,0.25)',
+    },
+  ];
+
   return (
     <div className={styles.bookPage}>
-      {/* Heading */}
-      <h1 className={styles.pageHeading}>Join Our Community</h1>
+      <h1 className={styles.pageHeading}>Join our community</h1>
+      <p className={styles.pageSubheading}>How would you like to get started?</p>
 
-      {/* Subheading */}
-      <p className={styles.pageSubheading}>Choose how you'd like to get started</p>
-
-      {/* Role Options Container */}
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '20px' }}>
-        {/* Customer Role Card */}
-        <button
-          onClick={() => onRoleSelect('CUSTOMER')}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            backgroundColor: '#1a1a1a',
-            border: '2px solid #5c5c8f',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            gap: '12px',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#2a2a2a';
-            e.currentTarget.style.borderColor = '#d4933e';
-            e.currentTarget.style.boxShadow = '0 8px 24px rgba(92, 92, 143, 0.2)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#1a1a1a';
-            e.currentTarget.style.borderColor = '#5c5c8f';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          <Users size={32} color="#d4933e" />
-          <h3 style={{ margin: 0, color: '#e8e8e8', fontSize: '16px', fontWeight: '600' }}>
-            Browse & Buy Books
-          </h3>
-          <p
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+        {roles.map((role) => (
+          <button
+            key={role.id}
+            onClick={() => onRoleSelect(role.id)}
             style={{
-              margin: 0,
-              color: '#a8a8a8',
-              fontSize: '13px',
-              textAlign: 'center',
+              display: 'flex', alignItems: 'center', gap: '16px',
+              padding: '18px 20px', textAlign: 'left',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '12px', cursor: 'pointer',
+              transition: 'all 0.18s ease', width: '100%',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = role.accent;
+              e.currentTarget.style.borderColor = role.border;
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
-            Discover thousands of books and build your personal library
-          </p>
-        </button>
-
-        {/* Author Role Card */}
-        <button
-          onClick={() => onRoleSelect('AUTHOR')}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            backgroundColor: '#1a1a1a',
-            border: '2px solid #5c5c8f',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            gap: '12px',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#2a2a2a';
-            e.currentTarget.style.borderColor = '#d48080';
-            e.currentTarget.style.boxShadow = '0 8px 24px rgba(92, 92, 143, 0.2)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#1a1a1a';
-            e.currentTarget.style.borderColor = '#5c5c8f';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          <PenTool size={32} color="#d48080" />
-          <h3 style={{ margin: 0, color: '#e8e8e8', fontSize: '16px', fontWeight: '600' }}>
-            Publish Your Books
-          </h3>
-          <p
-            style={{
-              margin: 0,
-              color: '#a8a8a8',
-              fontSize: '13px',
-              textAlign: 'center',
-            }}
-          >
-            Share your stories with readers around the world
-          </p>
-        </button>
+            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${role.iconColor}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: role.iconColor }}>
+              {role.icon}
+            </div>
+            <div>
+              <p style={{ margin: '0 0 3px', fontSize: '14px', fontWeight: '600', color: '#f0f0f0', fontFamily: 'Inter, sans-serif' }}>{role.title}</p>
+              <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter, sans-serif' }}>{role.desc}</p>
+            </div>
+          </button>
+        ))}
       </div>
 
-      {/* Back to Login Link */}
-      <button
-        onClick={onBackToLogin}
-        className={styles.linkSecondary}
-        style={{
-          marginTop: '24px',
-          textDecoration: 'none',
-        }}
-      >
-        Back to Login
-      </button>
+      <div className={styles.divider} style={{ margin: 0 }} />
+
+      <p className={styles.helperText} style={{ margin: '16px 0 0' }}>
+        Already have an account?{' '}
+        <button onClick={onBackToLogin} className={styles.linkPrimary}>Sign in</button>
+      </p>
     </div>
   );
 }
