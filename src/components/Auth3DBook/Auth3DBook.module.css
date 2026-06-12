@@ -199,18 +199,27 @@
   }
 }
 
-@keyframes pageFlipSignup {
-  0% {
-    transform: perspective(1200px) rotateY(0deg) scale(1);
-    opacity: 1;
+/* Per-page transition animations for signup — smooth slide+fade */
+
+@keyframes pageEnterForward {
+  from {
+    opacity: 0;
+    transform: translateX(28px) scale(0.97);
   }
-  50% {
-    transform: perspective(1200px) rotateY(-90deg) scale(0.95);
-    opacity: 0.3;
-  }
-  100% {
-    transform: perspective(1200px) rotateY(0deg) scale(1);
+  to {
     opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes pageEnterBack {
+  from {
+    opacity: 0;
+    transform: translateX(-28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
   }
 }
 
@@ -229,9 +238,19 @@
   will-change: transform;
 }
 
+.pageFlipForward {
+  animation: pageEnterForward 0.45s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.pageFlipBack {
+  animation: pageEnterBack 0.45s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Legacy — keep for any remaining references */
 .pageFlipSignupTransition {
-  animation: pageFlipSignup 0.5s ease-in-out forwards;
-  will-change: transform;
+  animation: pageEnterForward 0.45s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
 }
 
 .pageAnimation {

@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import LoginBookFlow from './LoginBookFlow';
 import SignupBookFlow from './SignupBookFlow';
+import ToastContainer from '../Toast/ToastContainer';
+import useToast from '../../hooks/useToast';
 import styles from './Auth3DBook.module.css';
 
 /**
@@ -10,24 +12,26 @@ import styles from './Auth3DBook.module.css';
 function Auth3DBook() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toasts, toast, removeToast } = useToast();
 
-  // Determine which flow to render based on current path
   const isLoginFlow = location.pathname === '/login';
   const isSignupFlow = location.pathname === '/register';
 
-  // If neither login nor signup route, redirect to login
   if (!isLoginFlow && !isSignupFlow) {
     navigate('/login');
     return null;
   }
 
   return (
-    <div className={styles.auth3DBookContainer}>
-      <div className={styles.bookViewport}>
-        {isLoginFlow && <LoginBookFlow />}
-        {isSignupFlow && <SignupBookFlow />}
+    <>
+      <div className={styles.auth3DBookContainer}>
+        <div className={styles.bookViewport}>
+          {isLoginFlow && <LoginBookFlow toast={toast} />}
+          {isSignupFlow && <SignupBookFlow toast={toast} />}
+        </div>
       </div>
-    </div>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+    </>
   );
 }
 

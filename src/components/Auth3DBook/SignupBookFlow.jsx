@@ -12,13 +12,13 @@ import styles from './Auth3DBook.module.css';
 /**
  * SignupBookFlow — Manages signup flow with multi-page form
  * Pages: 1=Role, 2=Personal, 3=Email, 4=Password, 5=Review, 6=Success
- * State: form data, page tracking, errors, loading state
  */
-function SignupBookFlow() {
+function SignupBookFlow({ toast }) {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+  const [transitionDirection, setTransitionDirection] = useState('forward'); // 'forward' | 'back'
   const [selectedRole, setSelectedRole] = useState(null);
   const [formData, setFormData] = useState({
     first_name: '',
@@ -34,60 +34,35 @@ function SignupBookFlow() {
   const [isLoading, setIsLoading] = useState(false);
 
   /**
-   * Trigger page transition animation
+   * Trigger smooth page transition animation
    */
-  const triggerPageTransition = (callback) => {
+  const triggerPageTransition = (direction, callback) => {
+    setTransitionDirection(direction);
     setIsPageTransitioning(true);
     setTimeout(() => {
       callback();
       setIsPageTransitioning(false);
-    }, 500);
+    }, 450);
   };
 
-  /**
-   * Handle role selection and advance to page 2
-   */
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
-    triggerPageTransition(() => {
-      setCurrentPage(2);
-    });
+    triggerPageTransition('forward', () => setCurrentPage(2));
   };
 
-  /**
-   * Update form data field
-   */
   const updateFormData = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    // Clear field error as user types
-    if (errors[field]) {
-      setErrors((prev) => ({
-        ...prev,
-        [field]: '',
-      }));
-    }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
-  /**
-   * Validate current page fields
-   */
   const validateCurrentPage = () => {
     const newErrors = {};
-
     switch (currentPage) {
-      case 2: // Personal Info
-        if (!formData.first_name.trim()) {
-          newErrors.first_name = 'First name is required';
-        }
-        if (!formData.last_name.trim()) {
-          newErrors.last_name = 'Last name is required';
-        }
+      case 2:
+        if (!formData.first_name.trim()) newErrors.first_name = 'First name is required';
+        if (!formData.last_name.trim()) newErrors.last_name = 'Last name is required';
         break;
-
-      case 3: // Email
+      case 3:
         if (!formData.email.trim()) {
           newErrors.email = 'Email is required';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -99,8 +74,7 @@ function SignupBookFlow() {
           newErrors.confirm_email = 'Emails do not match';
         }
         break;
-
-      case 4: // Password
+      case 4:
         if (!formData.password) {
           newErrors.password = 'Password is required';
         } else if (formData.password.length < 8) {
@@ -112,49 +86,34 @@ function SignupBookFlow() {
           newErrors.confirm_password = 'Passwords do not match';
         }
         break;
-
-      case 5: // Review
-        if (!formData.acceptTerms) {
-          newErrors.terms = 'You must accept the terms and conditions';
-        }
+      case 5:
+        if (!formData.acceptTerms) newErrors.terms = 'You must accept the terms and conditions';
         break;
-
       default:
         break;
     }
-
     return newErrors;
   };
 
-  /**
-   * Handle previous button (go to previous page)
-   */
   const handlePrevious = () => {
     if (currentPage > 1) {
-      triggerPageTransition(() => {
-        setCurrentPage(currentPage - 1);
-      });
+      setErrors({});
+      triggerPageTransition('back', () => setCurrentPage(currentPage - 1));
     }
   };
 
-  /**
-   * Handle next button (validate and go to next page)
-   */
   const handleNext = () => {
     const newErrors = validateCurrentPage();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
     setErrors({});
-    triggerPageTransition(() => {
-      setCurrentPage(currentPage + 1);
-    });
+    triggerPageTransition('forward', () => setCurrentPage(currentPage + 1));
   };
 
   /**
-   * Handle form submission
+   * Trigger page-flip animation then call the API
    */
   const handleSubmit = async () => {
     const newErrors = validateCurrentPage();
@@ -162,38 +121,29 @@ function SignupBookFlow() {
       setErrors(newErrors);
       return;
     }
-
-    // Trigger page-turn animation before showing success
+    // Trigger page-flip animation then show success page
     setIsAnimating(true);
-
-    // Wait for animation to complete
     setTimeout(() => {
-      // Show success page
       setCurrentPage(6);
       setIsAnimating(false);
-    }, 850); // Match animation duration
+    }, 850);
   };
 
-  /**
-   * Handle animation complete from SuccessPage
-   */
   const handleAnimationComplete = () => {
     setIsAnimating(false);
   };
 
   /**
-   * Submit actual signup API call
+   * Called from SuccessPage — hit the API and redirect
    */
   const submitSignup = async () => {
     setIsLoading(true);
     setErrors({});
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/user/signup/`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/user/signup/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           first_name: formData.first_name,
           last_name: formData.last_name,
@@ -204,29 +154,30 @@ function SignupBookFlow() {
         }),
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok) {
-        throw new Error(data.details || 'Registration failed');
+      if (!res.ok) {
+        const message = data?.status?.message || 'Registration failed';
+        toast.error(message);
+        setErrors({ submit: message });
+        setIsLoading(false);
+        // Go back to review page
+        triggerPageTransition('back', () => setCurrentPage(5));
+        return;
       }
 
-      // Success — redirect to login
-      navigate('/login?registered=true', {
-        state: { email: formData.email, role: selectedRole },
-      });
-    } catch (error) {
-      setErrors({ submit: error.message || 'An error occurred during registration' });
+      toast.success('Account created! Please check your email to verify your account.');
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+    } catch {
+      toast.error('Connection error. Please try again.');
+      setErrors({ submit: 'Connection error. Please try again.' });
       setIsLoading(false);
-      // Go back to review page to allow correction
-      triggerPageTransition(() => {
-        setCurrentPage(5);
-      });
+      triggerPageTransition('back', () => setCurrentPage(5));
     }
   };
 
-  /**
-   * Render current page based on currentPage state
-   */
   const renderCurrentPage = () => {
     const pageContent = (() => {
       switch (currentPage) {
@@ -237,49 +188,42 @@ function SignupBookFlow() {
               onBackToLogin={() => navigate('/login')}
             />
           );
-
         case 2:
           return (
             <PersonalInfoPage
               firstName={formData.first_name}
               lastName={formData.last_name}
-              onFirstNameChange={(value) => updateFormData('first_name', value)}
-              onLastNameChange={(value) => updateFormData('last_name', value)}
+              onFirstNameChange={(v) => updateFormData('first_name', v)}
+              onLastNameChange={(v) => updateFormData('last_name', v)}
               onPrevious={handlePrevious}
               onNext={handleNext}
               errors={errors}
-              progressPercentage={(2 / 5) * 100}
             />
           );
-
         case 3:
           return (
             <EmailPage
               email={formData.email}
               confirmEmail={formData.confirm_email}
-              onEmailChange={(value) => updateFormData('email', value)}
-              onConfirmEmailChange={(value) => updateFormData('confirm_email', value)}
+              onEmailChange={(v) => updateFormData('email', v)}
+              onConfirmEmailChange={(v) => updateFormData('confirm_email', v)}
               onPrevious={handlePrevious}
               onNext={handleNext}
               errors={errors}
-              progressPercentage={(3 / 5) * 100}
             />
           );
-
         case 4:
           return (
             <PasswordSecurityPage
               password={formData.password}
               confirmPassword={formData.confirm_password}
-              onPasswordChange={(value) => updateFormData('password', value)}
-              onConfirmPasswordChange={(value) => updateFormData('confirm_password', value)}
+              onPasswordChange={(v) => updateFormData('password', v)}
+              onConfirmPasswordChange={(v) => updateFormData('confirm_password', v)}
               onPrevious={handlePrevious}
               onNext={handleNext}
               errors={errors}
-              progressPercentage={(4 / 5) * 100}
             />
           );
-
         case 5:
           return (
             <ReviewPage
@@ -291,10 +235,8 @@ function SignupBookFlow() {
               onSubmit={handleSubmit}
               isLoading={isLoading}
               errors={errors}
-              progressPercentage={(5 / 5) * 100}
             />
           );
-
         case 6:
           return (
             <SuccessPage
@@ -302,14 +244,17 @@ function SignupBookFlow() {
               isLoading={isLoading}
             />
           );
-
         default:
           return null;
       }
     })();
 
-    // Apply transition animation if transitioning
-    const transitionClass = isPageTransitioning ? styles.pageFlipSignupTransition : '';
+    // Choose animation class based on transition direction
+    const transitionClass = isPageTransitioning
+      ? transitionDirection === 'forward'
+        ? styles.pageFlipForward
+        : styles.pageFlipBack
+      : '';
 
     return (
       <div className={transitionClass} style={{ width: '100%', height: '100%' }}>
