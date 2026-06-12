@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import EmailValidationPage from './pages/EmailValidationPage';
 import PasswordEntryPage from './pages/PasswordEntryPage';
 import OTPVerificationPage from './pages/OTPVerificationPage';
@@ -12,6 +13,7 @@ import styles from './Auth3DBook.module.css';
  */
 function LoginBookFlow({ toast }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [page, setPage] = useState('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -107,10 +109,20 @@ function LoginBookFlow({ toast }) {
         return;
       }
 
-      // Store tokens + user
-      localStorage.setItem('access_token', data.data.access);
-      localStorage.setItem('refresh_token', data.data.refresh);
+      // Store tokens + user (use keys that authSlice reads)
+      localStorage.setItem('access', data.data.access);
+      localStorage.setItem('refresh', data.data.refresh);
       localStorage.setItem('user', JSON.stringify(data.data.user));
+
+      // Also update Redux store so navbar and other components react immediately
+      dispatch({
+        type: 'auth/verifyOTP/fulfilled',
+        payload: {
+          access: data.data.access,
+          refresh: data.data.refresh,
+          user: data.data.user,
+        },
+      });
 
       toast.success(`Welcome back, ${data.data.user.full_name || 'there'}!`);
 
