@@ -1,10 +1,10 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { MapControls, PerspectiveCamera, Text } from '@react-three/drei';
+import { MapControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import BookSpine from './BookSpine';
 import BookshelfFrame from './BookshelfFrame';
-import { computeSpineThickness, groupBooksByCategory } from '../../utils/bookshelfUtils.js';
+import { computeSpineThickness } from '../../utils/bookshelfUtils.js';
 import { loadBrickTexture } from '../../utils/textureGenerators.js';
 
 const SHELF_WIDTH = 14; // interior usable width
@@ -14,41 +14,28 @@ const BOOK_GAP = 0.06;
 const SIDE_MARGIN = 0.4;
 
 /**
- * Lay books into rows grouped by category. Each category starts on a new row.
- * Within a category, books wrap to additional rows as needed.
+ * Lay books into rows filling the shelf width compactly (no category grouping).
  * @param {object[]} books
  * @returns {{ placements, rowCount, rowLabels }}
  */
 function layoutBooks(books) {
-  const grouped = groupBooksByCategory(books);
-  const categories = Object.keys(grouped);
   const placements = [];
-  const rowLabels = []; // { row, label }
   let row = 0;
-  let globalIndex = 0;
+  let cursor = -SHELF_WIDTH / 2 + SIDE_MARGIN;
 
-  categories.forEach((category) => {
-    rowLabels.push({ row, label: category });
-    let cursor = -SHELF_WIDTH / 2 + SIDE_MARGIN;
-
-    grouped[category].forEach((book) => {
-      const thickness = computeSpineThickness(book.pageCount);
-      if (cursor + thickness > SHELF_WIDTH / 2 - SIDE_MARGIN) {
-        row += 1;
-        cursor = -SHELF_WIDTH / 2 + SIDE_MARGIN;
-      }
-      const x = cursor + thickness / 2;
-      placements.push({ book, x, row, index: globalIndex, thickness });
-      cursor += thickness + BOOK_GAP;
-      globalIndex += 1;
-    });
-
-    // Next category starts on a new row
-    row += 1;
+  books.forEach((book, index) => {
+    const thickness = computeSpineThickness(book.pageCount);
+    if (cursor + thickness > SHELF_WIDTH / 2 - SIDE_MARGIN) {
+      row += 1;
+      cursor = -SHELF_WIDTH / 2 + SIDE_MARGIN;
+    }
+    const x = cursor + thickness / 2;
+    placements.push({ book, x, row, index, thickness });
+    cursor += thickness + BOOK_GAP;
   });
 
-  const rowCount = row;
-  return { placements, rowCount, rowLabels };
+  const rowCount = row + 1;
+  return { placements, rowCount, rowLabels: [] };
 }
 
 /** Brick wall backdrop behind the bookcase. */
@@ -144,27 +131,6 @@ export default function BookshelfScene({
           rowHeight={ROW_HEIGHT}
           rowDepth={ROW_DEPTH}
         />
-
-        {/* Category labels for each row */}
-        {rowLabels.map(({ row: r, label }) => {
-          const y = topY - r * ROW_HEIGHT - ROW_HEIGHT / 2 + 2.2;
-          return (
-            <Text
-              key={`label-${r}`}
-              position={[-SHELF_WIDTH / 2 + 0.5, y, 0.3]}
-              fontSize={0.18}
-              color="#FFD700"
-              anchorX="left"
-              anchorY="middle"
-              fontWeight="bold"
-              letterSpacing={0.04}
-              outlineWidth={0.005}
-              outlineColor="#000000"
-            >
-              {label}
-            </Text>
-          );
-        })}
 
         {/* Books standing on each shelf */}
         {placements.map(({ book, x, row, index }) => {
