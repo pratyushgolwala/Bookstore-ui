@@ -20,7 +20,7 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
 
   const thickness = computeSpineThickness(book.pageCount);
   const height = 2;
-  const depth = 0.3;
+  const depth = 1.2; // Real book depth — visible from the angled camera
   const color = assignSpineColor(index);
 
   const handlePointerOver = (e) => {
