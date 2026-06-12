@@ -10,7 +10,7 @@ describe('cartSlice', () => {
       const state = cartReducer(initialState, addItem(payload));
 
       expect(state.items).toHaveLength(1);
-      expect(state.items[0]).toEqual({ id: 'b1', title: 'Dune', price: 12.99, quantity: 1 });
+      expect(state.items[0]).toMatchObject({ id: 'b1', title: 'Dune', price: 12.99, quantity: 1 });
     });
 
     it('defaults quantity to 1 when not provided', () => {

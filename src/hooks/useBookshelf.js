@@ -1,53 +1,69 @@
 import { useEffect, useMemo, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { loadMockBooks, selectBook, clearSelection } from '../store/slices/booksSlice.js';
+import {
+  fetchBooks,
+  selectBook,
+  clearSelection,
+  setSearch,
+} from '../store/slices/booksSlice.js';
 import { groupBooksByCategory } from '../utils/bookshelfUtils.js';
 
 /**
- * useBookshelf — Custom hook that provides bookshelf data and actions.
- * Loads mock books into Redux on mount if store is empty.
- * Derives category groupings via useMemo for efficient rendering.
+ * useBookshelf — provides paginated bookshelf data and actions.
  *
- * @returns {{
- *   books: Array,
- *   booksByCategory: Record<string, Array>,
- *   categories: string[],
- *   selectedBook: object|null,
- *   selectBook: (book: object) => void,
- *   clearSelection: () => void,
- *   loading: boolean
- * }}
+ * Fetches a page of books from the API on mount and whenever page/search
+ * changes. Exposes pagination controls so the 3D shelf can flip through
+ * all books in the database.
  */
 export default function useBookshelf() {
   const dispatch = useDispatch();
 
-  const books = useSelector((state) => state.books.items);
-  const selectedBook = useSelector((state) => state.books.selected);
-  const loading = useSelector((state) => state.books.loading);
+  const books = useSelector((s) => s.books.items);
+  const selectedBook = useSelector((s) => s.books.selected);
+  const loading = useSelector((s) => s.books.loading);
+  const error = useSelector((s) => s.books.error);
+  const search = useSelector((s) => s.books.search);
+  const usingMockData = useSelector((s) => s.books.usingMockData);
+  const pagination = useSelector((s) => s.books.pagination);
 
-  // On mount, load mock data into Redux if the store is empty
+  // Fetch the first page on mount
   useEffect(() => {
-    if (books.length === 0) {
-      dispatch(loadMockBooks());
+    dispatch(fetchBooks({ page: 1, search }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
+
+  const goToPage = useCallback(
+    (page) => {
+      dispatch(fetchBooks({ page, search }));
+    },
+    [dispatch, search]
+  );
+
+  const nextPage = useCallback(() => {
+    if (pagination.hasNext) {
+      dispatch(fetchBooks({ page: pagination.currentPage + 1, search }));
     }
-  }, [dispatch, books.length]);
+  }, [dispatch, pagination, search]);
 
-  // Derive books grouped by category
+  const prevPage = useCallback(() => {
+    if (pagination.hasPrevious) {
+      dispatch(fetchBooks({ page: pagination.currentPage - 1, search }));
+    }
+  }, [dispatch, pagination, search]);
+
+  const runSearch = useCallback(
+    (query) => {
+      dispatch(setSearch(query));
+      dispatch(fetchBooks({ page: 1, search: query }));
+    },
+    [dispatch]
+  );
+
   const booksByCategory = useMemo(() => groupBooksByCategory(books), [books]);
-
-  // Derive category list from the grouped object
   const categories = useMemo(() => Object.keys(booksByCategory), [booksByCategory]);
 
-  // Bind actions to dispatch
-  const handleSelectBook = useCallback(
-    (book) => dispatch(selectBook(book)),
-    [dispatch]
-  );
-
-  const handleClearSelection = useCallback(
-    () => dispatch(clearSelection()),
-    [dispatch]
-  );
+  const handleSelectBook = useCallback((book) => dispatch(selectBook(book)), [dispatch]);
+  const handleClearSelection = useCallback(() => dispatch(clearSelection()), [dispatch]);
 
   return {
     books,
@@ -57,5 +73,13 @@ export default function useBookshelf() {
     selectBook: handleSelectBook,
     clearSelection: handleClearSelection,
     loading,
+    error,
+    usingMockData,
+    pagination,
+    goToPage,
+    nextPage,
+    prevPage,
+    runSearch,
+    search,
   };
 }
