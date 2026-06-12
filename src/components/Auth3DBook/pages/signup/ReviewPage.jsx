@@ -1,144 +1,55 @@
 import ProgressIndicator from '../../components/ProgressIndicator';
 import styles from '../../Auth3DBook.module.css';
 
-/**
- * ReviewPage — Page 5 of signup book
- * Displays summary of all entered information for review
- */
-function ReviewPage({
-  formData,
-  role,
-  acceptTerms,
-  onAcceptTermsChange,
-  onPrevious,
-  onSubmit,
-  isLoading,
-  errors,
-}) {
-  const isValid = acceptTerms;
+function ReviewPage({ formData, role, acceptTerms, onAcceptTermsChange, onPrevious, onSubmit, isLoading, errors }) {
+  const rows = [
+    { key: 'Name',  val: `${formData.first_name} ${formData.last_name}` },
+    { key: 'Email', val: formData.email },
+    { key: 'Role',  val: role === 'CUSTOMER' ? 'Customer' : 'Author' },
+    ...(formData.phone ? [{ key: 'Phone', val: formData.phone }] : []),
+  ];
 
   return (
     <div className={styles.bookPage}>
-      {/* Progress Indicator */}
       <ProgressIndicator currentPage={5} totalPages={5} />
 
-      {/* Heading */}
-      <h1 className={styles.pageHeading}>Review Your Info</h1>
+      <h1 className={styles.pageHeading}>Review & confirm</h1>
+      <p className={styles.pageSubheading}>Double-check your details before creating your account</p>
 
-      {/* Form Summary */}
-      <div
-        style={{
-          width: '100%',
-          marginTop: '12px',
-          padding: '14px',
-          backgroundColor: '#0f0f0f',
-          borderRadius: '6px',
-          border: '1px solid #3d3d3d',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          fontSize: '13px',
-          maxHeight: '140px',
-          overflowY: 'auto',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: '#a8a8a8' }}>Name:</span>
-          <span style={{ color: '#e8e8e8', fontWeight: '600' }}>
-            {formData.first_name} {formData.last_name}
-          </span>
-        </div>
-        <div style={{ height: '1px', backgroundColor: '#3d3d3d' }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: '#a8a8a8' }}>Email:</span>
-          <span style={{ color: '#e8e8e8', fontWeight: '600' }}>
-            {formData.email}
-          </span>
-        </div>
-        <div style={{ height: '1px', backgroundColor: '#3d3d3d' }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: '#a8a8a8' }}>Role:</span>
-          <span style={{ color: '#e8e8e8', fontWeight: '600' }}>
-            {role === 'CUSTOMER' ? 'Customer' : 'Author'}
-          </span>
-        </div>
-        {formData.phone && (
-          <>
-            <div style={{ height: '1px', backgroundColor: '#3d3d3d' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#a8a8a8' }}>Phone:</span>
-              <span style={{ color: '#e8e8e8', fontWeight: '600' }}>
-                {formData.phone}
-              </span>
+      {/* Summary */}
+      <div className={styles.summaryCard}>
+        {rows.map((row, i) => (
+          <div key={row.key}>
+            <div className={styles.summaryRow}>
+              <span className={styles.summaryKey}>{row.key}</span>
+              <span className={styles.summaryVal}>{row.val}</span>
             </div>
-          </>
-        )}
+            {i < rows.length - 1 && <div className={styles.summaryDivider} style={{ marginTop: '10px' }} />}
+          </div>
+        ))}
       </div>
 
-      {/* Error Message */}
+      {/* Error */}
       {errors.submit && (
-        <div
-          style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: '#d48080',
-            borderRadius: '6px',
-            marginTop: '10px',
-          }}
-        >
-          <p
-            style={{
-              margin: 0,
-              fontSize: '12px',
-              fontWeight: '600',
-              color: '#0f0f0f',
-            }}
-          >
-            {errors.submit}
-          </p>
+        <div style={{ padding: '10px 14px', background: 'rgba(212,128,128,0.1)', border: '1px solid rgba(212,128,128,0.3)', borderRadius: '8px', marginBottom: '12px' }}>
+          <p style={{ margin: 0, fontSize: '13px', color: '#d48080' }}>{errors.submit}</p>
         </div>
       )}
 
-      {/* Terms Checkbox */}
-      <div
-        className={styles.checkboxContainer}
-        style={{ marginTop: '12px' }}
-      >
-        <input
-          id="terms"
-          type="checkbox"
-          checked={acceptTerms}
-          onChange={(e) => onAcceptTermsChange(e.target.checked)}
-          className={styles.checkboxInput}
-        />
+      {/* Terms */}
+      <div className={styles.checkboxRow}>
+        <input id="terms" type="checkbox" checked={acceptTerms} onChange={(e) => onAcceptTermsChange(e.target.checked)} className={styles.checkboxInput} />
         <label htmlFor="terms" className={styles.checkboxLabel}>
           I agree to the{' '}
-          <a href="#" style={{ color: '#d4933e', textDecoration: 'none' }}>
-            Terms and Conditions
-          </a>
+          <a href="#" style={{ color: '#d4933e', textDecoration: 'none', fontWeight: '500' }}>Terms and Conditions</a>
         </label>
       </div>
-      {errors.terms && (
-        <div className={styles.formError} style={{ marginTop: '6px' }}>
-          <span>✕</span>
-          <span>{errors.terms}</span>
-        </div>
-      )}
+      {errors.terms && <div className={styles.formError} style={{ marginTop: '6px' }}>{errors.terms}</div>}
 
-      {/* Navigation Buttons */}
-      <div className={styles.buttonGroup} style={{ marginTop: '14px' }}>
-        <button
-          onClick={onPrevious}
-          className={styles.previousButton}
-        >
-          ← Previous
-        </button>
-        <button
-          onClick={onSubmit}
-          disabled={!isValid || isLoading}
-          className={styles.nextButton}
-        >
-          {isLoading ? 'Creating...' : 'Create Account'}
+      <div className={styles.buttonGroup}>
+        <button onClick={onPrevious} className={styles.previousButton}>← Back</button>
+        <button onClick={onSubmit} disabled={!acceptTerms || isLoading} className={styles.nextButton}>
+          {isLoading ? 'Creating…' : 'Create account'}
         </button>
       </div>
     </div>

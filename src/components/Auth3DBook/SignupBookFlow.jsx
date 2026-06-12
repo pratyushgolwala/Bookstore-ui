@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RoleSelectionPage from './pages/signup/RoleSelectionPage';
 import PersonalInfoPage from './pages/signup/PersonalInfoPage';
@@ -10,326 +10,187 @@ import PageTurnAnimation from './animations/PageTurnAnimation';
 import styles from './Auth3DBook.module.css';
 
 /**
- * SignupBookFlow — Manages signup flow with multi-page form
- * Pages: 1=Role, 2=Personal, 3=Email, 4=Password, 5=Review, 6=Success
- * State: form data, page tracking, errors, loading state
+ * SignupBookFlow — Two-phase smooth page rotation:
+ *   Phase 1 (rotateOut): old content spins to 90° → invisible
+ *   Swap: React swaps in new page content
+ *   Phase 2 (rotateIn): new content spins from 90° → 0° → visible
  */
-function SignupBookFlow() {
+function SignupBookFlow({ toast }) {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+
+  // 'idle' | 'out' | 'in'
+  const [phase, setPhase]         = useState('idle');
+  const [direction, setDirection] = useState('forward');
+
   const [selectedRole, setSelectedRole] = useState(null);
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    confirm_email: '',
-    password: '',
-    confirm_password: '',
-    phone: '',
-    acceptTerms: false,
+    first_name: '', last_name: '',
+    email: '', confirm_email: '',
+    password: '', confirm_password: '',
+    phone: '', acceptTerms: false,
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors]     = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  /**
-   * Trigger page transition animation
-   */
-  const triggerPageTransition = (callback) => {
-    setIsPageTransitioning(true);
-    setTimeout(() => {
-      callback();
-      setIsPageTransitioning(false);
-    }, 500);
-  };
+  // Duration of each half-rotation (ms) — keep snappy
+  const HALF_MS = 220;
 
   /**
-   * Handle role selection and advance to page 2
+   * Two-phase transition:
+   *  1. rotate out  (HALF_MS)
+   *  2. swap content
+   *  3. rotate in   (HALF_MS)
    */
+  const changePage = (dir, nextPage) => {
+    setDirection(dir);
+    setPhase('out');
+
+    setTimeout(() => {
+      setCurrentPage(nextPage);
+      setPhase('in');
+
+      setTimeout(() => {
+        setPhase('idle');
+      }, HALF_MS);
+    }, HALF_MS);
+  };
+
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
-    triggerPageTransition(() => {
-      setCurrentPage(2);
-    });
+    changePage('forward', 2);
   };
 
-  /**
-   * Update form data field
-   */
   const updateFormData = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    // Clear field error as user types
-    if (errors[field]) {
-      setErrors((prev) => ({
-        ...prev,
-        [field]: '',
-      }));
-    }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
-  /**
-   * Validate current page fields
-   */
   const validateCurrentPage = () => {
-    const newErrors = {};
-
+    const e = {};
     switch (currentPage) {
-      case 2: // Personal Info
-        if (!formData.first_name.trim()) {
-          newErrors.first_name = 'First name is required';
-        }
-        if (!formData.last_name.trim()) {
-          newErrors.last_name = 'Last name is required';
-        }
+      case 2:
+        if (!formData.first_name.trim()) e.first_name = 'First name is required';
+        if (!formData.last_name.trim())  e.last_name  = 'Last name is required';
         break;
-
-      case 3: // Email
-        if (!formData.email.trim()) {
-          newErrors.email = 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-          newErrors.email = 'Please enter a valid email address';
-        }
-        if (!formData.confirm_email.trim()) {
-          newErrors.confirm_email = 'Please confirm your email';
-        } else if (formData.email !== formData.confirm_email) {
-          newErrors.confirm_email = 'Emails do not match';
-        }
+      case 3:
+        if (!formData.email.trim()) e.email = 'Email is required';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Invalid email address';
+        if (!formData.confirm_email.trim()) e.confirm_email = 'Please confirm your email';
+        else if (formData.email !== formData.confirm_email) e.confirm_email = 'Emails do not match';
         break;
-
-      case 4: // Password
-        if (!formData.password) {
-          newErrors.password = 'Password is required';
-        } else if (formData.password.length < 8) {
-          newErrors.password = 'Password must be at least 8 characters';
-        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-          newErrors.password = 'Password must contain uppercase, lowercase, and numbers';
-        }
-        if (formData.password !== formData.confirm_password) {
-          newErrors.confirm_password = 'Passwords do not match';
-        }
+      case 4:
+        if (!formData.password) e.password = 'Password is required';
+        else if (formData.password.length < 8) e.password = 'At least 8 characters';
+        else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password))
+          e.password = 'Must have uppercase, lowercase and number';
+        if (formData.password !== formData.confirm_password)
+          e.confirm_password = 'Passwords do not match';
         break;
-
-      case 5: // Review
-        if (!formData.acceptTerms) {
-          newErrors.terms = 'You must accept the terms and conditions';
-        }
+      case 5:
+        if (!formData.acceptTerms) e.terms = 'You must accept the terms';
         break;
-
-      default:
-        break;
+      default: break;
     }
-
-    return newErrors;
+    return e;
   };
 
-  /**
-   * Handle previous button (go to previous page)
-   */
   const handlePrevious = () => {
-    if (currentPage > 1) {
-      triggerPageTransition(() => {
-        setCurrentPage(currentPage - 1);
-      });
-    }
+    if (currentPage > 1) { setErrors({}); changePage('back', currentPage - 1); }
   };
 
-  /**
-   * Handle next button (validate and go to next page)
-   */
   const handleNext = () => {
-    const newErrors = validateCurrentPage();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
+    const errs = validateCurrentPage();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
-    triggerPageTransition(() => {
-      setCurrentPage(currentPage + 1);
-    });
+    changePage('forward', currentPage + 1);
   };
 
-  /**
-   * Handle form submission
-   */
-  const handleSubmit = async () => {
-    const newErrors = validateCurrentPage();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    // Trigger page-turn animation before showing success
+  const handleSubmit = () => {
+    const errs = validateCurrentPage();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setIsAnimating(true);
-
-    // Wait for animation to complete
-    setTimeout(() => {
-      // Show success page
-      setCurrentPage(6);
-      setIsAnimating(false);
-    }, 850); // Match animation duration
+    setTimeout(() => { setCurrentPage(6); setIsAnimating(false); }, 850);
   };
 
-  /**
-   * Handle animation complete from SuccessPage
-   */
-  const handleAnimationComplete = () => {
-    setIsAnimating(false);
-  };
-
-  /**
-   * Submit actual signup API call
-   */
   const submitSignup = async () => {
     setIsLoading(true);
     setErrors({});
-
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/user/signup/`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/user/signup/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-          role: selectedRole,
+          first_name: formData.first_name, last_name: formData.last_name,
+          email: formData.email, password: formData.password,
+          phone: formData.phone, role: selectedRole,
         }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.details || 'Registration failed');
+      const data = await res.json();
+      if (!res.ok) {
+        const msg = data?.status?.message || 'Registration failed';
+        toast.error(msg);
+        setErrors({ submit: msg });
+        setIsLoading(false);
+        changePage('back', 5);
+        return;
       }
-
-      // Success — redirect to login
-      navigate('/login?registered=true', {
-        state: { email: formData.email, role: selectedRole },
-      });
-    } catch (error) {
-      setErrors({ submit: error.message || 'An error occurred during registration' });
+      toast.success('Account created! Check your email for a verification link.');
+      setTimeout(() => navigate('/login'), 1500);
+    } catch {
+      toast.error('Connection error. Please try again.');
+      setErrors({ submit: 'Connection error. Please try again.' });
       setIsLoading(false);
-      // Go back to review page to allow correction
-      triggerPageTransition(() => {
-        setCurrentPage(5);
-      });
+      changePage('back', 5);
     }
   };
 
-  /**
-   * Render current page based on currentPage state
-   */
-  const renderCurrentPage = () => {
-    const pageContent = (() => {
-      switch (currentPage) {
-        case 1:
-          return (
-            <RoleSelectionPage
-              onRoleSelect={handleRoleSelect}
-              onBackToLogin={() => navigate('/login')}
-            />
-          );
-
-        case 2:
-          return (
-            <PersonalInfoPage
-              firstName={formData.first_name}
-              lastName={formData.last_name}
-              onFirstNameChange={(value) => updateFormData('first_name', value)}
-              onLastNameChange={(value) => updateFormData('last_name', value)}
-              onPrevious={handlePrevious}
-              onNext={handleNext}
-              errors={errors}
-              progressPercentage={(2 / 5) * 100}
-            />
-          );
-
-        case 3:
-          return (
-            <EmailPage
-              email={formData.email}
-              confirmEmail={formData.confirm_email}
-              onEmailChange={(value) => updateFormData('email', value)}
-              onConfirmEmailChange={(value) => updateFormData('confirm_email', value)}
-              onPrevious={handlePrevious}
-              onNext={handleNext}
-              errors={errors}
-              progressPercentage={(3 / 5) * 100}
-            />
-          );
-
-        case 4:
-          return (
-            <PasswordSecurityPage
-              password={formData.password}
-              confirmPassword={formData.confirm_password}
-              onPasswordChange={(value) => updateFormData('password', value)}
-              onConfirmPasswordChange={(value) => updateFormData('confirm_password', value)}
-              onPrevious={handlePrevious}
-              onNext={handleNext}
-              errors={errors}
-              progressPercentage={(4 / 5) * 100}
-            />
-          );
-
-        case 5:
-          return (
-            <ReviewPage
-              formData={formData}
-              role={selectedRole}
-              acceptTerms={formData.acceptTerms}
-              onAcceptTermsChange={(checked) => updateFormData('acceptTerms', checked)}
-              onPrevious={handlePrevious}
-              onSubmit={handleSubmit}
-              isLoading={isLoading}
-              errors={errors}
-              progressPercentage={(5 / 5) * 100}
-            />
-          );
-
-        case 6:
-          return (
-            <SuccessPage
-              onRedirectToLogin={submitSignup}
-              isLoading={isLoading}
-            />
-          );
-
-        default:
-          return null;
-      }
-    })();
-
-    // Apply transition animation if transitioning
-    const transitionClass = isPageTransitioning ? styles.pageFlipSignupTransition : '';
-
-    return (
-      <div className={transitionClass} style={{ width: '100%', height: '100%' }}>
-        {pageContent}
-      </div>
-    );
+  // Page content map
+  const pageContent = {
+    1: <RoleSelectionPage onRoleSelect={handleRoleSelect} onBackToLogin={() => navigate('/login')} />,
+    2: <PersonalInfoPage
+          firstName={formData.first_name} lastName={formData.last_name}
+          onFirstNameChange={(v) => updateFormData('first_name', v)}
+          onLastNameChange={(v) => updateFormData('last_name', v)}
+          onPrevious={handlePrevious} onNext={handleNext} errors={errors} />,
+    3: <EmailPage
+          email={formData.email} confirmEmail={formData.confirm_email}
+          onEmailChange={(v) => updateFormData('email', v)}
+          onConfirmEmailChange={(v) => updateFormData('confirm_email', v)}
+          onPrevious={handlePrevious} onNext={handleNext} errors={errors} />,
+    4: <PasswordSecurityPage
+          password={formData.password} confirmPassword={formData.confirm_password}
+          onPasswordChange={(v) => updateFormData('password', v)}
+          onConfirmPasswordChange={(v) => updateFormData('confirm_password', v)}
+          onPrevious={handlePrevious} onNext={handleNext} errors={errors} />,
+    5: <ReviewPage
+          formData={formData} role={selectedRole}
+          acceptTerms={formData.acceptTerms}
+          onAcceptTermsChange={(v) => updateFormData('acceptTerms', v)}
+          onPrevious={handlePrevious} onSubmit={handleSubmit}
+          isLoading={isLoading} errors={errors} />,
+    6: <SuccessPage onRedirectToLogin={submitSignup} isLoading={isLoading} />,
   };
+
+  // CSS class for each phase
+  const cardClass =
+    phase === 'out' ? (direction === 'forward' ? styles.rotateOutForward : styles.rotateOutBack) :
+    phase === 'in'  ? (direction === 'forward' ? styles.rotateInForward  : styles.rotateInBack)  :
+    '';
 
   return (
     <div className={styles.signupContainer}>
       <div className={styles.signupBook}>
-        {renderCurrentPage()}
+        <div className={cardClass} style={{ width: '100%' }}>
+          {pageContent[currentPage] ?? null}
+        </div>
       </div>
 
       {isAnimating && (
         <PageTurnAnimation
-          onComplete={handleAnimationComplete}
-          pageCount={5}
-          duration={800}
-          isSignup={true}
+          onComplete={() => setIsAnimating(false)}
+          pageCount={5} duration={800} isSignup={true}
         />
       )}
     </div>

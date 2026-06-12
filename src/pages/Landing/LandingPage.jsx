@@ -1,12 +1,30 @@
+import React, { Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Book, ArrowRight, ChevronDown } from 'lucide-react';
 import COLORS from '../../constants/colors';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import useBookshelf from '../../hooks/useBookshelf';
+import { selectIsAuthenticated } from '../../store/slices/authSlice';
+
+const BookshelfScene = React.lazy(() => import('../../components/Bookshelf/BookshelfScene'));
 
 /**
  * LandingPage — Professional landing page with animated background
+ * and a decorative 3D bookshelf in the hero section.
+ * Redirects authenticated users to the books page.
  */
 function LandingPage() {
   const navigate = useNavigate();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const { books } = useBookshelf();
+
+  // Redirect authenticated users to the interactive bookshelf page
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/books', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="w-full" style={{ backgroundColor: COLORS.background }}>
@@ -22,8 +40,15 @@ function LandingPage() {
           }}
         ></div>
 
+        {/* 3D Bookshelf — decorative, non-interactive, positioned behind hero content */}
+        <div className="absolute inset-0 z-0 opacity-60 pointer-events-none">
+          <Suspense fallback={<LoadingSpinner />}>
+            <BookshelfScene books={books} interactive={false} onBookSelect={() => {}} />
+          </Suspense>
+        </div>
+
         {/* Overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/75 to-black/70"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/75 to-black/70 z-[1]"></div>
 
         {/* Content */}
         <div className="relative z-10 max-w-3xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
@@ -133,7 +158,7 @@ function LandingPage() {
 
         {/* Scroll indicator */}
         <div
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer hover:scale-125 transition-transform"
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer hover:scale-125 transition-transform z-10"
           onClick={() => {
             document.querySelector('#cta-section')?.scrollIntoView({ behavior: 'smooth' });
           }}

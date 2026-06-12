@@ -1,8 +1,9 @@
-/* Auth3DBook - 3D Book-Turning Authentication Interface */
+/* ============================================================
+   Auth3DBook — Pixel-Perfect Dark Auth Interface
+   Font: Inter (loaded via index.html)
+   ============================================================ */
 
-/* ============================================
-   CONTAINER LAYOUT
-   ============================================ */
+/* ── VIEWPORT ────────────────────────────────────────────── */
 
 .auth3DBookContainer {
   display: flex;
@@ -10,329 +11,246 @@
   justify-content: center;
   min-height: 100vh;
   width: 100%;
-  padding: 0;
-  background-color: #0f0f0f;
+  background-color: #0a0a0a;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 24px 20px;
 }
 
 .bookViewport {
-  position: relative;
-  width: 100%;
-  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  width: 100%;
 }
 
-/* ============================================
-   LOGIN FLOW
-   ============================================ */
+/* ── LOGIN WRAPPER ───────────────────────────────────────── */
 
 .loginContainer {
+  width: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
 }
 
 .loginBook {
-  position: relative;
   width: 100%;
-  max-width: 500px;
-  aspect-ratio: 13 / 9;
-  perspective: 1200px;
+  max-width: 420px;
+  perspective: 1400px;
 }
 
-/* ============================================
-   SIGNUP FLOW
-   ============================================ */
+/* ── SIGNUP WRAPPER ──────────────────────────────────────── */
 
 .signupContainer {
+  width: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
 }
 
 .signupBook {
-  position: relative;
   width: 100%;
-  max-width: 700px;
-  aspect-ratio: 13 / 9;
-  perspective: 1200px;
+  max-width: 560px;
+  perspective: 1400px;
+  transform-style: preserve-3d;
 }
 
-/* ============================================
-   BOOK PAGES - SHARED
-   ============================================ */
+/* ── CARD BASE ───────────────────────────────────────────── */
 
 .bookPage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 40px 40px 36px;
+  gap: 0;
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 32px 80px rgba(0, 0, 0, 0.7);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top accent line */
+.bookPage::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 32px;
-  background-color: #1a1a1a;
-  border: 1px solid #3d3d3d;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 0.2s ease-in-out;
-  overflow-y: auto;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(92, 92, 143, 0.6) 35%,
+    rgba(212, 147, 62, 0.6) 65%,
+    transparent 100%
+  );
 }
 
-.bookPageHidden {
-  opacity: 0;
-  visibility: hidden;
-}
-
-/* ============================================
-   PAGE SPECIFIC STYLES
-   ============================================ */
-
-.emailPage {
-  gap: 24px;
-}
-
-.passwordPage {
-  gap: 24px;
-}
-
-.roleSelectionPage {
-  gap: 28px;
-}
-
-.formPage {
-  gap: 24px;
-}
-
-/* ============================================
-   PROGRESS INDICATOR
-   ============================================ */
+/* ── PROGRESS ────────────────────────────────────────────── */
 
 .progressContainer {
-  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 28px;
 }
 
 .progressBar {
   width: 100%;
-  height: 6px;
-  background-color: #3d3d3d;
-  border-radius: 3px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 2px;
   overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .progressFill {
   height: 100%;
   background: linear-gradient(90deg, #5c5c8f 0%, #d4933e 100%);
-  border-radius: 3px;
-  transition: width 0.3s ease-in-out;
-  box-shadow: 0 0 12px rgba(92, 92, 143, 0.4);
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(212, 147, 62, 0.4);
 }
 
-.progressText {
-  font-size: 11px;
-  color: #a8a8a8;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+.progressMeta {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-}
-
-.progressDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #3d3d3d;
-  transition: all 0.3s ease;
-}
-
-.progressDot.active {
-  background: linear-gradient(135deg, #5c5c8f 0%, #d4933e 100%);
-  box-shadow: 0 0 8px rgba(212, 147, 62, 0.5);
+  justify-content: space-between;
 }
 
 .progressDotContainer {
   display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-
-/* ============================================
-   PAGE ANIMATION - BOOK FLIP
-   ============================================ */
-
-/* ============================================
-   PAGE ANIMATION - BOOK FLIP
-   ============================================ */
-
-@keyframes bookFlipLeft {
-  0% {
-    transform: perspective(1200px) rotateY(0deg);
-    opacity: 1;
-  }
-  50% {
-    transform: perspective(1200px) rotateY(-90deg);
-    opacity: 0.5;
-  }
-  100% {
-    transform: perspective(1200px) rotateY(-180deg);
-    opacity: 1;
-  }
-}
-
-@keyframes pageFlipSignup {
-  0% {
-    transform: perspective(1200px) rotateY(0deg) scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: perspective(1200px) rotateY(-90deg) scale(0.95);
-    opacity: 0.3;
-  }
-  100% {
-    transform: perspective(1200px) rotateY(0deg) scale(1);
-    opacity: 1;
-  }
-}
-
-.bookFlip5 {
-  animation: bookFlipLeft 0.8s ease-in-out forwards;
-  will-change: transform;
-}
-
-.bookFlip8 {
-  animation: bookFlipLeft 0.9s ease-in-out forwards;
-  will-change: transform;
-}
-
-.bookFlip10 {
-  animation: bookFlipLeft 1.0s ease-in-out forwards;
-  will-change: transform;
-}
-
-.pageFlipSignupTransition {
-  animation: pageFlipSignup 0.5s ease-in-out forwards;
-  will-change: transform;
-}
-
-.pageAnimation {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
+  gap: 6px;
   align-items: center;
-  justify-content: center;
-  background-color: rgba(15, 15, 15, 0.95);
-  z-index: 9999;
-  perspective: 1200px;
 }
 
-.bookFlipContainer {
-  width: 500px;
-  aspect-ratio: 16 / 9;
-  perspective: 1200px;
+.progressDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.bookFlipContainer.signup {
-  width: 400px;
-  aspect-ratio: 9 / 16;
+.progressDot.active {
+  background: linear-gradient(135deg, #5c5c8f, #d4933e);
+  transform: scale(1.4);
+  box-shadow: 0 0 6px rgba(212, 147, 62, 0.5);
 }
 
-/* ============================================
-   FORM ELEMENTS
-   ============================================ */
+.progressText {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.25);
+  letter-spacing: 0.3px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── TYPOGRAPHY ──────────────────────────────────────────── */
+
+.pageHeading {
+  margin: 0 0 8px;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #f2f2f2;
+  line-height: 1.2;
+}
+
+.pageSubheading {
+  margin: 0 0 28px;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.35);
+  line-height: 1.5;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── FORM ELEMENTS ───────────────────────────────────────── */
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.formLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  font-family: 'Inter', sans-serif;
+}
 
 .formInput {
   width: 100%;
-  padding: 12px 16px;
-  background-color: #0f0f0f;
-  border: 1px solid #3d3d3d;
-  border-radius: 6px;
-  color: #e8e8e8;
+  padding: 11px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  color: #f0f0f0;
   font-size: 14px;
-  font-family: inherit;
-  transition: all 0.2s ease;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-weight: 400;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  -webkit-appearance: none;
+  line-height: 1.4;
+}
+
+.formInput::placeholder {
+  color: rgba(255, 255, 255, 0.16);
+  font-weight: 300;
 }
 
 .formInput:focus {
   outline: none;
-  border-color: #5c5c8f;
-  box-shadow: 0 0 0 3px rgba(92, 92, 143, 0.1);
+  border-color: rgba(212, 147, 62, 0.55);
+  background: rgba(255, 255, 255, 0.065);
+  box-shadow: 0 0 0 3px rgba(212, 147, 62, 0.09);
 }
 
 .formInput:disabled {
-  opacity: 0.6;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.formInput::placeholder {
-  color: #767676;
-}
-
 .formInputError {
-  border-color: #d48080;
-  box-shadow: 0 0 0 3px rgba(212, 128, 128, 0.1);
-}
-
-.formLabel {
-  display: block;
-  margin-bottom: 8px;
-  color: #e8e8e8;
-  font-size: 14px;
-  font-weight: 500;
+  border-color: rgba(212, 128, 128, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(212, 128, 128, 0.08) !important;
 }
 
 .formError {
-  margin-top: 6px;
   font-size: 12px;
   color: #d48080;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  margin-top: 2px;
 }
 
-.formField {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* ============================================
-   BUTTONS
-   ============================================ */
+/* ── BUTTONS ─────────────────────────────────────────────── */
 
 .formButton {
-  padding: 12px 24px;
+  width: 100%;
+  padding: 12px 20px;
   background: linear-gradient(135deg, #5c5c8f 0%, #d4933e 100%);
   border: none;
-  border-radius: 6px;
-  color: #0f0f0f;
+  border-radius: 9px;
+  color: #fff;
   font-size: 14px;
   font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.1px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   min-height: 44px;
   display: flex;
   align-items: center;
@@ -341,47 +259,51 @@
 }
 
 .formButton:hover:not(:disabled) {
-  box-shadow: 0 8px 24px rgba(92, 92, 143, 0.3);
-  transform: translateY(-2px);
+  opacity: 0.88;
+  box-shadow: 0 6px 20px rgba(92, 92, 143, 0.28);
+  transform: translateY(-1px);
 }
 
 .formButton:active:not(:disabled) {
   transform: translateY(0);
+  opacity: 1;
 }
 
 .formButton:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
+  transform: none;
 }
 
 .buttonGroup {
-  width: 100%;
   display: flex;
-  gap: 12px;
-  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .previousButton {
   flex: 1;
-  padding: 12px 20px;
-  background-color: #1a1a1a;
-  border: 1px solid #3d3d3d;
-  border-radius: 6px;
-  color: #e8e8e8;
+  padding: 12px 16px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.45);
   font-size: 14px;
   font-weight: 500;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   min-height: 44px;
 }
 
 .previousButton:hover:not(:disabled) {
-  background-color: #2a2a2a;
-  border-color: #5c5c8f;
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .previousButton:disabled {
-  opacity: 0.3;
+  opacity: 0.2;
   cursor: not-allowed;
 }
 
@@ -390,302 +312,266 @@
   padding: 12px 20px;
   background: linear-gradient(135deg, #5c5c8f 0%, #d4933e 100%);
   border: none;
-  border-radius: 6px;
-  color: #0f0f0f;
+  border-radius: 9px;
+  color: #fff;
   font-size: 14px;
   font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.1px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   min-height: 44px;
 }
 
 .nextButton:hover:not(:disabled) {
-  box-shadow: 0 8px 24px rgba(92, 92, 143, 0.3);
+  opacity: 0.88;
+  box-shadow: 0 6px 20px rgba(92, 92, 143, 0.25);
+  transform: translateY(-1px);
 }
 
 .nextButton:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
+  transform: none;
 }
 
-/* ============================================
-   HEADINGS & TEXT
-   ============================================ */
+/* ── DIVIDER ─────────────────────────────────────────────── */
 
-.pageHeading {
-  margin: 0;
-  color: #e8e8e8;
-  font-size: 28px;
-  font-weight: 700;
-  text-align: center;
+.divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 20px 0;
 }
 
-.pageSubheading {
-  margin: 0;
-  color: #a8a8a8;
-  font-size: 14px;
-  font-weight: 400;
-  text-align: center;
-}
-
-.pageIndicator {
-  font-size: 12px;
-  color: #a8a8a8;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.pageNumber {
-  display: block;
-  margin-bottom: 16px;
-  font-size: 12px;
-  color: #767676;
-  letter-spacing: 0.5px;
-}
-
-/* ============================================
-   LINKS
-   ============================================ */
+/* ── LINKS ───────────────────────────────────────────────── */
 
 .linkPrimary {
   color: #d4933e;
   text-decoration: none;
   font-weight: 500;
-  transition: opacity 0.2s ease;
+  font-size: 14px;
+  transition: opacity 0.15s ease;
   cursor: pointer;
   border: none;
   background: none;
-  font-size: 14px;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.linkPrimary:hover { opacity: 0.72; }
+
+.linkSecondary {
+  color: rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 400;
+  transition: color 0.15s ease;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  background: none;
+  border: none;
   padding: 0;
 }
 
-.linkPrimary:hover {
-  opacity: 0.8;
-  text-decoration: underline;
-}
+.linkSecondary:hover { color: rgba(255, 255, 255, 0.6); }
 
-.linkSecondary {
-  color: #a8a8a8;
-  text-decoration: none;
-  font-weight: 400;
+/* ── HELPER TEXT ─────────────────────────────────────────── */
+
+.helperText {
   font-size: 13px;
-  transition: color 0.2s ease;
-  cursor: pointer;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  margin-top: 20px;
 }
 
-.linkSecondary:hover {
-  color: #e8e8e8;
-}
+/* ── CHECKBOX ────────────────────────────────────────────── */
 
-/* ============================================
-   CHECKBOX
-   ============================================ */
-
-.checkboxContainer {
+.checkboxRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: 100%;
-  cursor: pointer;
+  gap: 10px;
+  margin-bottom: 4px;
 }
 
 .checkboxInput {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
   accent-color: #d4933e;
+  cursor: pointer;
+  border-radius: 4px;
 }
 
 .checkboxLabel {
-  color: #a8a8a8;
-  font-size: 14px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
   cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.4;
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+/* ── REVIEW SUMMARY CARD ─────────────────────────────────── */
 
-@media (max-width: 900px) {
-  .loginBook {
-    max-width: 90vw;
-  }
-
-  .signupBook {
-    max-width: 90vw;
-  }
-
-  .bookPage {
-    padding: 32px 24px;
-  }
-
-  .bookFlipContainer {
-    max-width: 90vw;
-  }
-
-  .bookFlipContainer.signup {
-    max-width: 90vw;
-  }
-}
-
-@media (max-width: 768px) {
-  .bookViewport {
-    padding: 16px;
-  }
-
-  .loginBook {
-    max-width: 100%;
-  }
-
-  .signupBook {
-    max-width: 100%;
-  }
-
-  .bookPage {
-    padding: 28px 20px;
-    border-radius: 10px;
-  }
-
-  .pageHeading {
-    font-size: 22px;
-    margin-bottom: 8px;
-  }
-
-  .pageSubheading {
-    font-size: 13px;
-  }
-
-  .formInput {
-    font-size: 16px; /* Prevent zoom on iOS */
-    padding: 12px 14px;
-  }
-
-  .formLabel {
-    font-size: 13px;
-  }
-
-  .formButton,
-  .nextButton,
-  .previousButton {
-    min-height: 44px;
-    font-size: 14px;
-  }
-
-  .buttonGroup {
-    gap: 10px;
-    margin-top: 16px;
-  }
-
-  .bookFlipContainer,
-  .bookFlipContainer.signup {
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .bookViewport {
-    padding: 12px;
-  }
-
-  .bookPage {
-    padding: 24px 16px;
-    border-radius: 8px;
-  }
-
-  .pageHeading {
-    font-size: 20px;
-  }
-
-  .pageSubheading {
-    font-size: 12px;
-  }
-
-  .formField {
-    width: 100%;
-  }
-
-  .formInput {
-    font-size: 16px;
-    padding: 11px 12px;
-  }
-
-  .formLabel {
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-
-  .formButton,
-  .nextButton,
-  .previousButton {
-    min-height: 42px;
-    font-size: 13px;
-    padding: 10px 16px;
-  }
-
-  .buttonGroup {
-    gap: 8px;
-  }
-
-  .pageNumber {
-    font-size: 10px;
-    margin-bottom: 12px;
-  }
-}
-
-/* ============================================
-   REDUCED MOTION
-   ============================================ */
-
-@media (prefers-reduced-motion: reduce) {
-  .bookFlip5,
-  .bookFlip8,
-  .bookFlip10 {
-    animation: none !important;
-    transform: perspective(1200px) rotateY(0deg);
-  }
-
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* ============================================
-   UTILITY CLASSES
-   ============================================ */
-
-.fullWidth {
+.summaryCard {
   width: 100%;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
-.centerContent {
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+}
+
+.summaryKey {
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+}
+
+.summaryVal {
+  color: #f0f0f0;
+  font-weight: 500;
+  text-align: right;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summaryDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ── STEP ROTATION ANIMATION ─────────────────────────────── */
+
+/*
+ * Two-phase approach:
+ *   rotateOut* — spins card to 90° (content disappears)
+ *   rotateIn*  — spins card from 90° back to 0° (new content appears)
+ * Each phase runs for HALF_MS (220ms in JS).
+ */
+
+@keyframes rotateOutForward {
+  from { transform: perspective(1400px) rotateY(0deg);   opacity: 1; }
+  to   { transform: perspective(1400px) rotateY(-90deg); opacity: 0; }
+}
+
+@keyframes rotateInForward {
+  from { transform: perspective(1400px) rotateY(90deg);  opacity: 0; }
+  to   { transform: perspective(1400px) rotateY(0deg);   opacity: 1; }
+}
+
+@keyframes rotateOutBack {
+  from { transform: perspective(1400px) rotateY(0deg);  opacity: 1; }
+  to   { transform: perspective(1400px) rotateY(90deg); opacity: 0; }
+}
+
+@keyframes rotateInBack {
+  from { transform: perspective(1400px) rotateY(-90deg); opacity: 0; }
+  to   { transform: perspective(1400px) rotateY(0deg);   opacity: 1; }
+}
+
+.rotateOutForward {
+  animation: rotateOutForward 220ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.rotateInForward {
+  animation: rotateInForward 220ms cubic-bezier(0, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.rotateOutBack {
+  animation: rotateOutBack 220ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.rotateInBack {
+  animation: rotateInBack 220ms cubic-bezier(0, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Legacy aliases — kept for PageTurnAnimation overlay */
+.pageFlipForward { animation: rotateOutForward 220ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+.pageFlipBack    { animation: rotateOutBack    220ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+.pageFlipSignupTransition { animation: rotateOutForward 220ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+
+/* ── LOGIN BOOK-FLIP OVERLAY ANIMATION ───────────────────── */
+
+@keyframes bookFlipLeft {
+  0%   { transform: perspective(1400px) rotateY(0deg);    opacity: 1;   }
+  42%  { transform: perspective(1400px) rotateY(-90deg);  opacity: 0.2; }
+  58%  { transform: perspective(1400px) rotateY(-90deg);  opacity: 0.2; }
+  100% { transform: perspective(1400px) rotateY(-180deg); opacity: 1;   }
+}
+
+.bookFlip5  { animation: bookFlipLeft 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards; will-change: transform; }
+.bookFlip8  { animation: bookFlipLeft 0.8s  cubic-bezier(0.4, 0, 0.2, 1) forwards; will-change: transform; }
+.bookFlip10 { animation: bookFlipLeft 0.95s cubic-bezier(0.4, 0, 0.2, 1) forwards; will-change: transform; }
+
+.pageAnimation {
+  position: fixed;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(10, 10, 10, 0.97);
+  z-index: 9999;
 }
 
-.gap16 {
-  gap: 16px;
+.bookFlipContainer {
+  width: 420px;
+  aspect-ratio: 4 / 3;
+  perspective: 1400px;
 }
 
-.gap24 {
-  gap: 24px;
+.bookFlipContainer.signup {
+  width: 560px;
+  aspect-ratio: 16 / 10;
 }
 
-.textCenter {
-  text-align: center;
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .auth3DBookContainer { padding: 16px; }
+
+  .loginBook  { max-width: 100%; }
+  .signupBook { max-width: 100%; }
+
+  .bookPage {
+    padding: 32px 24px 28px;
+    border-radius: 14px;
+  }
+
+  .pageHeading { font-size: 21px; }
+  .formInput   { font-size: 16px; } /* prevent iOS zoom */
+
+  .buttonGroup { flex-direction: column; }
+  .previousButton,
+  .nextButton { flex: unset; width: 100%; }
 }
 
-.mt12 {
-  margin-top: 12px;
-}
+/* ── REDUCED MOTION ──────────────────────────────────────── */
 
-.mt16 {
-  margin-top: 16px;
-}
-
-.mt20 {
-  margin-top: 20px;
+@media (prefers-reduced-motion: reduce) {
+  .bookFlip5, .bookFlip8, .bookFlip10,
+  .pageFlipForward, .pageFlipBack, .pageFlipSignupTransition,
+  .rotateOutForward, .rotateInForward, .rotateOutBack, .rotateInBack {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
