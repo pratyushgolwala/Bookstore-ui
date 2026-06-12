@@ -185,3 +185,96 @@ export function createWoodBumpMap(width = 512, height = 256) {
   texture.repeat.set(2, 1);
   return texture;
 }
+
+/**
+ * Generates a procedural brick wall texture.
+ * Used as the bookshelf backdrop for a warm, rustic library feel.
+ *
+ * @param {number} width
+ * @param {number} height
+ * @returns {THREE.CanvasTexture}
+ */
+export function createBrickTexture(width = 512, height = 512) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  // Mortar background (dark gray)
+  ctx.fillStyle = '#2a2422';
+  ctx.fillRect(0, 0, width, height);
+
+  const brickH = 36;
+  const brickW = 96;
+  const mortar = 6;
+  const rows = Math.ceil(height / (brickH + mortar));
+  const cols = Math.ceil(width / (brickW + mortar)) + 1;
+
+  // Brick base palette — warm, aged reds/browns
+  const brickColors = ['#5c3a2e', '#6b4233', '#4a2f25', '#71452f', '#553228'];
+
+  for (let row = 0; row < rows; row += 1) {
+    const offset = row % 2 === 0 ? 0 : -(brickW + mortar) / 2;
+    for (let col = -1; col < cols; col += 1) {
+      const x = col * (brickW + mortar) + offset + mortar / 2;
+      const y = row * (brickH + mortar) + mortar / 2;
+
+      const base = brickColors[(row * 31 + col * 17) % brickColors.length];
+      ctx.fillStyle = base;
+      ctx.fillRect(x, y, brickW, brickH);
+
+      // Subtle per-brick shading gradient
+      const grad = ctx.createLinearGradient(x, y, x, y + brickH);
+      grad.addColorStop(0, 'rgba(255,255,255,0.06)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.18)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, brickW, brickH);
+
+      // Speckle noise for weathered look
+      for (let i = 0; i < 40; i += 1) {
+        const sx = x + Math.random() * brickW;
+        const sy = y + Math.random() * brickH;
+        ctx.fillStyle = Math.random() > 0.5
+          ? 'rgba(0,0,0,0.12)'
+          : 'rgba(255,235,205,0.05)';
+        ctx.fillRect(sx, sy, 1.5, 1.5);
+      }
+    }
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(3, 3);
+  return texture;
+}
+
+/**
+ * Loads an external brick texture from a CDN with a procedural fallback.
+ * Returns the texture immediately (procedural) and swaps in the high-res
+ * image when it loads via the onLoaded callback.
+ *
+ * @param {(tex: THREE.Texture) => void} [onLoaded]
+ * @returns {THREE.Texture} immediate procedural texture
+ */
+export function loadBrickTexture(onLoaded) {
+  const fallback = createBrickTexture();
+  const url =
+    'https://threejs.org/examples/textures/brick_diffuse.jpg';
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin('anonymous');
+  loader.load(
+    url,
+    (tex) => {
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(6, 6);
+      if (onLoaded) onLoaded(tex);
+    },
+    undefined,
+    () => {
+      /* keep procedural fallback on error */
+    }
+  );
+  return fallback;
+}

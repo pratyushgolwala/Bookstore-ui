@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { configureStore } from '@reduxjs/toolkit';
+import { Provider } from 'react-redux';
+import React from 'react';
 import BookshelfErrorBoundary from '../BookshelfErrorBoundary';
+import cartReducer from '../../../store/slices/cartSlice';
 
 // A child component that throws an error on render
 function ThrowingChild() {
@@ -25,6 +29,12 @@ const mockBooks = [
   },
 ];
 
+/** Render helper that wraps children in a Redux Provider (BookCard needs it). */
+function renderWithStore(ui) {
+  const store = configureStore({ reducer: { cart: cartReducer } });
+  return render(<Provider store={store}>{ui}</Provider>);
+}
+
 describe('BookshelfErrorBoundary', () => {
   beforeEach(() => {
     // Suppress console.error output during tests
@@ -32,7 +42,7 @@ describe('BookshelfErrorBoundary', () => {
   });
 
   it('renders children when there is no error', () => {
-    render(
+    renderWithStore(
       <BookshelfErrorBoundary books={mockBooks} onBookSelect={() => {}}>
         <HappyChild />
       </BookshelfErrorBoundary>
@@ -42,20 +52,20 @@ describe('BookshelfErrorBoundary', () => {
   });
 
   it('renders FallbackGrid when a child throws an error', () => {
-    render(
+    renderWithStore(
       <BookshelfErrorBoundary books={mockBooks} onBookSelect={() => {}}>
         <ThrowingChild />
       </BookshelfErrorBoundary>
     );
 
-    // FallbackGrid renders a region with "Book catalog" label
+    // FallbackGrid renders a region labeled "Book catalog"
     expect(screen.getByRole('region', { name: 'Book catalog' })).toBeInTheDocument();
     // Should show the book from mockBooks
     expect(screen.getByText('Test Book')).toBeInTheDocument();
   });
 
   it('logs the error to console.error', () => {
-    render(
+    renderWithStore(
       <BookshelfErrorBoundary books={mockBooks} onBookSelect={() => {}}>
         <ThrowingChild />
       </BookshelfErrorBoundary>
@@ -71,16 +81,16 @@ describe('BookshelfErrorBoundary', () => {
   it('passes onBookSelect to FallbackGrid on error', () => {
     const onBookSelect = vi.fn();
 
-    render(
+    renderWithStore(
       <BookshelfErrorBoundary books={mockBooks} onBookSelect={onBookSelect}>
         <ThrowingChild />
       </BookshelfErrorBoundary>
     );
 
-    // Click the book card in the fallback grid
-    const bookButton = screen.getByRole('button', { name: /View details for Test Book/i });
-    bookButton.click();
+    // Click the book card (title text) in the fallback grid
+    screen.getByText('Test Book').click();
 
     expect(onBookSelect).toHaveBeenCalledWith(mockBooks[0]);
   });
 });
+
