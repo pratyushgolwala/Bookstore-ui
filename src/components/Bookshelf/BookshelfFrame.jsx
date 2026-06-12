@@ -12,8 +12,8 @@ import { createWoodTexture, createWoodBumpMap } from '../../utils/textureGenerat
  * @param {number} props.rowDepth - Depth of the shelf
  */
 function BookshelfFrame({ width, rowCount, rowHeight, rowDepth }) {
-  const wood = useMemo(() => createWoodTexture(512, 256, '#3a2718', '#241606'), []);
-  const woodDark = useMemo(() => createWoodTexture(512, 256, '#2c1d12', '#1a1008'), []);
+  const wood = useMemo(() => createWoodTexture(512, 256, '#6B4226', '#4A2F1A'), []);
+  const woodDark = useMemo(() => createWoodTexture(512, 256, '#5C3A22', '#3D2515'), []);
   const bump = useMemo(() => createWoodBumpMap(), []);
 
   const frameThickness = 0.35;
@@ -29,7 +29,7 @@ function BookshelfFrame({ width, rowCount, rowHeight, rowDepth }) {
     bumpScale: 0.03,
     roughness: 0.78,
     metalness: 0.04,
-    color: '#5a3d1f',
+    color: '#8B6340',
   };
 
   return (
@@ -43,7 +43,7 @@ function BookshelfFrame({ width, rowCount, rowHeight, rowDepth }) {
           bumpScale={0.02}
           roughness={0.85}
           metalness={0.03}
-          color="#3a2718"
+          color="#5C3A22"
         />
       </mesh>
 

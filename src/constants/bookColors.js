@@ -1,26 +1,27 @@
 /**
  * Spine color palette for the 3D bookshelf.
- * Colors chosen to match the dark library theme:
- * - Deep indigo/navy (primary palette)
- * - Warm gold/amber (secondary palette)
- * - Copper/rose (accent palette)
- * - Dark earth tones (vintage leather)
+ * Brighter, more saturated colors so books are clearly visible
+ * against the dark shelf back panel and lit from the front.
  */
 export const SPINE_COLORS = [
-  '#2d2d54', // Deep Indigo (primary-200)
-  '#5a3d14', // Dark Amber (secondary-100)
-  '#4a4a7a', // Muted Indigo (primary-400)
-  '#5a3434', // Deep Copper (accent-100)
-  '#363666', // Royal Indigo (primary-300)
-  '#875c1f', // Warm Bronze (secondary-200)
-  '#2d1a1a', // Dark Burgundy (accent-50)
-  '#1E3A5F', // Deep Navy
-  '#b47a29', // Rich Gold (secondary-300)
-  '#874d4d', // Weathered Rose (accent-200)
-  '#252541', // Midnight Indigo (primary-100)
-  '#704214', // Antique Brown
-  '#5c5c8f', // Soft Indigo (primary-500)
-  '#3D2817', // Dark Walnut
-  '#d4933e', // Gold Accent (secondary-400)
-  '#4A3728', // Espresso
+  '#7B68EE', // Medium Slate Blue
+  '#CD853F', // Peru (warm tan)
+  '#8B0000', // Dark Red
+  '#2E8B57', // Sea Green
+  '#4682B4', // Steel Blue
+  '#DAA520', // Goldenrod
+  '#6A5ACD', // Slate Blue
+  '#D2691E', // Chocolate
+  '#5F9EA0', // Cadet Blue
+  '#B22222', // Firebrick
+  '#9370DB', // Medium Purple
+  '#8FBC8F', // Dark Sea Green
+  '#BC8F8F', // Rosy Brown
+  '#4169E1', // Royal Blue
+  '#D2B48C', // Tan
+  '#708090', // Slate Gray
+  '#CD5C5C', // Indian Red
+  '#6B8E23', // Olive Drab
+  '#9932CC', // Dark Orchid
+  '#F4A460', // Sandy Brown
 ];
