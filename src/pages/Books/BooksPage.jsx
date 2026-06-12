@@ -44,8 +44,8 @@ function BooksPage() {
     >
       {/* Header */}
       <div
-        className="sticky top-0 z-20 px-6 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b backdrop-blur"
-        style={{ backgroundColor: `${COLORS.background}e6`, borderColor: COLORS.border }}
+        className="sticky z-20 px-6 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b backdrop-blur"
+        style={{ top: '90px', backgroundColor: `${COLORS.background}e6`, borderColor: COLORS.border }}
       >
         <div className="flex items-center gap-3">
           <BookMarked style={{ color: COLORS.secondary[500] }} size={26} />
