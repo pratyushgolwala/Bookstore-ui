@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 /**
- * cartSlice — Phase 0 placeholder.
- * TODO: Add addItem, removeItem, updateQuantity, clearCart, and checkout thunk.
+ * cartSlice — Manages shopping cart state.
+ * Supports adding items (with duplicate detection), removing items, and clearing the cart.
  */
 const initialState = {
   items:   [],
@@ -14,9 +14,14 @@ const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    // TODO: Implement cart reducers
     addItem(state, action) {
-      state.items.push(action.payload);
+      const { id, title, price, quantity = 1 } = action.payload;
+      const existingItem = state.items.find((item) => item.id === id);
+      if (existingItem) {
+        existingItem.quantity += quantity;
+      } else {
+        state.items.push({ id, title, price, quantity });
+      }
     },
     removeItem(state, action) {
       state.items = state.items.filter((item) => item.id !== action.payload);
