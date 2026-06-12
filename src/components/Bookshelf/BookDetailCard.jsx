@@ -1,116 +1,147 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { X, ShoppingCart, Check, BookOpen, Globe, Calendar, Package } from 'lucide-react';
 import { addItem } from '../../store/slices/cartSlice';
+import { formatCurrency } from '../../utils/formatters';
+import COLORS from '../../constants/colors';
+import Badge from '../ui/Badge';
 
 /**
- * BookDetailCard — An HTML overlay displaying book details above the 3D canvas.
- * Shows title, author, price, cover image, category, and an "Add to Cart" button.
- * Closes on outside click (mousedown) or Escape key press.
- *
- * @param {{ book: object, onClose: () => void }} props
- * @param {object} props.book - Book object with id, title, author, price, coverImageUrl, category
- * @param {function} props.onClose - Callback to close the detail card
+ * BookDetailCard — a polished modal overlay showing full book details.
+ * Closes on outside click or Escape. Matches the dark library theme.
  */
 export default function BookDetailCard({ book, onClose }) {
   const dispatch = useDispatch();
   const cardRef = useRef(null);
+  const [added, setAdded] = useState(false);
 
-  const handleAddToCart = useCallback(() => {
-    dispatch(
-      addItem({
-        id: book.id,
-        title: book.title,
-        price: book.price,
-        quantity: 1,
-      })
-    );
-  }, [dispatch, book]);
+  const handleAddToCart = () => {
+    dispatch(addItem({ id: book.id, title: book.title, price: book.price, quantity: 1 }));
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
+  };
 
-  // Close on Escape key
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+    const onKey = (e) => e.key === 'Escape' && onClose();
+    const onDown = (e) => {
+      if (cardRef.current && !cardRef.current.contains(e.target)) onClose();
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
-  // Close on outside click (mousedown)
-  useEffect(() => {
-    const handleMouseDown = (e) => {
-      if (cardRef.current && !cardRef.current.contains(e.target)) {
-        onClose();
-      }
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onDown);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onDown);
     };
-    document.addEventListener('mousedown', handleMouseDown);
-    return () => document.removeEventListener('mousedown', handleMouseDown);
   }, [onClose]);
 
   if (!book) return null;
 
+  const inStock = (book.stock ?? 0) > 0;
+
   return (
     <div
-      ref={cardRef}
-      role="dialog"
-      aria-label={`Book details for ${book.title}`}
-      className="absolute z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-        max-w-sm w-full bg-white rounded-xl shadow-2xl border border-gray-200
-        p-6 flex flex-col items-center gap-4
-        max-h-[90vh] overflow-y-auto"
+      className="absolute inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
     >
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        aria-label="Close book details"
-        className="absolute top-3 right-3 text-gray-400 hover:text-gray-700
-          w-8 h-8 flex items-center justify-center rounded-full
-          hover:bg-gray-100 transition-colors"
+      <div
+        ref={cardRef}
+        role="dialog"
+        aria-label={`Book details for ${book.title}`}
+        className="relative w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[88vh]"
+        style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
       >
-        ✕
-      </button>
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+          style={{ backgroundColor: COLORS.surfaceLight, color: COLORS.text.secondary }}
+        >
+          <X size={18} />
+        </button>
 
-      {/* Cover image */}
-      <img
-        src={book.coverImageUrl}
-        alt={`Cover of ${book.title}`}
-        className="w-32 h-48 object-cover rounded-lg shadow-md"
-        onError={(e) => {
-          e.target.src = 'https://picsum.photos/200/300?grayscale';
-        }}
-      />
+        {/* Cover */}
+        <div
+          className="md:w-2/5 flex items-center justify-center p-6"
+          style={{ background: COLORS.gradient.dark }}
+        >
+          <img
+            src={book.coverImageUrl}
+            alt={`Cover of ${book.title}`}
+            className="w-44 h-64 object-cover rounded-lg shadow-2xl"
+            onError={(e) => {
+              e.target.src = `https://picsum.photos/seed/${encodeURIComponent(book.id)}/240/360`;
+            }}
+          />
+        </div>
 
-      {/* Category badge */}
-      <span className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary-900 bg-primary-50 rounded-full">
-        {book.category}
-      </span>
+        {/* Details */}
+        <div className="md:w-3/5 p-6 overflow-y-auto flex flex-col gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            {book.category && <Badge variant="secondary">{book.category}</Badge>}
+            <Badge variant={inStock ? 'success' : 'neutral'}>
+              {inStock ? 'In Stock' : 'Out of Stock'}
+            </Badge>
+          </div>
 
-      {/* Title */}
-      <h2 className="text-xl font-bold text-gray-900 text-center leading-tight">
-        {book.title}
-      </h2>
+          <h2 className="text-2xl font-bold leading-tight" style={{ color: COLORS.text.primary }}>
+            {book.title}
+          </h2>
+          <p className="text-sm" style={{ color: COLORS.text.secondary }}>
+            by <span style={{ color: COLORS.secondary[500] }}>{book.author}</span>
+          </p>
 
-      {/* Author */}
-      <p className="text-sm text-gray-600">
-        by {book.author}
-      </p>
+          {book.description && (
+            <p className="text-sm leading-relaxed line-clamp-4" style={{ color: COLORS.text.secondary }}>
+              {book.description}
+            </p>
+          )}
 
-      {/* Price */}
-      <p className="text-2xl font-bold text-primary-500">
-        ${typeof book.price === 'number' ? book.price.toFixed(2) : book.price}
-      </p>
+          {/* Meta grid */}
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            {book.publishedYear && (
+              <Meta icon={<Calendar size={15} />} label="Published" value={book.publishedYear} />
+            )}
+            {book.language && (
+              <Meta icon={<Globe size={15} />} label="Language" value={book.language.toUpperCase()} />
+            )}
+            {book.pageCount && (
+              <Meta icon={<BookOpen size={15} />} label="Pages" value={book.pageCount} />
+            )}
+            <Meta icon={<Package size={15} />} label="Stock" value={book.stock ?? 0} />
+          </div>
 
-      {/* Add to Cart button */}
-      <button
-        onClick={handleAddToCart}
-        aria-label={`Add ${book.title} to cart`}
-        className="w-full py-3 px-6 bg-primary-500 hover:bg-primary-900
-          text-white font-semibold rounded-lg transition-colors
-          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-      >
-        Add to Cart
-      </button>
+          <div className="mt-auto pt-4 flex items-center justify-between gap-4">
+            <span className="text-3xl font-bold" style={{ color: COLORS.secondary[500] }}>
+              {formatCurrency(book.price)}
+            </span>
+            <button
+              onClick={handleAddToCart}
+              disabled={!inStock}
+              className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: COLORS.gradient.primary, color: COLORS.text.inverse }}
+            >
+              {added ? <Check size={18} /> : <ShoppingCart size={18} />}
+              {added ? 'Added!' : 'Add to Cart'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Meta({ icon, label, value }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span style={{ color: COLORS.primary[600] }}>{icon}</span>
+      <div className="flex flex-col">
+        <span className="text-[10px] uppercase tracking-wide" style={{ color: COLORS.text.tertiary }}>
+          {label}
+        </span>
+        <span className="text-sm font-medium" style={{ color: COLORS.text.primary }}>
+          {value}
+        </span>
+      </div>
     </div>
   );
 }

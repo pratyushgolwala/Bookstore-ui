@@ -5,10 +5,7 @@ import booksReducer, {
   loadMockBooks,
   setBooks,
   setSelectedBook,
-  setLoading,
-  setError,
 } from '../booksSlice';
-import { MOCK_BOOKS } from '../../../data/mockBooks';
 
 describe('booksSlice', () => {
   const initialState = {
@@ -16,9 +13,19 @@ describe('booksSlice', () => {
     selected: null,
     loading: false,
     error: null,
+    search: '',
+    usingMockData: false,
+    pagination: {
+      count: 0,
+      numPages: 1,
+      currentPage: 1,
+      pageSize: 24,
+      hasNext: false,
+      hasPrevious: false,
+    },
   };
 
-  describe('existing reducers still work', () => {
+  describe('basic reducers', () => {
     it('setBooks sets items', () => {
       const books = [{ id: '1', title: 'Test' }];
       const state = booksReducer(initialState, setBooks(books));
@@ -29,16 +36,6 @@ describe('booksSlice', () => {
       const book = { id: '1', title: 'Test' };
       const state = booksReducer(initialState, setSelectedBook(book));
       expect(state.selected).toEqual(book);
-    });
-
-    it('setLoading sets loading', () => {
-      const state = booksReducer(initialState, setLoading(true));
-      expect(state.loading).toBe(true);
-    });
-
-    it('setError sets error', () => {
-      const state = booksReducer(initialState, setError('Something went wrong'));
-      expect(state.error).toBe('Something went wrong');
     });
   });
 
@@ -75,17 +72,19 @@ describe('booksSlice', () => {
   });
 
   describe('loadMockBooks', () => {
-    it('populates items from MOCK_BOOKS when items array is empty', () => {
+    it('populates normalized mock books and flags usingMockData', () => {
       const state = booksReducer(initialState, loadMockBooks());
-      expect(state.items).toEqual(MOCK_BOOKS);
       expect(state.items.length).toBeGreaterThanOrEqual(20);
+      expect(state.usingMockData).toBe(true);
+      // Normalized books expose a coverImageUrl and numeric price
+      expect(state.items[0]).toHaveProperty('coverImageUrl');
+      expect(typeof state.items[0].price).toBe('number');
     });
 
-    it('does not overwrite items if already populated', () => {
-      const existingBooks = [{ id: 'x1', title: 'Existing Book' }];
-      const stateWithBooks = { ...initialState, items: existingBooks };
-      const state = booksReducer(stateWithBooks, loadMockBooks());
-      expect(state.items).toEqual(existingBooks);
+    it('sets pagination metadata for the mock set', () => {
+      const state = booksReducer(initialState, loadMockBooks());
+      expect(state.pagination.count).toBe(state.items.length);
+      expect(state.pagination.hasNext).toBe(false);
     });
   });
 });

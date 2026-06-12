@@ -1,70 +1,78 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 import { computeSpineThickness, assignSpineColor } from '../../utils/bookshelfUtils.js';
 import { createSpineTexture } from '../../utils/textureGenerators.js';
 
 /**
- * Creates a rounded spine shape using an extruded geometry.
- * The spine is the curved left edge of the book — makes it look like a real bound book.
+ * Rounded-rectangle cross-section for the book, so the spine edge facing the
+ * viewer has a soft curve like a real bound book.
  */
-function createSpineGeometry(thickness, height, radius) {
+function roundedRectShape(w, h, r) {
   const shape = new THREE.Shape();
-  // Create a rounded rectangle for the spine cross-section
-  const w = thickness;
-  const h = height;
-  const r = radius;
-
-  shape.moveTo(-w / 2 + r, -h / 2);
-  shape.lineTo(w / 2 - r, -h / 2);
-  shape.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
-  shape.lineTo(w / 2, h / 2 - r);
-  shape.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
-  shape.lineTo(-w / 2 + r, h / 2);
-  shape.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
-  shape.lineTo(-w / 2, -h / 2 + r);
-  shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
-
+  const rad = Math.min(r, w / 2, h / 2);
+  shape.moveTo(-w / 2 + rad, -h / 2);
+  shape.lineTo(w / 2 - rad, -h / 2);
+  shape.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + rad);
+  shape.lineTo(w / 2, h / 2 - rad);
+  shape.quadraticCurveTo(w / 2, h / 2, w / 2 - rad, h / 2);
+  shape.lineTo(-w / 2 + rad, h / 2);
+  shape.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - rad);
+  shape.lineTo(-w / 2, -h / 2 + rad);
+  shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + rad, -h / 2);
   return shape;
 }
 
 /**
- * BookSpine — A realistic 3D book model with:
- * - Rounded spine edge (extruded shape)
- * - Separate front/back covers with slight overhang
- * - Visible page block (cream-colored, inset from covers)
- * - Headband detail at top and bottom
- * - Gold foil title on spine
+ * BookSpine — a book standing on a shelf, SPINE FACING THE VIEWER (+Z).
+ *
+ * Dimensions:
+ *   - thickness (X): how wide the spine is (from page count)
+ *   - height   (Y): the book's height
+ *   - depth    (Z): how deep the book sits into the shelf
+ *
+ * On hover the book eases forward and outward and the spine title glows gold.
  */
 function BookSpine({ book, index, position, interactive, onSelect }) {
   const [hovered, setHovered] = useState(false);
+  const groupRef = useRef();
 
-  const thickness = computeSpineThickness(book.pageCount);
-  const baseHeight = 2;
-  const depth = 1.2;
+  const thickness = computeSpineThickness(book.pageCount); // X
+  const depth = 1.15; // Z — into the shelf
   const color = assignSpineColor(index);
 
-  // Slight height variation per book
-  const height = baseHeight + (book.pageCount % 7) * 0.03 - 0.1;
-
-  // Cover overhang beyond the pages
-  const coverOverhang = 0.02;
-  const coverThickness = 0.035;
-  const pageInset = 0.04; // Pages are slightly inset from the cover edges
-  const spineRadius = thickness * 0.3; // Rounded spine curve
+  // Slight per-book height variation for realism
+  const height = 1.9 + (book.pageCount % 9) * 0.035;
 
   const spineTexture = useMemo(() => createSpineTexture(128, 256, color), [color]);
 
-  // Create extruded spine geometry
-  const spineGeo = useMemo(() => {
-    const shape = createSpineGeometry(thickness, height, Math.min(spineRadius, 0.08));
-    const extrudeSettings = {
+  // Extruded body with a rounded spine edge (extrudes along Z = depth)
+  const bodyGeo = useMemo(() => {
+    const shape = roundedRectShape(thickness, height, Math.min(thickness * 0.18, 0.06));
+    return new THREE.ExtrudeGeometry(shape, {
       steps: 1,
-      depth: coverThickness,
-      bevelEnabled: false,
-    };
-    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  }, [thickness, height, spineRadius]);
+      depth,
+      bevelEnabled: true,
+      bevelThickness: 0.015,
+      bevelSize: 0.015,
+      bevelSegments: 2,
+    });
+  }, [thickness, height, depth]);
+
+  // Smoothly animate hover pop-forward
+  const targetZ = hovered ? 0.45 : 0;
+  useFrame(() => {
+    if (!groupRef.current) return;
+    groupRef.current.position.z = THREE.MathUtils.lerp(
+      groupRef.current.position.z,
+      position[2] + targetZ,
+      0.15
+    );
+    const s = hovered ? 1.05 : 1;
+    groupRef.current.scale.x = THREE.MathUtils.lerp(groupRef.current.scale.x, s, 0.15);
+    groupRef.current.scale.y = THREE.MathUtils.lerp(groupRef.current.scale.y, s, 0.15);
+  });
 
   const handlePointerOver = (e) => {
     if (!interactive) return;
@@ -72,149 +80,83 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
     setHovered(true);
     document.body.style.cursor = 'pointer';
   };
-
   const handlePointerOut = (e) => {
     if (!interactive) return;
     e.stopPropagation();
     setHovered(false);
     document.body.style.cursor = 'auto';
   };
-
   const handleClick = (e) => {
     if (!interactive) return;
     e.stopPropagation();
     onSelect(book);
   };
 
-  // Darken/lighten color for cover variation
-  const coverColor = color;
-  const pageColor = '#f5f0e6';
-  const headbandColor = '#d4933e'; // Gold accent
+  const pageColor = '#efe7d6';
+  const headbandColor = '#d4933e';
+
+  // Truncate very long titles for the spine
+  const spineTitle =
+    book.title.length > 32 ? `${book.title.slice(0, 30)}…` : book.title;
 
   return (
-    <group
-      position={position}
-      scale={hovered ? [1.04, 1.04, 1.04] : [1, 1, 1]}
-      onPointerOver={handlePointerOver}
-      onPointerOut={handlePointerOut}
-      onClick={handleClick}
-    >
-      {/* === SPINE (rounded left edge) === */}
+    <group position={position} ref={groupRef}>
+      {/* Book body — spine faces +Z (viewer), extruded toward -Z into shelf */}
       <mesh
-        position={[-thickness / 2 + coverThickness / 2, 0, 0]}
-        rotation={[0, Math.PI / 2, 0]}
+        position={[0, 0, -depth / 2]}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+        onClick={handleClick}
       >
-        <primitive object={spineGeo} attach="geometry" />
+        <primitive object={bodyGeo} attach="geometry" />
         <meshStandardMaterial
           map={spineTexture}
-          color={coverColor}
-          roughness={0.6}
-          metalness={0.05}
+          color={color}
+          roughness={0.62}
+          metalness={0.06}
           emissive={hovered ? '#d4933e' : '#000000'}
-          emissiveIntensity={hovered ? 0.2 : 0}
+          emissiveIntensity={hovered ? 0.22 : 0}
         />
       </mesh>
 
-      {/* === FRONT COVER === */}
-      <mesh position={[0, 0, depth / 2 - coverThickness / 2]}>
-        <boxGeometry args={[thickness, height + coverOverhang * 2, coverThickness]} />
-        <meshStandardMaterial
-          color={coverColor}
-          roughness={0.55}
-          metalness={0.08}
-          emissive={hovered ? '#d4933e' : '#000000'}
-          emissiveIntensity={hovered ? 0.15 : 0}
-        />
+      {/* Page block on the back side (inside shelf), cream colored */}
+      <mesh position={[0, 0, -depth - 0.001]}>
+        <boxGeometry args={[thickness * 0.86, height * 0.96, 0.04]} />
+        <meshStandardMaterial color={pageColor} roughness={0.95} metalness={0} />
       </mesh>
 
-      {/* === BACK COVER === */}
-      <mesh position={[0, 0, -depth / 2 + coverThickness / 2]}>
-        <boxGeometry args={[thickness, height + coverOverhang * 2, coverThickness]} />
-        <meshStandardMaterial
-          color={coverColor}
-          roughness={0.55}
-          metalness={0.08}
-          emissive={hovered ? '#d4933e' : '#000000'}
-          emissiveIntensity={hovered ? 0.15 : 0}
-        />
+      {/* Headbands at top & bottom of the spine */}
+      <mesh position={[0, height / 2 - 0.04, 0.02]}>
+        <boxGeometry args={[thickness * 0.9, 0.05, 0.05]} />
+        <meshStandardMaterial color={headbandColor} roughness={0.4} metalness={0.25} />
+      </mesh>
+      <mesh position={[0, -height / 2 + 0.04, 0.02]}>
+        <boxGeometry args={[thickness * 0.9, 0.05, 0.05]} />
+        <meshStandardMaterial color={headbandColor} roughness={0.4} metalness={0.25} />
       </mesh>
 
-      {/* === PAGE BLOCK (cream-colored, inset) === */}
-      <mesh position={[pageInset / 2, 0, 0]}>
-        <boxGeometry args={[
-          thickness - pageInset * 2,
-          height - 0.02,
-          depth - coverThickness * 2 - 0.01
-        ]} />
-        <meshStandardMaterial
-          color={pageColor}
-          roughness={0.95}
-          metalness={0}
-        />
+      {/* Decorative gold band near the top of the spine */}
+      <mesh position={[0, height * 0.28, 0.07]}>
+        <boxGeometry args={[thickness * 0.8, 0.02, 0.02]} />
+        <meshStandardMaterial color="#d4933e" roughness={0.35} metalness={0.4} />
       </mesh>
 
-      {/* === TOP PAGE EDGES (visible from above) === */}
-      <mesh position={[pageInset / 2, height / 2, 0]}>
-        <boxGeometry args={[
-          thickness - pageInset * 2,
-          0.015,
-          depth - coverThickness * 2 - 0.02
-        ]} />
-        <meshStandardMaterial color="#ede8db" roughness={1} metalness={0} />
-      </mesh>
-
-      {/* === HEADBAND (colored strip at top of spine) === */}
-      <mesh position={[-thickness / 2 + 0.02, height / 2 - 0.01, 0]}>
-        <boxGeometry args={[0.04, 0.025, 0.12]} />
-        <meshStandardMaterial color={headbandColor} roughness={0.4} metalness={0.2} />
-      </mesh>
-
-      {/* === HEADBAND (bottom) === */}
-      <mesh position={[-thickness / 2 + 0.02, -height / 2 + 0.01, 0]}>
-        <boxGeometry args={[0.04, 0.025, 0.12]} />
-        <meshStandardMaterial color={headbandColor} roughness={0.4} metalness={0.2} />
-      </mesh>
-
-      {/* === SPINE TITLE TEXT === */}
-      <Text
-        position={[-thickness / 2 - 0.01, 0, 0]}
-        rotation={[0, -Math.PI / 2, Math.PI / 2]}
-        fontSize={0.09}
-        maxWidth={height * 0.75}
-        color={hovered ? '#f0b870' : '#e6a657'}
-        anchorX="center"
-        anchorY="middle"
-        textAlign="center"
-        fontWeight="bold"
-      >
-        {book.title}
-      </Text>
-
-      {/* === FRONT COVER TITLE (subtle, smaller) === */}
-      <Text
-        position={[0, 0.2, depth / 2 + 0.001]}
-        fontSize={0.07}
-        maxWidth={thickness * 0.85}
-        color={hovered ? '#f0b870' : '#e6a657'}
-        anchorX="center"
-        anchorY="middle"
-        textAlign="center"
-      >
-        {book.title}
-      </Text>
-
-      {/* === FRONT COVER AUTHOR (even smaller below title) === */}
-      <Text
-        position={[0, -0.15, depth / 2 + 0.001]}
-        fontSize={0.05}
-        maxWidth={thickness * 0.85}
-        color="#a8a8a8"
-        anchorX="center"
-        anchorY="middle"
-        textAlign="center"
-      >
-        {book.author}
-      </Text>
+      {/* Spine title — vertical text reading bottom-to-top */}
+      {thickness > 0.34 && (
+        <Text
+          position={[0, 0, 0.09]}
+          rotation={[0, 0, -Math.PI / 2]}
+          fontSize={Math.min(0.13, thickness * 0.4)}
+          maxWidth={height * 0.78}
+          color={hovered ? '#ffe7b9' : '#e6c98a'}
+          anchorX="center"
+          anchorY="middle"
+          textAlign="center"
+          fontWeight="bold"
+        >
+          {spineTitle}
+        </Text>
+      )}
     </group>
   );
 }

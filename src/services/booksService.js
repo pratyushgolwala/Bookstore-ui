@@ -1,16 +1,31 @@
 import { apiClient } from './apiClient';
 
 /**
- * booksService — placeholder API calls for the Books resource.
- * TODO: Implement all methods once the Django Books API is ready.
+ * booksService — Books resource API calls.
+ * The backend wraps every response in an envelope:
+ *   { status: { success, code, message }, data: { results, count, num_pages, ... } }
  */
 export const booksService = {
-  // TODO: GET /api/books/ with filter & pagination params
-  getBooks: (params) => apiClient.get('/api/books/'),
+  /**
+   * Fetch a page of books.
+   * @param {{ page?: number, pageSize?: number, search?: string }} params
+   * @returns {Promise<object>} the raw envelope
+   */
+  getBooks: ({ page = 1, pageSize = 24, search = '' } = {}) => {
+    const qs = new URLSearchParams();
+    qs.set('page', String(page));
+    qs.set('page_size', String(pageSize));
+    if (search) qs.set('search', search);
+    return apiClient.get(`/api/books/?${qs.toString()}`);
+  },
 
-  // TODO: GET /api/books/:id/
   getBookById: (id) => apiClient.get(`/api/books/${id}/`),
 
-  // TODO: GET /api/books/search/?q=
-  searchBooks: (query) => apiClient.get(`/api/books/?search=${query}`),
+  searchBooks: (query, page = 1, pageSize = 24) => {
+    const qs = new URLSearchParams();
+    qs.set('search', query);
+    qs.set('page', String(page));
+    qs.set('page_size', String(pageSize));
+    return apiClient.get(`/api/books/?${qs.toString()}`);
+  },
 };

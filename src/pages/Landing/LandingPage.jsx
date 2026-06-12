@@ -1,10 +1,11 @@
 import React, { Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Book, ArrowRight, ChevronDown } from 'lucide-react';
+import { Book, ArrowRight, ChevronDown, Truck, ShieldCheck, Sparkles, BookOpen } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import useBookshelf from '../../hooks/useBookshelf';
+import BookCard from '../../components/ui/BookCard';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
 
 const BookshelfScene = React.lazy(() => import('../../components/Bookshelf/BookshelfScene'));
@@ -18,6 +19,7 @@ function LandingPage() {
   const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const { books } = useBookshelf();
+  const featured = books.slice(0, 6);
 
   // Redirect authenticated users to the interactive bookshelf page
   useEffect(() => {
@@ -166,6 +168,77 @@ function LandingPage() {
           <ChevronDown size={28} style={{ color: COLORS.primary[500] }} />
         </div>
       </section>
+
+      {/* Features Section */}
+      <section className="py-20 px-6 sm:px-8 lg:px-12" style={{ backgroundColor: COLORS.background }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: COLORS.text.primary }}>
+              Why Read With Us
+            </h2>
+            <p className="text-lg" style={{ color: COLORS.text.secondary }}>
+              A modern bookstore built for true book lovers.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { icon: BookOpen, title: 'Vast Collection', desc: 'Over 10,000 titles across every genre, browsable as an immersive 3D shelf.' },
+              { icon: Truck, title: 'Fast Delivery', desc: 'Free shipping on orders over ₹500, delivered right to your door.' },
+              { icon: ShieldCheck, title: 'Secure Checkout', desc: 'Protected payments and a smooth, trustworthy buying experience.' },
+            ].map((f) => {
+              const Icon = f.icon;
+              return (
+                <div
+                  key={f.title}
+                  className="p-7 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-2xl"
+                  style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
+                >
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                    style={{ background: COLORS.gradient.primary }}
+                  >
+                    <Icon size={24} color={COLORS.text.inverse} />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2" style={{ color: COLORS.text.primary }}>
+                    {f.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed" style={{ color: COLORS.text.secondary }}>
+                    {f.desc}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Books Section */}
+      {featured.length > 0 && (
+        <section className="py-16 px-6 sm:px-8 lg:px-12" style={{ backgroundColor: COLORS.neutral[100] }}>
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-2">
+                <Sparkles style={{ color: COLORS.secondary[500] }} size={24} />
+                <h2 className="text-2xl md:text-3xl font-bold" style={{ color: COLORS.text.primary }}>
+                  Featured Books
+                </h2>
+              </div>
+              <button
+                onClick={() => navigate('/books')}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80"
+                style={{ color: COLORS.secondary[500] }}
+              >
+                View all <ArrowRight size={16} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {featured.map((book) => (
+                <BookCard key={book.id} book={book} onSelect={() => navigate('/books')} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section
