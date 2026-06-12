@@ -134,7 +134,13 @@ export default function BookshelfScene({
 
         {/* Books standing on each shelf */}
         {placements.map(({ book, x, row, index }) => {
-          const y = topY - row * ROW_HEIGHT - ROW_HEIGHT / 2 + 1.05;
+          // Shelf plank Y for this row (matches BookshelfFrame logic)
+          const frameThickness = 0.35;
+          const plankY = topY - frameThickness / 2 - (row + 1) * ROW_HEIGHT + 0.02;
+          const plankTopY = plankY + 0.06; // half plank height (0.12/2)
+          // Book height varies per book; approximate center above plank
+          const bookHeight = 1.9 + (book.pageCount % 9) * 0.035;
+          const y = plankTopY + bookHeight / 2;
           return (
             <BookSpine
               key={book.id || index}
