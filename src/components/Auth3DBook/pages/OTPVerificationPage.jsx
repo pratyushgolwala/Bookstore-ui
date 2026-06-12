@@ -2,101 +2,56 @@ import { useState, useRef, useEffect } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import styles from '../Auth3DBook.module.css';
 
-/**
- * OTPVerificationPage — Third page of login book
- * 6-digit OTP input — each box is independently typeable
- */
-function OTPVerificationPage({ email, onSubmit, onResend, submitError, isLoading }) {
+function OTPVerificationPage({ email, onSubmit, onResend, submitError }) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpError, setOtpError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const inputRefs = useRef([]);
 
-  // Auto-focus first empty input on mount
   useEffect(() => {
-    setTimeout(() => {
-      inputRefs.current[0]?.focus();
-    }, 50);
+    setTimeout(() => inputRefs.current[0]?.focus(), 60);
   }, []);
 
-  const handleChange = (index, e) => {
-    const raw = e.target.value;
-    // Take only the last digit typed (handles autofill too)
-    const digit = raw.replace(/\D/g, '').slice(-1);
-
-    const newOtp = [...otp];
-    newOtp[index] = digit;
-    setOtp(newOtp);
+  const handleChange = (i, e) => {
+    const digit = e.target.value.replace(/\D/g, '').slice(-1);
+    const next = [...otp];
+    next[i] = digit;
+    setOtp(next);
     setOtpError('');
-
-    // Move focus forward
-    if (digit && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-
-    // Auto-submit when all digits filled
-    if (digit && newOtp.every((d) => d !== '')) {
-      handleVerify(newOtp.join(''));
-    }
+    if (digit && i < 5) inputRefs.current[i + 1]?.focus();
+    if (digit && next.every((d) => d !== '')) handleVerify(next.join(''));
   };
 
-  const handleKeyDown = (index, e) => {
+  const handleKeyDown = (i, e) => {
     if (e.key === 'Backspace') {
       e.preventDefault();
-      const newOtp = [...otp];
-      if (newOtp[index]) {
-        // Clear current box
-        newOtp[index] = '';
-        setOtp(newOtp);
-      } else if (index > 0) {
-        // Move back and clear previous
-        newOtp[index - 1] = '';
-        setOtp(newOtp);
-        inputRefs.current[index - 1]?.focus();
-      }
+      const next = [...otp];
+      if (next[i]) { next[i] = ''; setOtp(next); }
+      else if (i > 0) { next[i - 1] = ''; setOtp(next); inputRefs.current[i - 1]?.focus(); }
       setOtpError('');
     }
-    if (e.key === 'ArrowLeft' && index > 0) {
-      e.preventDefault();
-      inputRefs.current[index - 1]?.focus();
-    }
-    if (e.key === 'ArrowRight' && index < 5) {
-      e.preventDefault();
-      inputRefs.current[index + 1]?.focus();
-    }
+    if (e.key === 'ArrowLeft'  && i > 0) { e.preventDefault(); inputRefs.current[i - 1]?.focus(); }
+    if (e.key === 'ArrowRight' && i < 5) { e.preventDefault(); inputRefs.current[i + 1]?.focus(); }
   };
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (!pasted) return;
-    const newOtp = Array(6).fill('');
-    pasted.split('').forEach((digit, i) => {
-      if (i < 6) newOtp[i] = digit;
-    });
-    setOtp(newOtp);
+    const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!digits) return;
+    const next = Array(6).fill('');
+    digits.split('').forEach((d, idx) => { if (idx < 6) next[idx] = d; });
+    setOtp(next);
     setOtpError('');
-    const focusIndex = Math.min(pasted.length, 5);
-    inputRefs.current[focusIndex]?.focus();
-    if (pasted.length === 6) {
-      handleVerify(newOtp.join(''));
-    }
+    inputRefs.current[Math.min(digits.length, 5)]?.focus();
+    if (digits.length === 6) handleVerify(next.join(''));
   };
 
   const handleVerify = async (code) => {
-    if (isVerifying) return;
-    if (!code || code.length < 6) {
-      setOtpError('Please enter all 6 digits');
-      return;
-    }
+    if (isVerifying || code.length < 6) { if (code.length < 6) setOtpError('Enter all 6 digits'); return; }
     setIsVerifying(true);
     setOtpError('');
     await onSubmit(code);
     setIsVerifying(false);
-  };
-
-  const handleManualSubmit = () => {
-    handleVerify(otp.join(''));
   };
 
   const handleResend = async () => {
@@ -106,62 +61,36 @@ function OTPVerificationPage({ email, onSubmit, onResend, submitError, isLoading
     await onResend();
   };
 
-  const maskedEmail = email
+  const masked = email
     ? email.replace(/(.{2})(.*)(@.*)/, (_, a, b, c) => a + '*'.repeat(Math.min(b.length, 8)) + c)
     : '';
 
   const allFilled = otp.every((d) => d !== '');
-  const disableInputs = isVerifying;
+  const hasError = otpError || submitError;
 
   return (
     <div className={styles.bookPage}>
-      {/* Submit Error banner */}
-      {(submitError || otpError) && (
-        <div
-          style={{
-            width: '100%',
-            padding: '10px 14px',
-            backgroundColor: 'rgba(212,128,128,0.12)',
-            border: '1px solid rgba(212,128,128,0.4)',
-            borderRadius: '8px',
-          }}
-        >
-          <p style={{ margin: 0, fontSize: '13px', color: '#d48080', fontWeight: '500' }}>
-            {otpError || submitError}
-          </p>
+      {/* Icon */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg,rgba(92,92,143,0.15),rgba(212,147,62,0.15))', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ShieldCheck size={22} color="#d4933e" />
+        </div>
+      </div>
+
+      <h1 className={styles.pageHeading} style={{ textAlign: 'center' }}>Check your email</h1>
+      <p className={styles.pageSubheading} style={{ textAlign: 'center' }}>
+        We sent a 6-digit code to <span style={{ color: '#d4933e', fontWeight: '500' }}>{masked}</span>
+      </p>
+
+      {/* Error */}
+      {hasError && (
+        <div style={{ padding: '10px 14px', background: 'rgba(212,128,128,0.1)', border: '1px solid rgba(212,128,128,0.3)', borderRadius: '8px', marginBottom: '16px' }}>
+          <p style={{ margin: 0, fontSize: '13px', color: '#d48080' }}>{otpError || submitError}</p>
         </div>
       )}
 
-      {/* Icon + Heading */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-        <div
-          style={{
-            width: '52px',
-            height: '52px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, rgba(92,92,143,0.15), rgba(212,147,62,0.15))',
-            border: '1px solid #3d3d3d',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <ShieldCheck size={26} color="#d4933e" />
-        </div>
-        <h1 className={styles.pageHeading}>Verify Your Identity</h1>
-        <p className={styles.pageSubheading}>
-          Enter the 6-digit code sent to{' '}
-          <span style={{ color: '#d4933e', fontWeight: '600', display: 'block', marginTop: '2px' }}>
-            {maskedEmail}
-          </span>
-        </p>
-      </div>
-
-      {/* OTP Input Grid */}
-      <div
-        style={{ display: 'flex', gap: '10px', marginTop: '4px' }}
-        onPaste={handlePaste}
-      >
+      {/* OTP boxes */}
+      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '24px' }} onPaste={handlePaste}>
         {otp.map((digit, i) => (
           <input
             key={i}
@@ -169,72 +98,38 @@ function OTPVerificationPage({ email, onSubmit, onResend, submitError, isLoading
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
-            autoComplete="one-time-code"
+            autoComplete={i === 0 ? 'one-time-code' : 'off'}
             maxLength={2}
             value={digit}
             onChange={(e) => handleChange(i, e)}
             onKeyDown={(e) => handleKeyDown(i, e)}
-            disabled={disableInputs}
+            disabled={isVerifying}
+            onFocus={(e) => { e.target.select(); e.target.style.borderColor = '#d4933e'; e.target.style.boxShadow = '0 0 0 3px rgba(212,147,62,0.12)'; }}
+            onBlur={(e) => { e.target.style.borderColor = digit ? 'rgba(92,92,143,0.6)' : (hasError ? 'rgba(212,128,128,0.5)' : 'rgba(255,255,255,0.09)'); e.target.style.boxShadow = digit ? '0 0 8px rgba(92,92,143,0.15)' : 'none'; }}
             style={{
-              width: '48px',
-              height: '56px',
-              textAlign: 'center',
-              fontSize: '22px',
-              fontWeight: '700',
-              backgroundColor: digit ? 'rgba(92,92,143,0.12)' : '#0f0f0f',
-              border: `2px solid ${digit ? '#5c5c8f' : (otpError ? '#d48080' : '#3d3d3d')}`,
-              borderRadius: '10px',
-              color: '#e8e8e8',
-              outline: 'none',
-              transition: 'border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease',
-              caretColor: '#d4933e',
-              cursor: disableInputs ? 'not-allowed' : 'text',
-              boxShadow: digit ? '0 0 10px rgba(92,92,143,0.2)' : 'none',
+              width: '46px', height: '54px', textAlign: 'center',
+              fontSize: '20px', fontWeight: '700', fontFamily: 'Inter, sans-serif',
+              background: digit ? 'rgba(92,92,143,0.1)' : 'rgba(255,255,255,0.03)',
+              border: `1.5px solid ${digit ? 'rgba(92,92,143,0.6)' : hasError ? 'rgba(212,128,128,0.5)' : 'rgba(255,255,255,0.09)'}`,
+              borderRadius: '10px', color: '#f0f0f0', outline: 'none',
+              transition: 'all 0.15s ease', caretColor: '#d4933e',
+              cursor: isVerifying ? 'not-allowed' : 'text',
               WebkitAppearance: 'none',
-              MozAppearance: 'textfield',
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = '#d4933e';
-              e.target.style.boxShadow = '0 0 0 3px rgba(212,147,62,0.15)';
-              e.target.select();
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = digit ? '#5c5c8f' : (otpError ? '#d48080' : '#3d3d3d');
-              e.target.style.boxShadow = digit ? '0 0 10px rgba(92,92,143,0.2)' : 'none';
             }}
           />
         ))}
       </div>
 
-      {/* Verify Button */}
-      <button
-        onClick={handleManualSubmit}
-        disabled={!allFilled || disableInputs}
-        className={styles.formButton}
-        style={{ marginTop: '16px', width: '100%' }}
-      >
-        {isVerifying ? 'Verifying...' : 'Verify OTP'}
+      <button onClick={() => handleVerify(otp.join(''))} disabled={!allFilled || isVerifying} className={styles.formButton}>
+        {isVerifying ? 'Verifying…' : 'Verify Code'}
       </button>
 
-      {/* Resend */}
-      <p style={{ fontSize: '13px', color: '#a8a8a8', textAlign: 'center', marginTop: '12px' }}>
-        Didn't receive the code?{' '}
-        <button
-          onClick={handleResend}
-          disabled={isVerifying}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#d4933e',
-            fontWeight: '600',
-            fontSize: '13px',
-            cursor: isVerifying ? 'not-allowed' : 'pointer',
-            padding: 0,
-            textDecoration: 'underline',
-            opacity: isVerifying ? 0.5 : 1,
-          }}
-        >
-          Resend OTP
+      <div className={styles.divider} />
+
+      <p className={styles.helperText} style={{ margin: 0 }}>
+        Didn't receive it?{' '}
+        <button onClick={handleResend} disabled={isVerifying} className={styles.linkPrimary}>
+          Resend code
         </button>
       </p>
     </div>

@@ -1,256 +1,87 @@
 import { useState } from 'react';
-import { Lock, Eye, EyeOff, Check } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import ProgressIndicator from '../../components/ProgressIndicator';
 import styles from '../../Auth3DBook.module.css';
 
-/**
- * PasswordSecurityPage — Page 4 of signup book
- * Collects password with strength indicator and validation
- */
-function PasswordSecurityPage({
-  password,
-  confirmPassword,
-  onPasswordChange,
-  onConfirmPasswordChange,
-  onPrevious,
-  onNext,
-  errors,
-}) {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+function PasswordSecurityPage({ password, confirmPassword, onPasswordChange, onConfirmPasswordChange, onPrevious, onNext, errors }) {
+  const [showPw, setShowPw] = useState(false);
+  const [showCpw, setShowCpw] = useState(false);
 
-  // Calculate password strength
-  const getPasswordStrength = () => {
-    if (!password) return { score: 0, label: 'None', color: '#767676' };
-
-    let score = 0;
-    if (password.length >= 8) score++;
-    if (/[a-z]/.test(password)) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/\d/.test(password)) score++;
-
-    if (score <= 1) return { score: 1, label: 'Weak', color: '#d48080' };
-    if (score <= 2) return { score: 2, label: 'Fair', color: '#e6a657' };
-    return { score: 3, label: 'Strong', color: '#00d084' };
+  const checks = {
+    len:   password.length >= 8,
+    upper: /[A-Z]/.test(password),
+    lower: /[a-z]/.test(password),
+    num:   /\d/.test(password),
   };
-
-  const strength = getPasswordStrength();
-
-  // Validation checks
-  const has8Chars = password.length >= 8;
-  const hasLowercase = /[a-z]/.test(password);
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasNumber = /\d/.test(password);
-  const passwordsMatch = password === confirmPassword && confirmPassword;
-
-  const isValid = has8Chars && hasLowercase && hasUppercase && hasNumber && passwordsMatch;
+  const score = Object.values(checks).filter(Boolean).length;
+  const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'][score];
+  const strengthColor = ['', '#d48080', '#e6a657', '#7bc8a4', '#00d084'][score];
+  const isValid = Object.values(checks).every(Boolean) && password === confirmPassword && confirmPassword;
 
   return (
     <div className={styles.bookPage}>
-      {/* Progress Indicator */}
       <ProgressIndicator currentPage={4} totalPages={5} />
 
-      {/* Heading */}
-      <h1 className={styles.pageHeading}>Password & Security</h1>
+      <h1 className={styles.pageHeading}>Create a password</h1>
+      <p className={styles.pageSubheading}>Make it strong and memorable</p>
 
-      {/* Password Field */}
       <div className={styles.formField}>
-        <label htmlFor="password" className={styles.formLabel}>
-          Password
-        </label>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <Lock
-            size={18}
-            style={{
-              position: 'absolute',
-              left: '12px',
-              color: '#a8a8a8',
-              pointerEvents: 'none',
-            }}
-          />
-          <input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={password}
+        <label htmlFor="s-pw" className={styles.formLabel}>Password</label>
+        <div style={{ position: 'relative' }}>
+          <input id="s-pw" type={showPw ? 'text' : 'password'} placeholder="••••••••" value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
             className={`${styles.formInput} ${errors.password ? styles.formInputError : ''}`}
-            style={{ paddingLeft: '40px', paddingRight: '40px' }}
-            autoFocus
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            style={{
-              position: 'absolute',
-              right: '12px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#a8a8a8',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            style={{ paddingRight: '40px' }} autoFocus autoComplete="new-password" />
+          <button type="button" onClick={() => setShowPw(!showPw)}
+            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.28)', display: 'flex' }}>
+            {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
         </div>
-        {errors.password && (
-          <div className={styles.formError}>
-            <span>✕</span>
-            <span>{errors.password}</span>
-          </div>
-        )}
-
-        {/* Strength Indicator */}
+        {/* Strength bar */}
         {password && (
-          <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div
-              style={{
-                height: '4px',
-                flex: 1,
-                backgroundColor: '#3d3d3d',
-                borderRadius: '2px',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  height: '100%',
-                  width: `${(strength.score / 3) * 100}%`,
-                  backgroundColor: strength.color,
-                  transition: 'width 0.2s ease',
-                }}
-              />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+            <div style={{ flex: 1, height: '3px', background: 'rgba(255,255,255,0.07)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${(score / 4) * 100}%`, background: strengthColor, transition: 'width 0.25s ease, background 0.25s ease' }} />
             </div>
-            <span style={{ fontSize: '12px', color: strength.color, fontWeight: '600' }}>
-              {strength.label}
-            </span>
+            <span style={{ fontSize: '11px', color: strengthColor, fontWeight: '600', fontFamily: 'Inter, sans-serif', minWidth: '36px' }}>{strengthLabel}</span>
           </div>
         )}
+        {errors.password && <div className={styles.formError}>{errors.password}</div>}
       </div>
 
-      {/* Confirm Password Field */}
+      {/* Checklist */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px', marginBottom: '16px' }}>
+        {[
+          { ok: checks.len,   label: '8+ characters' },
+          { ok: checks.upper, label: 'Uppercase letter' },
+          { ok: checks.lower, label: 'Lowercase letter' },
+          { ok: checks.num,   label: 'One number' },
+        ].map(({ ok, label }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontFamily: 'Inter, sans-serif', color: ok ? '#00d084' : 'rgba(255,255,255,0.22)', transition: 'color 0.2s ease' }}>
+            <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: ok ? '#00d084' : 'rgba(255,255,255,0.15)', flexShrink: 0, transition: 'background 0.2s ease' }} />
+            {label}
+          </div>
+        ))}
+      </div>
+
       <div className={styles.formField}>
-        <label htmlFor="confirm_password" className={styles.formLabel}>
-          Confirm Password
-        </label>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <Lock
-            size={18}
-            style={{
-              position: 'absolute',
-              left: '12px',
-              color: '#a8a8a8',
-              pointerEvents: 'none',
-            }}
-          />
-          <input
-            id="confirm_password"
-            type={showConfirmPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={confirmPassword}
+        <label htmlFor="s-cpw" className={styles.formLabel}>Confirm password</label>
+        <div style={{ position: 'relative' }}>
+          <input id="s-cpw" type={showCpw ? 'text' : 'password'} placeholder="••••••••" value={confirmPassword}
             onChange={(e) => onConfirmPasswordChange(e.target.value)}
             className={`${styles.formInput} ${errors.confirm_password ? styles.formInputError : ''}`}
-            style={{ paddingLeft: '40px', paddingRight: '40px' }}
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            style={{
-              position: 'absolute',
-              right: '12px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#a8a8a8',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            style={{ paddingRight: '40px' }} autoComplete="new-password" />
+          <button type="button" onClick={() => setShowCpw(!showCpw)}
+            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.28)', display: 'flex' }}>
+            {showCpw ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
         </div>
-        {errors.confirm_password && (
-          <div className={styles.formError}>
-            <span>✕</span>
-            <span>{errors.confirm_password}</span>
-          </div>
-        )}
+        {errors.confirm_password && <div className={styles.formError}>{errors.confirm_password}</div>}
       </div>
 
-      {/* Requirements Checklist */}
-      <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <p style={{ fontSize: '12px', color: '#a8a8a8', fontWeight: '600', margin: 0 }}>
-          Requirements:
-        </p>
-        <div
-          style={{
-            fontSize: '12px',
-            color: has8Chars ? '#00d084' : '#767676',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          {has8Chars && <Check size={14} />}
-          <span>At least 8 characters</span>
-        </div>
-        <div
-          style={{
-            fontSize: '12px',
-            color: hasUppercase ? '#00d084' : '#767676',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          {hasUppercase && <Check size={14} />}
-          <span>One uppercase letter</span>
-        </div>
-        <div
-          style={{
-            fontSize: '12px',
-            color: hasLowercase ? '#00d084' : '#767676',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          {hasLowercase && <Check size={14} />}
-          <span>One lowercase letter</span>
-        </div>
-        <div
-          style={{
-            fontSize: '12px',
-            color: hasNumber ? '#00d084' : '#767676',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          {hasNumber && <Check size={14} />}
-          <span>One number</span>
-        </div>
-      </div>
-
-      {/* Navigation Buttons */}
-      <div className={styles.buttonGroup} style={{ marginTop: '16px' }}>
-        <button
-          onClick={onPrevious}
-          className={styles.previousButton}
-        >
-          ← Previous
-        </button>
-        <button
-          onClick={onNext}
-          disabled={!isValid}
-          className={styles.nextButton}
-        >
-          Next →
-        </button>
+      <div className={styles.buttonGroup}>
+        <button onClick={onPrevious} className={styles.previousButton}>← Back</button>
+        <button onClick={onNext} disabled={!isValid} className={styles.nextButton}>Continue →</button>
       </div>
     </div>
   );
