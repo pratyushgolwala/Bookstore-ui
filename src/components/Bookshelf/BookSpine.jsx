@@ -101,9 +101,9 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
 
   return (
     <group position={position} ref={groupRef}>
-      {/* Book body — spine faces +Z (viewer), extruded toward -Z into shelf */}
+      {/* Book body — extruded from z=0 toward z=+depth, positioned so spine face is at z=depth/2 in group space */}
       <mesh
-        position={[0, 0, -depth / 2]}
+        position={[0, 0, -depth]}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
         onClick={handleClick}
@@ -120,7 +120,7 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
       </mesh>
 
       {/* Page block on the back side (inside shelf), cream colored */}
-      <mesh position={[0, 0, -depth - 0.001]}>
+      <mesh position={[0, 0, -depth - 0.02]}>
         <boxGeometry args={[thickness * 0.86, height * 0.96, 0.04]} />
         <meshStandardMaterial color={pageColor} roughness={0.95} metalness={0} />
       </mesh>
@@ -136,14 +136,14 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
       </mesh>
 
       {/* Decorative gold band near the top of the spine */}
-      <mesh position={[0, height * 0.28, 0.07]}>
+      <mesh position={[0, height * 0.28, 0.04]}>
         <boxGeometry args={[thickness * 0.8, 0.02, 0.02]} />
         <meshStandardMaterial color="#d4933e" roughness={0.35} metalness={0.4} />
       </mesh>
 
-      {/* Spine title — always show, white text for readability */}
+      {/* Spine title — positioned well in front of the book face */}
       <Text
-        position={[0, 0, 0.09]}
+        position={[0, 0, 0.12]}
         rotation={[0, 0, -Math.PI / 2]}
         fontSize={Math.min(0.14, Math.max(0.08, thickness * 0.35))}
         maxWidth={height * 0.82}
