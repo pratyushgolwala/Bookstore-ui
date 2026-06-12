@@ -141,22 +141,22 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
         <meshStandardMaterial color="#d4933e" roughness={0.35} metalness={0.4} />
       </mesh>
 
-      {/* Spine title — vertical text reading bottom-to-top */}
-      {thickness > 0.34 && (
-        <Text
-          position={[0, 0, 0.09]}
-          rotation={[0, 0, -Math.PI / 2]}
-          fontSize={Math.min(0.13, thickness * 0.4)}
-          maxWidth={height * 0.78}
-          color={hovered ? '#ffe7b9' : '#e6c98a'}
-          anchorX="center"
-          anchorY="middle"
-          textAlign="center"
-          fontWeight="bold"
-        >
-          {spineTitle}
-        </Text>
-      )}
+      {/* Spine title — always show, white text for readability */}
+      <Text
+        position={[0, 0, 0.09]}
+        rotation={[0, 0, -Math.PI / 2]}
+        fontSize={Math.min(0.14, Math.max(0.08, thickness * 0.35))}
+        maxWidth={height * 0.82}
+        color={hovered ? '#FFFFFF' : '#FFFDE8'}
+        anchorX="center"
+        anchorY="middle"
+        textAlign="center"
+        fontWeight="bold"
+        outlineWidth={0.008}
+        outlineColor="#000000"
+      >
+        {spineTitle}
+      </Text>
     </group>
   );
 }
