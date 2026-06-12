@@ -1,33 +1,31 @@
+import { useMemo } from 'react';
 import { Text } from '@react-three/drei';
 import BookSpine from './BookSpine';
 import { computeSpineThickness } from '../../utils/bookshelfUtils.js';
+import { createWoodTexture, createWoodBumpMap } from '../../utils/textureGenerators.js';
 
 /**
  * ShelfRow — A horizontal shelf that holds books of a single category.
- * Renders a wood-textured shelf plank, a 3D category label, and
- * maps books to BookSpine components positioned left-to-right.
- *
- * @param {Object} props
- * @param {string} props.category - The category name displayed as a label
- * @param {Array} props.books - Array of book objects to render on this shelf
- * @param {number} props.yPosition - Vertical placement in the scene
- * @param {boolean} props.interactive - Whether book interactions are enabled
- * @param {function} props.onBookSelect - Callback when a book is selected
+ * Renders a richly-textured vintage wood shelf plank, a category label,
+ * and maps books to BookSpine components positioned left-to-right.
  */
 function ShelfRow({ category, books, yPosition, interactive, onBookSelect }) {
   // Shelf plank dimensions
   const shelfWidth = 12;
-  const shelfHeight = 0.15;
-  const shelfDepth = 1.6; // Deep enough to hold books with depth 1.2
+  const shelfHeight = 0.18;
+  const shelfDepth = 1.6;
+
+  // Generate wood textures once per component instance
+  const woodTexture = useMemo(() => createWoodTexture(512, 256, '#3D2817', '#2A1B0F'), []);
+  const woodBump = useMemo(() => createWoodBumpMap(), []);
 
   // Calculate x positions for books left-to-right with spacing
-  const spacing = 0.05;
+  const spacing = 0.06;
   const bookPositions = [];
-  let currentX = -shelfWidth / 2 + 0.3; // Start with a small left margin
+  let currentX = -shelfWidth / 2 + 0.4;
 
   books.forEach((book) => {
     const thickness = computeSpineThickness(book.pageCount);
-    // Position is at the center of the book spine
     const xCenter = currentX + thickness / 2;
     bookPositions.push(xCenter);
     currentX += thickness + spacing;
@@ -35,22 +33,67 @@ function ShelfRow({ category, books, yPosition, interactive, onBookSelect }) {
 
   return (
     <group position={[0, yPosition, 0]}>
-      {/* Wood-textured shelf plank */}
+      {/* Main shelf plank — vintage dark wood */}
       <mesh position={[0, -1.05, 0]}>
         <boxGeometry args={[shelfWidth, shelfHeight, shelfDepth]} />
-        <meshStandardMaterial color="#8B5E3C" roughness={0.8} metalness={0.1} />
+        <meshStandardMaterial
+          map={woodTexture}
+          bumpMap={woodBump}
+          bumpScale={0.02}
+          roughness={0.75}
+          metalness={0.05}
+          color="#5a3d14"
+        />
       </mesh>
 
-      {/* Category label — 3D text above the shelf on the left side */}
+      {/* Shelf front lip — a thin raised edge for depth */}
+      <mesh position={[0, -1.05 + shelfHeight / 2 + 0.04, shelfDepth / 2 - 0.05]}>
+        <boxGeometry args={[shelfWidth, 0.08, 0.1]} />
+        <meshStandardMaterial
+          map={woodTexture}
+          roughness={0.7}
+          metalness={0.08}
+          color="#4a3320"
+        />
+      </mesh>
+
+      {/* Vertical side panel — left */}
+      <mesh position={[-shelfWidth / 2 - 0.08, 0, 0]}>
+        <boxGeometry args={[0.16, 2.4, shelfDepth]} />
+        <meshStandardMaterial
+          map={woodTexture}
+          bumpMap={woodBump}
+          bumpScale={0.015}
+          roughness={0.8}
+          metalness={0.05}
+          color="#3D2817"
+        />
+      </mesh>
+
+      {/* Vertical side panel — right */}
+      <mesh position={[shelfWidth / 2 + 0.08, 0, 0]}>
+        <boxGeometry args={[0.16, 2.4, shelfDepth]} />
+        <meshStandardMaterial
+          map={woodTexture}
+          bumpMap={woodBump}
+          bumpScale={0.015}
+          roughness={0.8}
+          metalness={0.05}
+          color="#3D2817"
+        />
+      </mesh>
+
+      {/* Category label — gold-accented text matching site secondary color */}
       <Text
-        position={[-shelfWidth / 2 + 0.2, 1.3, 0.8]}
-        fontSize={0.28}
-        color="#E8D5B7"
+        position={[-shelfWidth / 2 + 0.4, 1.35, 0.85]}
+        fontSize={0.22}
+        color="#d4933e"
         anchorX="left"
         anchorY="middle"
         fontWeight="bold"
+        letterSpacing={0.05}
       >
-        {category}
+        {category.toUpperCase()}
       </Text>
 
       {/* Books positioned left-to-right */}
