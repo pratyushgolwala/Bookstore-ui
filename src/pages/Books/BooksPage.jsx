@@ -25,12 +25,12 @@ function BooksPage() {
 
   return (
     <div
-      style={{ backgroundColor: COLORS.background, color: COLORS.text.primary }}
-      className="relative min-h-screen flex flex-col"
+      className="relative flex flex-col"
+      style={{ backgroundColor: COLORS.background, color: COLORS.text.primary, height: 'calc(100vh - 72px)' }}
     >
-      <h1 className="text-3xl font-bold p-8 pb-4">Books</h1>
+      <h1 className="text-3xl font-bold px-8 pt-6 pb-2">Books</h1>
 
-      <div className="flex-1 relative">
+      <div className="flex-1 relative min-h-0">
         {useFallback ? (
           <FallbackGrid books={books} onBookSelect={selectBook} />
         ) : (

@@ -17,8 +17,8 @@ import { computeSpineThickness } from '../../utils/bookshelfUtils.js';
 function ShelfRow({ category, books, yPosition, interactive, onBookSelect }) {
   // Shelf plank dimensions
   const shelfWidth = 12;
-  const shelfHeight = 0.1;
-  const shelfDepth = 0.5;
+  const shelfHeight = 0.15;
+  const shelfDepth = 1.6; // Deep enough to hold books with depth 1.2
 
   // Calculate x positions for books left-to-right with spacing
   const spacing = 0.05;
@@ -43,9 +43,9 @@ function ShelfRow({ category, books, yPosition, interactive, onBookSelect }) {
 
       {/* Category label — 3D text above the shelf on the left side */}
       <Text
-        position={[-shelfWidth / 2 + 0.2, 1.2, 0.3]}
-        fontSize={0.2}
-        color="#5C3D2E"
+        position={[-shelfWidth / 2 + 0.2, 1.3, 0.8]}
+        fontSize={0.28}
+        color="#E8D5B7"
         anchorX="left"
         anchorY="middle"
         fontWeight="bold"
