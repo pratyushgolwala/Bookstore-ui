@@ -2,16 +2,18 @@ import { useMemo } from 'react';
 import { createWoodTexture, createWoodBumpMap } from '../../utils/textureGenerators.js';
 
 /**
- * BookshelfFrame — a solid wooden bookcase: two side panels, top and bottom,
- * a back panel, and a horizontal shelf plank under each row of books.
- *
- * @param {Object} props
- * @param {number} props.width - Interior width of the shelf
- * @param {number} props.rowCount - Number of shelf rows
- * @param {number} props.rowHeight - Vertical spacing between rows
- * @param {number} props.rowDepth - Depth of the shelf
+ * BookshelfFrame — a solid wooden bookcase: side panels, top/bottom, back panel,
+ * a horizontal shelf plank under each row, and vertical dividers that split each
+ * row into equal sections like a real library shelf.
  */
-function BookshelfFrame({ width, rowCount, rowHeight, rowDepth }) {
+function BookshelfFrame({
+  width,
+  rowCount,
+  rowHeight,
+  rowDepth,
+  sectionsPerRow = 4,
+  dividerThickness = 0.16,
+}) {
   const wood = useMemo(() => createWoodTexture(512, 256, '#6B4226', '#4A2F1A'), []);
   const woodDark = useMemo(() => createWoodTexture(512, 256, '#5C3A22', '#3D2515'), []);
   const bump = useMemo(() => createWoodBumpMap(), []);
@@ -32,6 +34,22 @@ function BookshelfFrame({ width, rowCount, rowHeight, rowDepth }) {
     color: '#8B6340',
   };
 
+  const dividerMat = {
+    map: wood,
+    bumpMap: bump,
+    bumpScale: 0.02,
+    roughness: 0.8,
+    metalness: 0.04,
+    color: '#6B4226',
+  };
+
+  // X positions of interior vertical dividers (excludes the outer side panels)
+  const sectionOuterWidth = width / sectionsPerRow;
+  const dividerXs = [];
+  for (let s = 1; s < sectionsPerRow; s += 1) {
+    dividerXs.push(-width / 2 + s * sectionOuterWidth);
+  }
+
   return (
     <group>
       {/* Back panel */}
@@ -43,7 +61,7 @@ function BookshelfFrame({ width, rowCount, rowHeight, rowDepth }) {
           bumpScale={0.02}
           roughness={0.85}
           metalness={0.03}
-          color="#5C3A22"
+          color="#4A2F1A"
         />
       </mesh>
 
@@ -65,20 +83,39 @@ function BookshelfFrame({ width, rowCount, rowHeight, rowDepth }) {
         <meshStandardMaterial {...woodMat} />
       </mesh>
 
-      {/* Horizontal shelf plank beneath each row */}
+      {/* Bottom cap */}
+      <mesh position={[0, bottomY, 0]}>
+        <boxGeometry args={[width + frameThickness * 2, frameThickness, rowDepth + 0.1]} />
+        <meshStandardMaterial {...woodMat} />
+      </mesh>
+
+      {/* Per-row shelf plank + vertical section dividers */}
       {Array.from({ length: rowCount }).map((_, i) => {
-        const y = topY - frameThickness / 2 - (i + 1) * rowHeight + 0.02;
+        const plankY = topY - frameThickness / 2 - (i + 1) * rowHeight + 0.02;
+        // Centre Y of the compartment ABOVE this plank
+        const compartmentCenterY = plankY + rowHeight / 2;
+        const dividerHeight = rowHeight - 0.14;
+
         return (
           <group key={i}>
-            <mesh position={[0, y, 0]}>
+            {/* Shelf plank */}
+            <mesh position={[0, plankY, 0]}>
               <boxGeometry args={[width, 0.12, rowDepth]} />
               <meshStandardMaterial {...woodMat} />
             </mesh>
-            {/* Front lip for depth */}
-            <mesh position={[0, y + 0.08, rowDepth / 2 - 0.04]}>
+            {/* Front lip */}
+            <mesh position={[0, plankY + 0.08, rowDepth / 2 - 0.04]}>
               <boxGeometry args={[width, 0.06, 0.08]} />
               <meshStandardMaterial {...woodMat} color="#4a3320" />
             </mesh>
+
+            {/* Vertical dividers splitting this row into sections */}
+            {dividerXs.map((dx, di) => (
+              <mesh key={di} position={[dx, compartmentCenterY, 0]}>
+                <boxGeometry args={[dividerThickness, dividerHeight, rowDepth - 0.1]} />
+                <meshStandardMaterial {...dividerMat} />
+              </mesh>
+            ))}
           </group>
         );
       })}

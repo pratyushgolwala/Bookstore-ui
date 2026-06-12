@@ -6,8 +6,8 @@ import { computeSpineThickness, assignSpineColor } from '../../utils/bookshelfUt
 import { createSpineTexture } from '../../utils/textureGenerators.js';
 
 /**
- * Rounded-rectangle cross-section for the book, so the spine edge facing the
- * viewer has a soft curve like a real bound book.
+ * Rounded-rectangle cross-section so the spine edge facing the viewer
+ * has a soft curve like a real bound book.
  */
 function roundedRectShape(w, h, r) {
   const shape = new THREE.Shape();
@@ -25,29 +25,35 @@ function roundedRectShape(w, h, r) {
 }
 
 /**
- * BookSpine — a book standing on a shelf, SPINE FACING THE VIEWER (+Z).
+ * BookSpine — a book standing on a shelf, spine facing the viewer (+Z).
  *
- * Dimensions:
- *   - thickness (X): how wide the spine is (from page count)
- *   - height   (Y): the book's height
- *   - depth    (Z): how deep the book sits into the shelf
- *
- * On hover the book eases forward and outward and the spine title glows gold.
+ * Behaviour:
+ *   - hover (interactive): eases slightly forward + gold glow
+ *   - pulling=true: smoothly slides out of the shelf, rotates to face the
+ *     viewer and scales up; once it reaches the target it calls onPullComplete
+ *     (which opens the detail card) — one continuous transition.
  */
-function BookSpine({ book, index, position, interactive, onSelect }) {
+function BookSpine({
+  book,
+  index,
+  position,
+  interactive,
+  pulling = false,
+  pullTarget = [0, 0, 6],
+  onSelect,
+  onPullComplete,
+}) {
   const [hovered, setHovered] = useState(false);
   const groupRef = useRef();
+  const completedRef = useRef(false);
 
-  const thickness = computeSpineThickness(book.pageCount); // X
-  const depth = 1.15; // Z — into the shelf
+  const thickness = computeSpineThickness(book.pageCount);
+  const depth = 1.15;
   const color = assignSpineColor(index);
-
-  // Slight per-book height variation for realism
   const height = 1.9 + (book.pageCount % 9) * 0.035;
 
   const spineTexture = useMemo(() => createSpineTexture(128, 256, color), [color]);
 
-  // Extruded body with a rounded spine edge (extrudes along Z = depth)
   const bodyGeo = useMemo(() => {
     const shape = roundedRectShape(thickness, height, Math.min(thickness * 0.18, 0.06));
     return new THREE.ExtrudeGeometry(shape, {
@@ -60,22 +66,49 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
     });
   }, [thickness, height, depth]);
 
-  // Smoothly animate hover pop-forward
-  const targetZ = hovered ? 0.45 : 0;
+  // Animate per-frame: either the pull-out transition or the hover ease
   useFrame(() => {
-    if (!groupRef.current) return;
-    groupRef.current.position.z = THREE.MathUtils.lerp(
-      groupRef.current.position.z,
-      position[2] + targetZ,
-      0.15
-    );
-    const s = hovered ? 1.05 : 1;
-    groupRef.current.scale.x = THREE.MathUtils.lerp(groupRef.current.scale.x, s, 0.15);
-    groupRef.current.scale.y = THREE.MathUtils.lerp(groupRef.current.scale.y, s, 0.15);
+    const g = groupRef.current;
+    if (!g) return;
+
+    if (pulling) {
+      // Ease group toward the pull target (in front of the shelf)
+      const [tx, ty, tz] = pullTarget;
+      g.position.x = THREE.MathUtils.lerp(g.position.x, tx, 0.12);
+      g.position.y = THREE.MathUtils.lerp(g.position.y, ty, 0.12);
+      g.position.z = THREE.MathUtils.lerp(g.position.z, tz, 0.12);
+
+      // Rotate so the cover/spine turns to face the viewer a touch
+      g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, -Math.PI / 2, 0.12);
+
+      // Scale up as it comes forward
+      const s = THREE.MathUtils.lerp(g.scale.x, 2.4, 0.12);
+      g.scale.set(s, s, s);
+
+      // Detect arrival → fire completion once
+      const dist = Math.hypot(g.position.x - tx, g.position.y - ty, g.position.z - tz);
+      if (!completedRef.current && dist < 0.35) {
+        completedRef.current = true;
+        onPullComplete?.();
+      }
+      return;
+    }
+
+    // Not pulling — reset completion latch and run hover ease
+    completedRef.current = false;
+    const targetZ = hovered ? 0.5 : 0;
+    g.position.x = THREE.MathUtils.lerp(g.position.x, position[0], 0.18);
+    g.position.y = THREE.MathUtils.lerp(g.position.y, position[1], 0.18);
+    g.position.z = THREE.MathUtils.lerp(g.position.z, position[2] + targetZ, 0.18);
+    g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, 0, 0.18);
+    const s = hovered ? 1.06 : 1;
+    g.scale.x = THREE.MathUtils.lerp(g.scale.x, s, 0.18);
+    g.scale.y = THREE.MathUtils.lerp(g.scale.y, s, 0.18);
+    g.scale.z = THREE.MathUtils.lerp(g.scale.z, s, 0.18);
   });
 
   const handlePointerOver = (e) => {
-    if (!interactive) return;
+    if (!interactive || pulling) return;
     e.stopPropagation();
     setHovered(true);
     document.body.style.cursor = 'pointer';
@@ -87,21 +120,19 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
     document.body.style.cursor = 'auto';
   };
   const handleClick = (e) => {
-    if (!interactive) return;
+    if (!interactive || pulling) return;
     e.stopPropagation();
+    setHovered(false);
+    document.body.style.cursor = 'auto';
     onSelect(book);
   };
 
   const pageColor = '#efe7d6';
   const headbandColor = '#d4933e';
-
-  // Truncate very long titles for the spine
-  const spineTitle =
-    book.title.length > 32 ? `${book.title.slice(0, 30)}…` : book.title;
+  const spineTitle = book.title.length > 32 ? `${book.title.slice(0, 30)}…` : book.title;
 
   return (
-    <group position={position} ref={groupRef}>
-      {/* Book body — extruded from z=0 toward z=+depth, positioned so spine face is at z=depth/2 in group space */}
+    <group position={position} ref={groupRef} renderOrder={pulling ? 999 : 0}>
       <mesh
         position={[0, 0, -depth]}
         onPointerOver={handlePointerOver}
@@ -119,13 +150,13 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
         />
       </mesh>
 
-      {/* Page block on the back side (inside shelf), cream colored */}
+      {/* Page block */}
       <mesh position={[0, 0, -depth - 0.02]}>
         <boxGeometry args={[thickness * 0.86, height * 0.96, 0.04]} />
         <meshStandardMaterial color={pageColor} roughness={0.95} metalness={0} />
       </mesh>
 
-      {/* Headbands at top & bottom of the spine */}
+      {/* Headbands */}
       <mesh position={[0, height / 2 - 0.04, 0.02]}>
         <boxGeometry args={[thickness * 0.9, 0.05, 0.05]} />
         <meshStandardMaterial color={headbandColor} roughness={0.4} metalness={0.25} />
@@ -135,13 +166,13 @@ function BookSpine({ book, index, position, interactive, onSelect }) {
         <meshStandardMaterial color={headbandColor} roughness={0.4} metalness={0.25} />
       </mesh>
 
-      {/* Decorative gold band near the top of the spine */}
+      {/* Decorative gold band */}
       <mesh position={[0, height * 0.28, 0.04]}>
         <boxGeometry args={[thickness * 0.8, 0.02, 0.02]} />
         <meshStandardMaterial color="#d4933e" roughness={0.35} metalness={0.4} />
       </mesh>
 
-      {/* Spine title — positioned well in front of the book face */}
+      {/* Spine title */}
       <Text
         position={[0, 0, 0.12]}
         rotation={[0, 0, -Math.PI / 2]}

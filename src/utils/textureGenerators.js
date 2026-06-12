@@ -278,3 +278,59 @@ export function loadBrickTexture(onLoaded) {
   );
   return fallback;
 }
+
+
+/**
+ * Creates a subtle warm "library" backdrop — a soft radial gradient that
+ * fades from a dim warm centre to near-black edges (cozy reading-room vibe).
+ * @returns {THREE.CanvasTexture}
+ */
+export function createLibraryBackdrop(width = 1024, height = 1024) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  // Base near-black warm tone
+  ctx.fillStyle = '#0c0a08';
+  ctx.fillRect(0, 0, width, height);
+
+  // Soft warm glow toward the centre (like a wall sconce wash)
+  const grad = ctx.createRadialGradient(
+    width / 2, height * 0.42, width * 0.05,
+    width / 2, height * 0.42, width * 0.7
+  );
+  grad.addColorStop(0, 'rgba(58, 42, 28, 0.9)');
+  grad.addColorStop(0.45, 'rgba(34, 25, 17, 0.6)');
+  grad.addColorStop(1, 'rgba(10, 8, 6, 0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Faint vertical wood-panel seams
+  ctx.globalAlpha = 0.05;
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 2;
+  const panelW = width / 6;
+  for (let i = 1; i < 6; i += 1) {
+    ctx.beginPath();
+    ctx.moveTo(i * panelW, 0);
+    ctx.lineTo(i * panelW, height);
+    ctx.stroke();
+  }
+
+  // Subtle grain noise
+  ctx.globalAlpha = 0.04;
+  for (let i = 0; i < 4000; i += 1) {
+    const x = Math.random() * width;
+    const y = Math.random() * height;
+    ctx.fillStyle = Math.random() > 0.5 ? '#000000' : '#caa37a';
+    ctx.fillRect(x, y, 1.5, 1.5);
+  }
+
+  ctx.globalAlpha = 1;
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  return texture;
+}

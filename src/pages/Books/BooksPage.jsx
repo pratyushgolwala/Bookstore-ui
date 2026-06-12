@@ -152,7 +152,12 @@ function BooksPage() {
                 {loading ? (
                   <LoadingSpinner />
                 ) : (
-                  <BookshelfScene books={books} interactive onBookSelect={selectBook} />
+                  <BookshelfScene
+                    books={books}
+                    interactive
+                    onBookSelect={selectBook}
+                    selectedBookId={selectedBook?.id || null}
+                  />
                 )}
               </BookshelfErrorBoundary>
             </Suspense>
