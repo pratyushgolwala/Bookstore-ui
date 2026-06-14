@@ -120,7 +120,7 @@ function Navbar() {
                   <div
                     className="dropdown-menu"
                     style={{
-                      boxShadow: `0 8px 32px rgba(92, 92, 143, 0.3)`,
+                      boxShadow: `0 8px 32px rgba(46, 139, 87, 0.3)`,
                     }}
                   >
                     {item.submenu.map((subitem) => (
@@ -165,7 +165,7 @@ function Navbar() {
                 <div
                   className="dropdown-menu"
                   style={{
-                    boxShadow: `0 8px 32px rgba(92, 92, 143, 0.3)`,
+                    boxShadow: `0 8px 32px rgba(46, 139, 87, 0.3)`,
                     right: 0,
                     left: 'auto',
                   }}

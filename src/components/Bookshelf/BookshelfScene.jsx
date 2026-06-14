@@ -117,7 +117,7 @@ export default function BookshelfScene({
         {/* Bright library lighting — books should be clearly visible */}
         <ambientLight intensity={1.2} color="#FFFFFF" />
         <directionalLight position={[4, centerY + 5, 12]} intensity={1.5} color="#FFFAF0" />
-        <directionalLight position={[-4, centerY + 2, 8]} intensity={0.6} color="#E8E0FF" />
+        <directionalLight position={[-4, centerY + 2, 8]} intensity={0.6} color="#E0FFE8" />
         <pointLight position={[0, centerY + 2, 8]} intensity={1.0} color="#FFD700" distance={40} decay={2} />
         <pointLight position={[-5, centerY, 6]} intensity={0.4} color="#FFFFFF" distance={25} decay={2} />
 

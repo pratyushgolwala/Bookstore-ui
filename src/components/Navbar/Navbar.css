@@ -47,12 +47,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(92, 92, 143, 0.3);
+  box-shadow: 0 4px 12px rgba(46, 139, 87, 0.3);
   transition: all 0.3s ease;
 }
 
 .navbar-logo:hover .logo-icon {
-  box-shadow: 0 8px 24px rgba(92, 92, 143, 0.5);
+  box-shadow: 0 8px 24px rgba(46, 139, 87, 0.5);
 }
 
 .logo-text {

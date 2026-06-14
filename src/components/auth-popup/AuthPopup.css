@@ -107,7 +107,7 @@
 
 .auth-popup-btn.primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(92, 92, 143, 0.4);
+  box-shadow: 0 8px 20px rgba(46, 139, 87, 0.4);
 }
 
 .auth-popup-btn.primary:hover::before {
@@ -116,7 +116,7 @@
 
 .auth-popup-btn.primary:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(92, 92, 143, 0.2);
+  box-shadow: 0 2px 8px rgba(46, 139, 87, 0.2);
 }
 
 .auth-popup-btn.secondary {
@@ -126,7 +126,7 @@
 }
 
 .auth-popup-btn.secondary:hover {
-  background: rgba(92, 92, 143, 0.1);
+  background: rgba(46, 139, 87, 0.1);
   transform: translateY(-2px);
 }
 
