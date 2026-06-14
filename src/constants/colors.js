@@ -4,18 +4,18 @@
  */
 
 export const COLORS = {
-  // Primary colors - Deep Indigo/Navy
+  // Primary colors - Green / Bottle Green
   primary: {
-    50: '#1a1a2e',
-    100: '#252541',
-    200: '#2d2d54',
-    300: '#363666',
-    400: '#4a4a7a',
-    500: '#5c5c8f', // Primary brand color - deep indigo
-    600: '#6d6d9d',
-    700: '#7e7eab',
-    800: '#8f8fb9',
-    900: '#a0a0c7',
+    50: '#0a1f17',
+    100: '#0f2e22',
+    200: '#143d2c',
+    300: '#1a5740',
+    400: '#1f7a54',
+    500: '#2e8b57', // Primary brand color - sea green
+    600: '#3da06a',
+    700: '#5bb583',
+    800: '#88c9a3',
+    900: '#b9e7cf',
   },
 
   // Secondary colors - Warm Gold/Amber
@@ -79,12 +79,12 @@ export const COLORS = {
     inverse: '#0f0f0f',
   },
 
-  // Gradients
+  // Gradients — green to bottle green with warm accents
   gradient: {
-    primary: 'linear-gradient(135deg, #5c5c8f 0%, #d4933e 100%)',
-    dark: 'linear-gradient(135deg, #2d2d54 0%, #875c1f 100%)',
-    accent: 'linear-gradient(135deg, #d4933e 0%, #d48080 100%)',
-    glow: 'linear-gradient(135deg, #5c5c8f 0%, #d4933e 50%, #d48080 100%)',
+    primary: 'linear-gradient(135deg, #2e8b57 0%, #0f3d2e 100%)',
+    dark: 'linear-gradient(135deg, #143d2c 0%, #0a2018 100%)',
+    accent: 'linear-gradient(135deg, #2e8b57 0%, #d4933e 100%)',
+    glow: 'linear-gradient(135deg, #3da06a 0%, #2e8b57 50%, #0f3d2e 100%)',
   },
 };
 
