@@ -65,7 +65,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(92, 92, 143, 0.35);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(46, 139, 87, 0.35);
 }
 
 .brand-name {
@@ -136,13 +140,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(92, 92, 143, 0.3);
+  box-shadow: 0 4px 14px rgba(46, 139, 87, 0.3);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .account-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(92, 92, 143, 0.45);
+  box-shadow: 0 8px 20px rgba(46, 139, 87, 0.45);
 }
 
 .account-btn:active {

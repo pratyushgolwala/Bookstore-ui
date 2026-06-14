@@ -84,7 +84,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(92, 92, 143, 0.6) 35%,
+    rgba(46, 139, 87, 0.6) 35%,
     rgba(212, 147, 62, 0.6) 65%,
     transparent 100%
   );
@@ -260,7 +260,7 @@
 
 .formButton:hover:not(:disabled) {
   opacity: 0.88;
-  box-shadow: 0 6px 20px rgba(92, 92, 143, 0.28);
+  box-shadow: 0 6px 20px rgba(46, 139, 87, 0.28);
   transform: translateY(-1px);
 }
 
@@ -325,7 +325,7 @@
 
 .nextButton:hover:not(:disabled) {
   opacity: 0.88;
-  box-shadow: 0 6px 20px rgba(92, 92, 143, 0.25);
+  box-shadow: 0 6px 20px rgba(46, 139, 87, 0.25);
   transform: translateY(-1px);
 }
 
