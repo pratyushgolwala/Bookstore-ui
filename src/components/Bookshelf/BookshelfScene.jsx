@@ -1,144 +1,150 @@
-import { useMemo, useState, useRef, useEffect } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
-import { MapControls, PerspectiveCamera } from '@react-three/drei';
+import { useMemo, useState, useEffect } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import BookSpine from './BookSpine';
 import BookshelfFrame from './BookshelfFrame';
 import { computeSpineThickness } from '../../utils/bookshelfUtils.js';
-import { loadBrickTexture } from '../../utils/textureGenerators.js';
+import { createLibraryBackdrop } from '../../utils/textureGenerators.js';
 
-const SHELF_WIDTH = 14; // interior usable width
-const ROW_HEIGHT = 2.9;
-const ROW_DEPTH = 1.6;
-const BOOK_GAP = 0.06;
-const SIDE_MARGIN = 0.4;
+const SHELF_WIDTH = 15;       // interior usable width
+const ROW_HEIGHT = 3.0;       // vertical spacing between shelf planks
+const ROW_DEPTH = 1.6;        // shelf depth
+const BOOK_GAP = 0.05;        // gap between books
+const SECTIONS_PER_ROW = 4;   // compartments per shelf row
+const DIVIDER_THICKNESS = 0.16;
+const SECTION_MARGIN = 0.3;   // inner padding within each section
 
 /**
- * Lay books into rows filling the shelf width compactly (no category grouping).
- * @param {object[]} books
- * @returns {{ placements, rowCount, rowLabels }}
+ * Lay books into rows split into equal-width SECTIONS (like a real library).
+ * Books fill section-by-section, left-to-right, then wrap to the next row.
  */
 function layoutBooks(books) {
   const placements = [];
+
+  // Width available for books inside one section
+  const sectionOuterWidth = SHELF_WIDTH / SECTIONS_PER_ROW;
+  const sectionInnerWidth = sectionOuterWidth - SECTION_MARGIN * 2;
+
   let row = 0;
-  let cursor = -SHELF_WIDTH / 2 + SIDE_MARGIN;
+  let section = 0;
+  // cursor is the left edge within the current section's inner area
+  let cursor = 0;
+
+  const sectionLeftEdge = (s) =>
+    -SHELF_WIDTH / 2 + s * sectionOuterWidth + SECTION_MARGIN;
 
   books.forEach((book, index) => {
     const thickness = computeSpineThickness(book.pageCount);
-    if (cursor + thickness > SHELF_WIDTH / 2 - SIDE_MARGIN) {
-      row += 1;
-      cursor = -SHELF_WIDTH / 2 + SIDE_MARGIN;
+
+    // If the book doesn't fit in the current section, advance section
+    if (cursor + thickness > sectionInnerWidth) {
+      section += 1;
+      cursor = 0;
+      // If we've run out of sections, wrap to next row
+      if (section >= SECTIONS_PER_ROW) {
+        section = 0;
+        row += 1;
+      }
     }
-    const x = cursor + thickness / 2;
-    placements.push({ book, x, row, index, thickness });
+
+    const x = sectionLeftEdge(section) + cursor + thickness / 2;
+    placements.push({ book, x, row, section, index, thickness });
     cursor += thickness + BOOK_GAP;
   });
 
   const rowCount = row + 1;
-  return { placements, rowCount, rowLabels: [] };
+  return { placements, rowCount };
 }
 
-/** Brick wall backdrop behind the bookcase. */
-function BrickWall({ centerY, height }) {
-  const [tex, setTex] = useState(() => loadBrickTexture((loaded) => setTex(loaded)));
+/** Subtle warm library backdrop plane behind the bookcase. */
+function Backdrop({ centerY, height }) {
+  const tex = useMemo(() => createLibraryBackdrop(), []);
   return (
-    <mesh position={[0, centerY, -ROW_DEPTH / 2 - 1.2]}>
-      <planeGeometry args={[60, Math.max(40, height + 20)]} />
-      <meshStandardMaterial map={tex} roughness={0.95} metalness={0} />
+    <mesh position={[0, centerY, -ROW_DEPTH / 2 - 2]}>
+      <planeGeometry args={[70, Math.max(50, height + 30)]} />
+      <meshBasicMaterial map={tex} toneMapped={false} />
     </mesh>
   );
 }
 
 /**
- * Locks MapControls panning to the bookshelf bounds and disables rotation.
- * Camera moves only on X and Y (no orbit around the shelf).
- */
-function ClampedControls({ minX, maxX, minY, maxY, target }) {
-  const controlsRef = useRef();
-  const { camera } = useThree();
-
-  useEffect(() => {
-    if (controlsRef.current) {
-      controlsRef.current.target.set(target[0], target[1], 0);
-      controlsRef.current.update();
-    }
-  }, [target]);
-
-  return (
-    <MapControls
-      ref={controlsRef}
-      enableRotate={false}
-      enableDamping
-      dampingFactor={0.08}
-      screenSpacePanning
-      minDistance={6}
-      maxDistance={18}
-      onChange={() => {
-        const c = controlsRef.current;
-        if (!c) return;
-        // Clamp the pan target to shelf bounds
-        c.target.x = THREE.MathUtils.clamp(c.target.x, minX, maxX);
-        c.target.y = THREE.MathUtils.clamp(c.target.y, minY, maxY);
-        camera.position.x = THREE.MathUtils.clamp(camera.position.x, minX, maxX);
-        camera.position.y = THREE.MathUtils.clamp(camera.position.y, minY, maxY);
-      }}
-    />
-  );
-}
-
-/**
- * BookshelfScene — a realistic wooden bookcase against a brick wall.
- * Books fill horizontal rows; the camera pans on X/Y only (no rotation).
+ * BookshelfScene — a STATIC, framed wooden bookcase against a subtle
+ * library backdrop. No zoom / no pan (pagination handles navigation).
+ * Clicking a book pulls it smoothly out of the shelf, then opens the detail card.
  */
 export default function BookshelfScene({
   books = [],
   interactive = true,
   onBookSelect,
+  selectedBookId = null,
 }) {
-  const { placements, rowCount, rowLabels } = useMemo(() => layoutBooks(books), [books]);
+  const { placements, rowCount } = useMemo(() => layoutBooks(books), [books]);
 
+  const frameThickness = 0.35;
   const topY = ROW_HEIGHT * 0.5;
-  const totalHeight = rowCount * ROW_HEIGHT;
+  const totalHeight = rowCount * ROW_HEIGHT + frameThickness;
   const centerY = topY - totalHeight / 2;
 
-  // Camera framing
-  const camY = centerY;
-  const panRangeY = totalHeight / 2;
+  // Track which book is animating out of the shelf
+  const [pullingId, setPullingId] = useState(null);
+
+  // Reset the pulled book when the detail card closes
+  useEffect(() => {
+    if (!selectedBookId) setPullingId(null);
+  }, [selectedBookId]);
+
+  // Camera distance to FIT the whole shelf in view (static framing)
+  const fov = 50;
+  const fitDist = useMemo(() => {
+    const vFov = (fov * Math.PI) / 180;
+    const fitH = (totalHeight + 1.5) / 2 / Math.tan(vFov / 2);
+    const aspect = 16 / 9;
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+    const fitW = (SHELF_WIDTH + 2) / 2 / Math.tan(hFov / 2);
+    return Math.max(fitH, fitW) + 1.5;
+  }, [totalHeight]);
+
+  const handleBookClick = (book) => {
+    if (!interactive) return;
+    setPullingId(book.id);
+  };
+
+  // Target the book animates toward (in front, centred vertically)
+  const pullTarget = [0, centerY, fitDist - 5];
 
   return (
     <div className="relative w-full" style={{ height: '100%', minHeight: '600px' }}>
       <Canvas
-        style={{ background: '#0f0f0f' }}
+        style={{ background: '#0c0a08' }}
         gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
         dpr={[1, 2]}
       >
-        <PerspectiveCamera makeDefault position={[0, camY, 13]} fov={55} near={0.1} far={120} />
+        <PerspectiveCamera makeDefault position={[0, centerY, fitDist]} fov={fov} near={0.1} far={200} />
 
-        {/* Bright library lighting — books should be clearly visible */}
-        <ambientLight intensity={1.2} color="#FFFFFF" />
-        <directionalLight position={[4, centerY + 5, 12]} intensity={1.5} color="#FFFAF0" />
-        <directionalLight position={[-4, centerY + 2, 8]} intensity={0.6} color="#E0FFE8" />
-        <pointLight position={[0, centerY + 2, 8]} intensity={1.0} color="#FFD700" distance={40} decay={2} />
-        <pointLight position={[-5, centerY, 6]} intensity={0.4} color="#FFFFFF" distance={25} decay={2} />
+        {/* Warm library lighting */}
+        <ambientLight intensity={0.85} color="#fff4e6" />
+        <directionalLight position={[5, centerY + 6, 14]} intensity={1.1} color="#FFE8C8" />
+        <directionalLight position={[-5, centerY + 2, 9]} intensity={0.4} color="#cdd4ff" />
+        <pointLight position={[0, centerY + 1, 7]} intensity={0.8} color="#FFC96B" distance={45} decay={2} />
 
-        {/* Brick wall backdrop */}
-        <BrickWall centerY={centerY} height={totalHeight} />
+        {/* Subtle backdrop */}
+        <Backdrop centerY={centerY} height={totalHeight} />
 
-        {/* Wooden bookcase frame */}
+        {/* Wooden bookcase with sectioned shelves */}
         <BookshelfFrame
           width={SHELF_WIDTH}
           rowCount={rowCount}
           rowHeight={ROW_HEIGHT}
           rowDepth={ROW_DEPTH}
+          sectionsPerRow={SECTIONS_PER_ROW}
+          dividerThickness={DIVIDER_THICKNESS}
         />
 
-        {/* Books standing on each shelf */}
+        {/* Books */}
         {placements.map(({ book, x, row, index }) => {
-          // Shelf plank Y for this row (matches BookshelfFrame logic)
-          const frameThickness = 0.35;
           const plankY = topY - frameThickness / 2 - (row + 1) * ROW_HEIGHT + 0.02;
-          const plankTopY = plankY + 0.06; // half plank height (0.12/2)
-          // Book height varies per book; approximate center above plank
+          const plankTopY = plankY + 0.06;
           const bookHeight = 1.9 + (book.pageCount % 9) * 0.035;
           const y = plankTopY + bookHeight / 2;
           return (
@@ -148,26 +154,19 @@ export default function BookshelfScene({
               index={index}
               position={[x, y, 0]}
               interactive={interactive}
-              onSelect={onBookSelect}
+              pulling={pullingId === book.id}
+              pullTarget={pullTarget}
+              onSelect={handleBookClick}
+              onPullComplete={() => onBookSelect?.(book)}
             />
           );
         })}
-
-        {interactive && (
-          <ClampedControls
-            minX={-SHELF_WIDTH / 2}
-            maxX={SHELF_WIDTH / 2}
-            minY={centerY - panRangeY}
-            maxY={centerY + panRangeY}
-            target={[0, camY, 0]}
-          />
-        )}
       </Canvas>
 
       {!interactive && (
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ backgroundColor: 'rgba(15, 15, 15, 0.25)' }}
+          style={{ backgroundColor: 'rgba(12, 10, 8, 0.25)' }}
           aria-hidden="true"
         />
       )}
