@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   BookMarked, Menu, X, User, LogOut, ShoppingCart,
-  Heart, Settings, Library, LogIn,
+  Heart, Settings, Library, LogIn, Bell,
 } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import AuthPopup from '../auth-popup/AuthPopup';
 import { selectIsAuthenticated, selectCurrentUser, logout } from '../../store/slices/authSlice';
 import { selectCartCount } from '../../store/slices/cartSlice';
 import { emitToast } from '../../utils/toastBus';
+import { notificationsService } from '../../services/notificationsService';
 import './Navbar.css';
 
 const BRAND = 'Folio';
@@ -31,8 +32,43 @@ function Navbar() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   const lastScrollY = useRef(0);
+
+  // Fetch notifications when user logs in
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchNotifications();
+      // Poll every 30 seconds
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setNotifications([]);
+    }
+  }, [isAuthenticated]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await notificationsService.getNotifications();
+      const data = res.data?.results || res.data || [];
+      setNotifications(Array.isArray(data) ? data : []);
+    } catch {
+      // silent fail
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationsService.markAllRead();
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    } catch {
+      // silent fail
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   // Hide on scroll down, show on scroll up
   useEffect(() => {
@@ -154,6 +190,54 @@ function Navbar() {
 
           {/* ── RIGHT: Account ── */}
           <div className="navbar-right">
+            {/* Notification Bell — authenticated only */}
+            {isAuthenticated && (
+              <div
+                className="nav-item-wrapper"
+                onMouseEnter={() => setNotifOpen(true)}
+                onMouseLeave={() => setNotifOpen(false)}
+              >
+                <button className="notif-btn" aria-label="Notifications">
+                  <Bell size={18} />
+                  {unreadCount > 0 && (
+                    <span className="notif-badge">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {notifOpen && (
+                  <div className="dropdown-menu dropdown-right notif-dropdown">
+                    <div className="notif-header">
+                      <span style={{ color: COLORS.text.primary, fontWeight: 600 }}>Notifications</span>
+                      {unreadCount > 0 && (
+                        <button className="notif-mark-all" onClick={handleMarkAllRead}
+                          style={{ color: COLORS.primary[600] }}>
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+                    <div className="account-divider" />
+                    {notifications.length === 0 ? (
+                      <div className="notif-empty" style={{ color: COLORS.text.tertiary }}>
+                        No notifications yet
+                      </div>
+                    ) : (
+                      notifications.slice(0, 8).map(n => (
+                        <div key={n.id}
+                          className={`notif-item ${!n.is_read ? 'notif-unread' : ''}`}
+                          style={{ borderColor: COLORS.border }}
+                        >
+                          <p className="notif-title" style={{ color: COLORS.text.primary }}>{n.title}</p>
+                          <p className="notif-msg" style={{ color: COLORS.text.secondary }}>{n.message}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Cart button — always visible */}
             <button
               className="cart-btn"
