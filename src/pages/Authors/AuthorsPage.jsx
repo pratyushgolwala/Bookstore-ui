@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Users, BookOpen, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import { authorsService } from '../../services/authorsService';
 import { normalizeBook } from '../../utils/bookNormalizer';
@@ -88,6 +89,11 @@ function AuthorsPage() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('books_desc');
 
+  // Author detail is driven by the ?author= query param so it can be deep-linked
+  // (e.g. clicking an author name on any book card lands here).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const authorParam = searchParams.get('author');
+
   // Author detail state
   const [selectedAuthor, setSelectedAuthor] = useState(null); // full author object
   const [authorBooks, setAuthorBooks] = useState([]);
@@ -115,45 +121,61 @@ function AuthorsPage() {
     return () => { active = false; };
   }, [search]);
 
-  // Fetch books + bio when an author is selected
-  const openAuthor = async (author) => {
-    setSelectedAuthor(author);
-    setBooksLoading(true);
-    try {
-      const res = await authorsService.getBooksByAuthor(author.name);
-      const data = res?.data ?? res;
-      const books = (data?.books || []).map(normalizeBook).filter(Boolean);
-
-      // Backend may return author as an object { name, image, bio, book_count }
-      // (current) or as a plain string (legacy). Handle both gracefully.
-      const meta =
-        data?.author && typeof data.author === 'object'
-          ? data.author
-          : { name: author.name };
-
-      setSelectedAuthor((prev) => {
-        const merged = { ...prev, ...meta };
-        // Guarantee an image and an "about" blurb even on the legacy backend.
-        if (!merged.image) merged.image = avatarFor(merged.name);
-        if (!merged.bio) {
-          merged.bio = `${merged.name} has ${books.length} book${
-            books.length !== 1 ? 's' : ''
-          } in our catalogue.`;
-        }
-        return merged;
-      });
-
-      setAuthorBooks(books);
-    } catch {
+  // Load the selected author's books + bio whenever the ?author= param changes.
+  useEffect(() => {
+    if (!authorParam) {
+      setSelectedAuthor(null);
       setAuthorBooks([]);
-    } finally {
-      setBooksLoading(false);
+      return undefined;
     }
+
+    let active = true;
+    setSelectedAuthor({ name: authorParam });
+    setBooksLoading(true);
+
+    (async () => {
+      try {
+        const res = await authorsService.getBooksByAuthor(authorParam);
+        const data = res?.data ?? res;
+        const books = (data?.books || []).map(normalizeBook).filter(Boolean);
+
+        // Backend may return author as an object { name, image, bio, book_count }
+        // (current) or as a plain string (legacy). Handle both gracefully.
+        const meta =
+          data?.author && typeof data.author === 'object'
+            ? data.author
+            : { name: authorParam };
+
+        if (!active) return;
+        setSelectedAuthor((prev) => {
+          const merged = { ...prev, ...meta };
+          if (!merged.image) merged.image = avatarFor(merged.name);
+          if (!merged.bio) {
+            merged.bio = `${merged.name} has ${books.length} book${
+              books.length !== 1 ? 's' : ''
+            } in our catalogue.`;
+          }
+          return merged;
+        });
+        setAuthorBooks(books);
+      } catch {
+        if (active) setAuthorBooks([]);
+      } finally {
+        if (active) setBooksLoading(false);
+      }
+    })();
+
+    return () => { active = false; };
+  }, [authorParam]);
+
+  // Navigate to an author's detail view (updates the URL so it's shareable).
+  const openAuthor = (author) => {
+    setSearchParams({ author: author.name });
+    window.scrollTo({ top: 0 });
   };
 
   const goBack = () => {
-    setSelectedAuthor(null);
-    setAuthorBooks([]);
+    setSearchParams({});
   };
 
   // Apply the chosen sort/filter to the loaded authors (client-side).
