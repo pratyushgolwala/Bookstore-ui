@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import React from 'react';
 import BookshelfErrorBoundary from '../BookshelfErrorBoundary';
 import cartReducer from '../../../store/slices/cartSlice';
+import authReducer from '../../../store/slices/authSlice';
 
 // A child component that throws an error on render
 function ThrowingChild() {
@@ -31,7 +32,12 @@ const mockBooks = [
 
 /** Render helper that wraps children in a Redux Provider (BookCard needs it). */
 function renderWithStore(ui) {
-  const store = configureStore({ reducer: { cart: cartReducer } });
+  const store = configureStore({
+    reducer: {
+      cart: cartReducer,
+      auth: authReducer,
+    },
+  });
   return render(<Provider store={store}>{ui}</Provider>);
 }
 

@@ -1,14 +1,38 @@
+import { useEffect, useRef } from 'react';
 import { Outlet } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import Navbar from '../components/Navbar/Navbar';
-import ToastContainer from '../components/Toast/ToastContainer';
-import useToast from '../hooks/useToast';
+import ToastHost from '../components/Toast/ToastHost';
+import { selectCurrentUser } from '../store/slices/authSlice';
+import { hydrateCart, resetCart } from '../store/slices/cartSlice';
+import { hydrateWishlist, resetWishlist } from '../store/slices/wishlistSlice';
 import COLORS from '../constants/colors';
 
 /**
- * MainLayout — wraps all public-facing pages with professional styling
+ * MainLayout — wraps all public-facing pages with professional styling.
+ * Hosts the global toast renderer and keeps the cart + wishlist in sync with
+ * the logged-in user (hydrate on login, reset on logout).
  */
 function MainLayout() {
-  const { toasts, removeToast } = useToast();
+  const dispatch = useDispatch();
+  const currentUser = useSelector(selectCurrentUser);
+  const prevUserId = useRef(currentUser?.id ?? null);
+
+  useEffect(() => {
+    const userId = currentUser?.id ?? null;
+    if (userId === prevUserId.current) return;
+
+    if (userId) {
+      // Logged in (or switched user) — load that user's saved cart + wishlist
+      dispatch(hydrateCart(userId));
+      dispatch(hydrateWishlist(userId));
+    } else {
+      // Logged out — clear the in-memory cart + wishlist
+      dispatch(resetCart());
+      dispatch(resetWishlist());
+    }
+    prevUserId.current = userId;
+  }, [currentUser, dispatch]);
 
   return (
     <div className="flex flex-col min-h-screen relative" style={{ backgroundColor: COLORS.background }}>
@@ -174,8 +198,8 @@ function MainLayout() {
         </div>
       </footer>
 
-      {/* Global toast notifications — top-right, available on all pages */}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      {/* Global toast notifications — available on all pages via toastBus */}
+      <ToastHost />
     </div>
   );
 }

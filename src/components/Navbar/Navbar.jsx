@@ -9,6 +9,7 @@ import COLORS from '../../constants/colors';
 import AuthPopup from '../auth-popup/AuthPopup';
 import { selectIsAuthenticated, selectCurrentUser, logout } from '../../store/slices/authSlice';
 import { selectCartCount } from '../../store/slices/cartSlice';
+import { emitToast } from '../../utils/toastBus';
 import './Navbar.css';
 
 const BRAND = 'Folio';
@@ -72,7 +73,10 @@ function Navbar() {
   ];
 
   const accountLinks = [
-    { label: 'My Books', href: '/my-books', icon: <Library size={15} /> },
+    // "My Books" is author-only — added conditionally below
+    ...(currentUser?.role === 'AUTHOR'
+      ? [{ label: 'My Books', href: '/my-books', icon: <Library size={15} /> }]
+      : []),
     { label: 'Wishlist', href: '/wishlist', icon: <Heart size={15} /> },
     { label: 'Orders', href: '/orders', icon: <ShoppingCart size={15} /> },
     { label: 'Settings', href: '/settings', icon: <Settings size={15} /> },
@@ -90,6 +94,17 @@ function Navbar() {
     setAccountMenuOpen(false);
     setMobileMenuOpen(false);
     navigate('/');
+  };
+
+  // Cart requires login — otherwise prompt the user to sign in
+  const handleCartClick = () => {
+    if (isAuthenticated) {
+      navigate('/cart');
+    } else {
+      emitToast('warning', 'Please log in to view your cart.');
+      setAuthPopupOpen(true);
+    }
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -142,11 +157,11 @@ function Navbar() {
             {/* Cart button — always visible */}
             <button
               className="cart-btn"
-              onClick={() => navigate('/cart')}
+              onClick={handleCartClick}
               aria-label={`Cart — ${cartCount} item${cartCount !== 1 ? 's' : ''}`}
             >
               <ShoppingCart size={18} />
-              {cartCount > 0 && (
+              {isAuthenticated && cartCount > 0 && (
                 <span className="cart-badge">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
@@ -224,8 +239,8 @@ function Navbar() {
               <div className="mobile-nav-group">
                 <div className="mobile-nav-label">Account</div>
                 <div className="mobile-submenu">
-                  <button className="mobile-nav-item" onClick={() => go('/cart')}>
-                    🛒 Cart {cartCount > 0 && `(${cartCount})`}
+                  <button className="mobile-nav-item" onClick={handleCartClick}>
+                    Cart {cartCount > 0 && `(${cartCount})`}
                   </button>
                   {accountLinks.map((link) => (
                     <button key={link.label} className="mobile-nav-item" onClick={() => go(link.href)}>

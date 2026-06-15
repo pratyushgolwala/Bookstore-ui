@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { ShoppingCart, Check } from 'lucide-react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addItem } from '../../store/slices/cartSlice';
+import { selectIsAuthenticated } from '../../store/slices/authSlice';
+import { emitToast } from '../../utils/toastBus';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import Badge from './Badge';
+import WishlistButton from './WishlistButton';
 
 /**
  * BookCard — a polished 2D book card for grids.
@@ -12,11 +15,24 @@ import Badge from './Badge';
  */
 function BookCard({ book, onSelect }) {
   const dispatch = useDispatch();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const [added, setAdded] = useState(false);
 
   const quickAdd = (e) => {
     e.stopPropagation();
-    dispatch(addItem({ id: book.id, title: book.title, price: book.price, quantity: 1 }));
+    if (!isAuthenticated) {
+      emitToast('warning', 'Please log in to add books to your cart.');
+      return;
+    }
+    dispatch(addItem({
+      id: book.id,
+      title: book.title,
+      price: book.price,
+      quantity: 1,
+      author: book.author,
+      coverImageUrl: book.coverImageUrl,
+    }));
+    emitToast('success', `"${book.title}" added to cart.`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
@@ -67,9 +83,12 @@ function BookCard({ book, onSelect }) {
         <p className="text-xs mt-1 line-clamp-1" style={{ color: COLORS.text.tertiary }}>
           {book.author}
         </p>
-        <p className="text-base font-bold mt-auto pt-2" style={{ color: COLORS.secondary[500] }}>
-          {formatCurrency(book.price)}
-        </p>
+        <div className="flex items-end justify-between mt-auto pt-2">
+          <p className="text-base font-bold" style={{ color: COLORS.secondary[500] }}>
+            {formatCurrency(book.price)}
+          </p>
+          <WishlistButton book={book} size={16} />
+        </div>
       </div>
     </div>
   );

@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { X, ShoppingCart, Check, BookOpen, Globe, Calendar, Package } from 'lucide-react';
 import { addItem } from '../../store/slices/cartSlice';
+import { selectIsAuthenticated } from '../../store/slices/authSlice';
+import { emitToast } from '../../utils/toastBus';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import Badge from '../ui/Badge';
+import WishlistButton from '../ui/WishlistButton';
 
 /**
  * BookDetailCard — a polished modal overlay showing full book details.
@@ -12,11 +15,24 @@ import Badge from '../ui/Badge';
  */
 export default function BookDetailCard({ book, onClose }) {
   const dispatch = useDispatch();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const cardRef = useRef(null);
   const [added, setAdded] = useState(false);
 
   const handleAddToCart = () => {
-    dispatch(addItem({ id: book.id, title: book.title, price: book.price, quantity: 1 }));
+    if (!isAuthenticated) {
+      emitToast('warning', 'Please log in to add books to your cart.');
+      return;
+    }
+    dispatch(addItem({
+      id: book.id,
+      title: book.title,
+      price: book.price,
+      quantity: 1,
+      author: book.author,
+      coverImageUrl: book.coverImageUrl,
+    }));
+    emitToast('success', `"${book.title}" added to cart.`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -61,9 +77,13 @@ export default function BookDetailCard({ book, onClose }) {
 
         {/* Cover */}
         <div
-          className="md:w-2/5 flex items-center justify-center p-6"
+          className="md:w-2/5 flex items-center justify-center p-6 relative"
           style={{ background: COLORS.gradient.dark }}
         >
+          {/* Wishlist heart — top-right of the image section */}
+          <div className="absolute top-3 right-3 z-10">
+            <WishlistButton book={book} size={18} />
+          </div>
           <img
             src={book.coverImageUrl}
             alt={`Cover of ${book.title}`}
