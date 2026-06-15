@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { MessageSquare, Plus, Pin, Lock, Clock, MessageCircle, Search, Filter } from 'lucide-react';
+import { MessageSquare, Plus, Pin, Lock, Clock, MessageCircle, Search, Filter, Send } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import useToast from '../../hooks/useToast';
-import { selectIsAuthenticated } from '../../store/slices/authSlice';
+import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
+import { discussionsService } from '../../services/discussionsService';
 import './DiscussionPage.css';
 
 /**
- * DiscussionPage — Forum for book discussions
+ * DiscussionPage — Reddit/Threads-style discussion forum
  * Read-only for anonymous users, full access for authenticated users
  */
 function DiscussionPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const currentUser = useSelector(selectCurrentUser);
   const { toast } = useToast();
 
   const [threads, setThreads] = useState([]);
@@ -33,60 +35,33 @@ function DiscussionPage() {
     { value: 'help', label: 'Help & Support' },
   ];
 
-  // Mock data - replace with API calls
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setThreads([
-        {
-          id: '1',
-          title: 'What are you currently reading?',
-          author_name: 'Jane Reader',
-          category: 'general',
-          is_pinned: true,
-          is_locked: false,
-          post_count: 234,
-          last_post_at: new Date(Date.now() - 3600000).toISOString(),
-          created_at: new Date(Date.now() - 86400000 * 7).toISOString(),
-          posts: [
-            {
-              id: 'p1',
-              author_name: 'Jane Reader',
-              author_email: 'jane@example.com',
-              content: "I just started 'The Midnight Library' and I'm hooked! What's everyone else reading?",
-              created_at: new Date(Date.now() - 86400000 * 7).toISOString(),
-              is_edited: false,
-            },
-          ],
-        },
-        {
-          id: '2',
-          title: 'Best sci-fi books for beginners?',
-          author_name: 'Alex Novice',
-          category: 'recommendations',
-          is_pinned: false,
-          is_locked: false,
-          post_count: 45,
-          last_post_at: new Date(Date.now() - 7200000).toISOString(),
-          created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
-        },
-        {
-          id: '3',
-          title: 'Book club meeting next week',
-          author_name: 'Sarah Organizer',
-          category: 'events',
-          is_pinned: false,
-          is_locked: false,
-          post_count: 12,
-          last_post_at: new Date(Date.now() - 14400000).toISOString(),
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
+    fetchThreads();
   }, []);
 
-  const handleCreateThread = () => {
+  const fetchThreads = async () => {
+    try {
+      setLoading(true);
+      const response = await discussionsService.getThreads();
+      const threadsData = response.data?.results || response.data || [];
+      setThreads(threadsData);
+    } catch (error) {
+      toast.error(error.message || 'Failed to load discussions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchThreadDetails = async (threadId) => {
+    try {
+      const response = await discussionsService.getThreadById(threadId);
+      setSelectedThread(response.data);
+    } catch (error) {
+      toast.error(error.message || 'Failed to load thread details');
+    }
+  };
+
+  const handleCreateThread = async () => {
     if (!isAuthenticated) {
       toast.error('You need to login to create a thread.');
       return;
@@ -95,14 +70,23 @@ function DiscussionPage() {
       toast.warning('Please enter a thread title.');
       return;
     }
-    // TODO: API call to create thread
-    toast.success('Thread created successfully!');
-    setShowNewThreadModal(false);
-    setNewThreadTitle('');
-    setNewThreadCategory('general');
+
+    try {
+      await discussionsService.createThread({
+        title: newThreadTitle,
+        category: newThreadCategory,
+      });
+      toast.success('Thread created successfully!');
+      setShowNewThreadModal(false);
+      setNewThreadTitle('');
+      setNewThreadCategory('general');
+      fetchThreads();
+    } catch (error) {
+      toast.error(error.message || 'Failed to create thread');
+    }
   };
 
-  const handleAddPost = () => {
+  const handleAddPost = async () => {
     if (!isAuthenticated) {
       toast.error('You need to login to post in discussions.');
       return;
@@ -111,9 +95,17 @@ function DiscussionPage() {
       toast.warning('Please enter your message.');
       return;
     }
-    // TODO: API call to add post
-    toast.success('Post added successfully!');
-    setNewPostContent('');
+
+    try {
+      await discussionsService.addPostToThread(selectedThread.id, {
+        content: newPostContent,
+      });
+      toast.success('Post added successfully!');
+      setNewPostContent('');
+      fetchThreadDetails(selectedThread.id);
+    } catch (error) {
+      toast.error(error.message || 'Failed to add post');
+    }
   };
 
   const getTimeAgo = (dateString) => {
@@ -146,7 +138,7 @@ function DiscussionPage() {
                   Community Discussions
                 </h1>
                 <p className="page-subtitle" style={{ color: COLORS.text.secondary }}>
-                  Share your thoughts, ask questions, and connect with fellow readers
+                  Share your thoughts and connect with fellow readers
                 </p>
               </div>
             </div>
@@ -163,7 +155,7 @@ function DiscussionPage() {
 
           {/* Search and Filters */}
           <div className="discussion-filters">
-            <div className="search-box" style={{ borderColor: COLORS.border }}>
+            <div className="search-box" style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}>
               <Search size={18} color={COLORS.text.tertiary} />
               <input
                 type="text"
@@ -174,15 +166,17 @@ function DiscussionPage() {
               />
             </div>
 
-            <div className="filter-dropdown" style={{ borderColor: COLORS.border }}>
+            <div className="custom-dropdown" style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}>
               <Filter size={18} color={COLORS.text.tertiary} />
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                style={{ color: COLORS.text.primary, backgroundColor: COLORS.surface }}
+                style={{ color: COLORS.text.primary, backgroundColor: 'transparent' }}
               >
                 {categories.map(cat => (
-                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  <option key={cat.value} value={cat.value} style={{ backgroundColor: COLORS.surface, color: COLORS.text.primary }}>
+                    {cat.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -207,7 +201,7 @@ function DiscussionPage() {
               <div
                 key={thread.id}
                 className="thread-card"
-                onClick={() => setSelectedThread(thread)}
+                onClick={() => fetchThreadDetails(thread.id)}
                 style={{
                   backgroundColor: COLORS.surface,
                   borderColor: COLORS.border,
@@ -247,7 +241,7 @@ function DiscussionPage() {
                   </span>
                   <span className="thread-time" style={{ color: COLORS.text.tertiary }}>
                     <Clock size={14} />
-                    {getTimeAgo(thread.last_post_at)}
+                    {getTimeAgo(thread.last_post_at || thread.created_at)}
                   </span>
                 </div>
               </div>
@@ -272,13 +266,14 @@ function DiscussionPage() {
               </div>
 
               <div className="modal-body">
-                {selectedThread.posts?.map((post) => (
-                  <div key={post.id} className="post-card" style={{ backgroundColor: COLORS.surfaceLight, borderColor: COLORS.border }}>
+                {selectedThread.posts?.map((post, index) => (
+                  <div key={post.id} className="post-card" style={{ backgroundColor: index === 0 ? COLORS.primary[500] + '10' : COLORS.surfaceLight, borderColor: COLORS.border }}>
                     <div className="post-header">
                       <div>
                         <strong style={{ color: COLORS.primary[600] }}>{post.author_name}</strong>
                         <span style={{ color: COLORS.text.tertiary }}> • {getTimeAgo(post.created_at)}</span>
                         {post.is_edited && <span style={{ color: COLORS.text.tertiary, fontSize: '0.8rem' }}> (edited)</span>}
+                        {index === 0 && <span style={{ color: COLORS.primary[600], fontSize: '0.75rem', marginLeft: '0.5rem', fontWeight: 600 }}>OP</span>}
                       </div>
                     </div>
                     <p className="post-content" style={{ color: COLORS.text.primary }}>{post.content}</p>
@@ -308,6 +303,7 @@ function DiscussionPage() {
                       cursor: isAuthenticated && !selectedThread.is_locked ? 'pointer' : 'not-allowed',
                     }}
                   >
+                    <Send size={18} />
                     Post Reply
                   </button>
                 </div>
@@ -345,19 +341,22 @@ function DiscussionPage() {
 
                 <div className="form-group">
                   <label style={{ color: COLORS.text.secondary }}>Category</label>
-                  <select
-                    value={newThreadCategory}
-                    onChange={(e) => setNewThreadCategory(e.target.value)}
-                    style={{
-                      backgroundColor: COLORS.surfaceLight,
-                      color: COLORS.text.primary,
-                      borderColor: COLORS.border,
-                    }}
-                  >
-                    {categories.slice(1).map(cat => (
-                      <option key={cat.value} value={cat.value}>{cat.label}</option>
-                    ))}
-                  </select>
+                  <div className="custom-dropdown" style={{ backgroundColor: COLORS.surfaceLight, borderColor: COLORS.border }}>
+                    <select
+                      value={newThreadCategory}
+                      onChange={(e) => setNewThreadCategory(e.target.value)}
+                      style={{
+                        backgroundColor: 'transparent',
+                        color: COLORS.text.primary,
+                      }}
+                    >
+                      {categories.slice(1).map(cat => (
+                        <option key={cat.value} value={cat.value} style={{ backgroundColor: COLORS.surface, color: COLORS.text.primary }}>
+                          {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <button

@@ -4,6 +4,8 @@ import { Star, StarHalf, BookOpen, ThumbsUp, Filter, Search } from 'lucide-react
 import COLORS from '../../constants/colors';
 import useToast from '../../hooks/useToast';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
+import { reviewsService } from '../../services/reviewsService';
+import { booksService } from '../../services/booksService';
 import './ReviewsPage.css';
 
 /**
@@ -15,6 +17,7 @@ function ReviewsPage() {
   const { toast } = useToast();
 
   const [reviews, setReviews] = useState([]);
+  const [books, setBooks] = useState([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newReview, setNewReview] = useState({
     book: '',
@@ -27,67 +30,42 @@ function ReviewsPage() {
   const [sortBy, setSortBy] = useState('recent');
   const [loading, setLoading] = useState(true);
 
-  // Mock data - replace with API calls
+  // Fetch reviews from API
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setReviews([
-        {
-          id: '1',
-          book_title: 'The Midnight Library',
-          user_name: 'Emma Watson',
-          user_email: 'emma@example.com',
-          rating: 5,
-          title: 'Life-changing read!',
-          body: 'This book made me think about life choices in a completely new way. Matt Haig\'s writing is both profound and accessible. Highly recommended for anyone going through a difficult time.',
-          created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-          is_approved: true,
-        },
-        {
-          id: '2',
-          book_title: 'Project Hail Mary',
-          user_name: 'John Smith',
-          user_email: 'john@example.com',
-          rating: 5,
-          title: 'Best sci-fi I\'ve read in years',
-          body: 'Andy Weir does it again! The science is fascinating, the humor is on point, and I couldn\'t put it down. Rocky is one of my favorite characters ever.',
-          created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
-          is_approved: true,
-        },
-        {
-          id: '3',
-          book_title: 'Atomic Habits',
-          user_name: 'Sarah Johnson',
-          user_email: 'sarah@example.com',
-          rating: 4,
-          title: 'Practical and actionable',
-          body: 'Great framework for building habits. Some concepts felt repetitive, but the core message is powerful. I\'ve already implemented several strategies from this book.',
-          created_at: new Date(Date.now() - 86400000 * 7).toISOString(),
-          is_approved: true,
-        },
-        {
-          id: '4',
-          book_title: 'The Hobbit',
-          user_name: 'Michael Brown',
-          user_email: 'michael@example.com',
-          rating: 5,
-          title: 'A timeless classic',
-          body: 'Re-read this after 20 years and it still holds up beautifully. Tolkien\'s world-building is unmatched. Perfect for both children and adults.',
-          created_at: new Date(Date.now() - 86400000 * 10).toISOString(),
-          is_approved: true,
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
+    fetchReviews();
+    fetchBooks();
   }, []);
 
-  const handleSubmitReview = () => {
+  const fetchReviews = async () => {
+    try {
+      setLoading(true);
+      const response = await reviewsService.getReviews();
+      const reviewsData = response.data?.results || response.data || [];
+      setReviews(reviewsData);
+    } catch (error) {
+      toast.error(error.message || 'Failed to load reviews');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBooks = async () => {
+    try {
+      const response = await booksService.getBooks();
+      const booksData = response.data?.results || response.data || [];
+      setBooks(booksData);
+    } catch (error) {
+      console.error('Failed to load books:', error);
+    }
+  };
+
+  const handleSubmitReview = async () => {
     if (!isAuthenticated) {
       toast.error('You need to login to post a review.');
       return;
     }
 
-    if (!newReview.book.trim()) {
+    if (!newReview.book) {
       toast.warning('Please select a book.');
       return;
     }
@@ -97,10 +75,40 @@ function ReviewsPage() {
       return;
     }
 
-    // TODO: API call to submit review
-    toast.success('Review submitted successfully!');
-    setShowReviewForm(false);
-    setNewReview({ book: '', rating: 5, title: '', body: '' });
+    try {
+      await reviewsService.createReview(newReview);
+      toast.success('Review submitted successfully!');
+      setShowReviewForm(false);
+      setNewReview({ book: '', rating: 5, title: '', body: '' });
+      fetchReviews(); // Refresh reviews list
+    } catch (error) {
+      toast.error(error.message || 'Failed to submit review');
+    }
+  };
+
+  const handleToggleHelpful = async (reviewId) => {
+    if (!isAuthenticated) {
+      toast.error('You need to login to mark reviews as helpful.');
+      return;
+    }
+
+    try {
+      const response = await reviewsService.toggleHelpful(reviewId);
+      // Update local state
+      setReviews(reviews.map(review => {
+        if (review.id === reviewId) {
+          return {
+            ...review,
+            is_helpful: response.data.is_helpful,
+            helpful_count: response.data.helpful_count,
+          };
+        }
+        return review;
+      }));
+      toast.success(response.data.is_helpful ? 'Marked as helpful!' : 'Removed from helpful');
+    } catch (error) {
+      toast.error(error.message || 'Failed to update helpful status');
+    }
   };
 
   const renderStars = (rating) => {
@@ -274,10 +282,15 @@ function ReviewsPage() {
 
                   <button
                     className="helpful-btn"
-                    style={{ color: COLORS.text.tertiary, borderColor: COLORS.border }}
+                    onClick={() => handleToggleHelpful(review.id)}
+                    style={{ 
+                      color: review.is_helpful ? COLORS.secondary[500] : COLORS.text.tertiary,
+                      borderColor: review.is_helpful ? COLORS.secondary[500] : COLORS.border,
+                      backgroundColor: review.is_helpful ? COLORS.secondary[500] + '20' : 'transparent'
+                    }}
                   >
-                    <ThumbsUp size={16} />
-                    Helpful
+                    <ThumbsUp size={16} fill={review.is_helpful ? COLORS.secondary[500] : 'none'} />
+                    {review.helpful_count > 0 ? review.helpful_count : 'Helpful'}
                   </button>
                 </div>
               </div>
@@ -298,18 +311,21 @@ function ReviewsPage() {
 
               <div className="modal-body">
                 <div className="form-group">
-                  <label style={{ color: COLORS.text.secondary }}>Book Title</label>
-                  <input
-                    type="text"
+                  <label style={{ color: COLORS.text.secondary }}>Book</label>
+                  <select
                     value={newReview.book}
                     onChange={(e) => setNewReview({ ...newReview, book: e.target.value })}
-                    placeholder="Enter book title or search..."
                     style={{
                       backgroundColor: COLORS.surfaceLight,
                       color: COLORS.text.primary,
                       borderColor: COLORS.border,
                     }}
-                  />
+                  >
+                    <option value="">Select a book...</option>
+                    {books.map(book => (
+                      <option key={book.id} value={book.id}>{book.title}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="form-group">
