@@ -478,3 +478,52 @@
     align-items: flex-start;
   }
 }
+
+
+/* Custom Dropdown Styling - Better UX */
+.custom-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  min-width: 200px;
+}
+
+.custom-dropdown select {
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  width: 100%;
+  appearance: none;
+  background: transparent;
+  padding-right: 1.5rem;
+}
+
+.custom-dropdown::after {
+  content: '▼';
+  position: absolute;
+  right: 1rem;
+  pointer-events: none;
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+.custom-dropdown:hover {
+  border-color: rgba(212, 147, 62, 0.6);
+  box-shadow: 0 0 0 3px rgba(212, 147, 62, 0.1);
+}
+
+.filter-dropdown::after,
+.sort-dropdown::after {
+  content: '▼';
+  position: absolute;
+  right: 1rem;
+  pointer-events: none;
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
