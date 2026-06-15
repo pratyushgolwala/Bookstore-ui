@@ -129,7 +129,7 @@ function LoginBookFlow({ toast }) {
       const role = data.data.user.role;
       setTimeout(() => {
         if (role === 'ADMIN') navigate('/admin');
-        else if (role === 'AUTHOR') navigate('/profile');
+        else if (role === 'AUTHOR') navigate('/author');
         else navigate('/books');
       }, 800);
     } catch {

@@ -9,6 +9,7 @@ const CartPage        = lazy(() => import('../pages/Cart/CartPage'));
 const OrdersPage      = lazy(() => import('../pages/Orders/OrdersPage'));
 const ProfilePage     = lazy(() => import('../pages/Profile/ProfilePage'));
 const AdminPage       = lazy(() => import('../pages/Admin/AdminPage'));
+const AuthorDashboard = lazy(() => import('../pages/Author/AuthorDashboard'));
 const NotFoundPage    = lazy(() => import('../pages/NotFound/NotFoundPage'));
 const VerifyEmailPage = lazy(() => import('../pages/Auth/VerifyEmailPage'));
 
@@ -28,6 +29,7 @@ export function AppRoutes() {
         <Route path="orders"  element={<OrdersPage />}   />
         <Route path="profile" element={<ProfilePage />}  />
         <Route path="admin"   element={<AdminPage />}    />
+        <Route path="author"  element={<AuthorDashboard />} />
         <Route path="*"       element={<NotFoundPage />} />
       </Route>
     </Routes>
