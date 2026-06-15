@@ -5,12 +5,13 @@ import Navbar from '../components/Navbar/Navbar';
 import ToastHost from '../components/Toast/ToastHost';
 import { selectCurrentUser } from '../store/slices/authSlice';
 import { hydrateCart, resetCart } from '../store/slices/cartSlice';
+import { hydrateWishlist, resetWishlist } from '../store/slices/wishlistSlice';
 import COLORS from '../constants/colors';
 
 /**
  * MainLayout — wraps all public-facing pages with professional styling.
- * Hosts the global toast renderer and keeps the cart in sync with the
- * logged-in user (hydrate on login, reset on logout).
+ * Hosts the global toast renderer and keeps the cart + wishlist in sync with
+ * the logged-in user (hydrate on login, reset on logout).
  */
 function MainLayout() {
   const dispatch = useDispatch();
@@ -22,11 +23,13 @@ function MainLayout() {
     if (userId === prevUserId.current) return;
 
     if (userId) {
-      // Logged in (or switched user) — load that user's saved cart
+      // Logged in (or switched user) — load that user's saved cart + wishlist
       dispatch(hydrateCart(userId));
+      dispatch(hydrateWishlist(userId));
     } else {
-      // Logged out — clear the in-memory cart
+      // Logged out — clear the in-memory cart + wishlist
       dispatch(resetCart());
+      dispatch(resetWishlist());
     }
     prevUserId.current = userId;
   }, [currentUser, dispatch]);
