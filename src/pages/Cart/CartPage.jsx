@@ -21,6 +21,7 @@ import COLORS from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Skeleton from '../../components/ui/Skeleton';
+import AuthorLink from '../../components/ui/AuthorLink';
 
 /* ─── Constants ──────────────────────────────────────────── */
 const FREE_SHIPPING_THRESHOLD = 500;
@@ -447,9 +448,11 @@ function CartItem({ item, idx, mounted, removing, onRemove, onIncrement, onDecre
           {item.title}
         </h3>
         {item.author && (
-          <p className="text-xs mt-0.5" style={{ color: COLORS.text.tertiary }}>
-            {item.author}
-          </p>
+          <AuthorLink
+            author={item.author}
+            className="text-xs mt-0.5 block w-fit max-w-full"
+            style={{ color: COLORS.text.tertiary }}
+          />
         )}
         <p
           className="mt-2 text-base font-bold"
@@ -614,7 +617,11 @@ function RecommendedSection() {
             />
             <div className="min-w-0">
               <p className="font-semibold text-sm line-clamp-1" style={{ color: COLORS.text.primary }}>{book.title}</p>
-              <p className="text-xs mt-0.5" style={{ color: COLORS.text.tertiary }}>{book.author}</p>
+              <AuthorLink
+                author={book.author}
+                className="text-xs mt-0.5 block w-fit max-w-full"
+                style={{ color: COLORS.text.tertiary }}
+              />
               <p className="font-bold text-sm mt-1" style={{ color: COLORS.secondary[500] }}>{formatCurrency(book.price)}</p>
             </div>
             <button

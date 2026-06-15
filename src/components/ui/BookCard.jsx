@@ -8,6 +8,7 @@ import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import Badge from './Badge';
 import WishlistButton from './WishlistButton';
+import AuthorLink from './AuthorLink';
 
 /**
  * BookCard — a polished 2D book card for grids.
@@ -80,9 +81,11 @@ function BookCard({ book, onSelect }) {
         >
           {book.title}
         </h3>
-        <p className="text-xs mt-1 line-clamp-1" style={{ color: COLORS.text.tertiary }}>
-          {book.author}
-        </p>
+        <AuthorLink
+          author={book.author}
+          className="text-xs mt-1 line-clamp-1 block w-fit max-w-full"
+          style={{ color: COLORS.text.tertiary }}
+        />
         <div className="flex items-end justify-between mt-auto pt-2">
           <p className="text-base font-bold" style={{ color: COLORS.secondary[500] }}>
             {formatCurrency(book.price)}
