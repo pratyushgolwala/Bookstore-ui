@@ -72,16 +72,18 @@ function DiscussionPage() {
     }
 
     try {
-      await discussionsService.createThread({
+      const result = await discussionsService.createThread({
         title: newThreadTitle,
         category: newThreadCategory,
       });
+      console.log('Create thread result:', result);
       toast.success('Thread created successfully!');
       setShowNewThreadModal(false);
       setNewThreadTitle('');
       setNewThreadCategory('general');
       fetchThreads();
     } catch (error) {
+      console.error('Create thread error:', error);
       toast.error(error.message || 'Failed to create thread');
     }
   };
@@ -97,13 +99,15 @@ function DiscussionPage() {
     }
 
     try {
-      await discussionsService.addPostToThread(selectedThread.id, {
+      const result = await discussionsService.addPostToThread(selectedThread.id, {
         content: newPostContent,
       });
+      console.log('Add post result:', result);
       toast.success('Post added successfully!');
       setNewPostContent('');
       fetchThreadDetails(selectedThread.id);
     } catch (error) {
+      console.error('Add post error:', error);
       toast.error(error.message || 'Failed to add post');
     }
   };

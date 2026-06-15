@@ -5,7 +5,6 @@ import COLORS from '../../constants/colors';
 import useToast from '../../hooks/useToast';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
 import { reviewsService } from '../../services/reviewsService';
-import { booksService } from '../../services/booksService';
 import './ReviewsPage.css';
 
 /**
@@ -17,10 +16,9 @@ function ReviewsPage() {
   const { toast } = useToast();
 
   const [reviews, setReviews] = useState([]);
-  const [books, setBooks] = useState([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newReview, setNewReview] = useState({
-    book: '',
+    book_title: '',
     rating: 5,
     title: '',
     body: '',
@@ -33,7 +31,6 @@ function ReviewsPage() {
   // Fetch reviews from API
   useEffect(() => {
     fetchReviews();
-    fetchBooks();
   }, []);
 
   const fetchReviews = async () => {
@@ -43,19 +40,10 @@ function ReviewsPage() {
       const reviewsData = response.data?.results || response.data || [];
       setReviews(reviewsData);
     } catch (error) {
+      console.error('Fetch reviews error:', error);
       toast.error(error.message || 'Failed to load reviews');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchBooks = async () => {
-    try {
-      const response = await booksService.getBooks();
-      const booksData = response.data?.results || response.data || [];
-      setBooks(booksData);
-    } catch (error) {
-      console.error('Failed to load books:', error);
     }
   };
 
@@ -65,8 +53,8 @@ function ReviewsPage() {
       return;
     }
 
-    if (!newReview.book) {
-      toast.warning('Please select a book.');
+    if (!newReview.book_title.trim()) {
+      toast.warning('Please enter a book title.');
       return;
     }
 
@@ -76,12 +64,14 @@ function ReviewsPage() {
     }
 
     try {
-      await reviewsService.createReview(newReview);
+      const result = await reviewsService.createReview(newReview);
+      console.log('Create review result:', result);
       toast.success('Review submitted successfully!');
       setShowReviewForm(false);
-      setNewReview({ book: '', rating: 5, title: '', body: '' });
-      fetchReviews(); // Refresh reviews list
+      setNewReview({ book_title: '', rating: 5, title: '', body: '' });
+      fetchReviews();
     } catch (error) {
+      console.error('Submit review error:', error);
       toast.error(error.message || 'Failed to submit review');
     }
   };
@@ -311,21 +301,21 @@ function ReviewsPage() {
 
               <div className="modal-body">
                 <div className="form-group">
-                  <label style={{ color: COLORS.text.secondary }}>Book</label>
-                  <select
-                    value={newReview.book}
-                    onChange={(e) => setNewReview({ ...newReview, book: e.target.value })}
+                  <label style={{ color: COLORS.text.secondary }}>Book Title</label>
+                  <input
+                    type="text"
+                    value={newReview.book_title}
+                    onChange={(e) => setNewReview({ ...newReview, book_title: e.target.value })}
+                    placeholder="Enter the exact book title..."
                     style={{
                       backgroundColor: COLORS.surfaceLight,
                       color: COLORS.text.primary,
                       borderColor: COLORS.border,
                     }}
-                  >
-                    <option value="">Select a book...</option>
-                    {books.map(book => (
-                      <option key={book.id} value={book.id}>{book.title}</option>
-                    ))}
-                  </select>
+                  />
+                  <p style={{ color: COLORS.text.tertiary, fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                    Please enter the exact book title as it appears in our store
+                  </p>
                 </div>
 
                 <div className="form-group">
