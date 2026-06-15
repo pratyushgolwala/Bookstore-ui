@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, BookOpen, Search, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Users, BookOpen, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import { authorsService } from '../../services/authorsService';
 import { normalizeBook } from '../../utils/bookNormalizer';
 import { formatCurrency } from '../../utils/formatters';
@@ -11,8 +11,8 @@ import COLORS from '../../constants/colors';
  * AuthorsPage — browse authors and view their books.
  *
  * Two views:
- *  1. Author list (grid of authors with book count)
- *  2. Author detail (books by that author)
+ *  1. Author list (grid of authors with photo + book count)
+ *  2. Author detail (author photo, about/bio, and books by that author)
  */
 function AuthorsPage() {
   const [authors, setAuthors] = useState([]);
@@ -21,7 +21,7 @@ function AuthorsPage() {
   const [search, setSearch] = useState('');
 
   // Author detail state
-  const [selectedAuthor, setSelectedAuthor] = useState(null);
+  const [selectedAuthor, setSelectedAuthor] = useState(null); // full author object
   const [authorBooks, setAuthorBooks] = useState([]);
   const [booksLoading, setBooksLoading] = useState(false);
 
@@ -47,13 +47,17 @@ function AuthorsPage() {
     return () => { active = false; };
   }, [search]);
 
-  // Fetch books when an author is selected
-  const openAuthor = async (authorName) => {
-    setSelectedAuthor(authorName);
+  // Fetch books + bio when an author is selected
+  const openAuthor = async (author) => {
+    setSelectedAuthor(author);
     setBooksLoading(true);
     try {
-      const res = await authorsService.getBooksByAuthor(authorName);
+      const res = await authorsService.getBooksByAuthor(author.name);
       const data = res?.data ?? res;
+      // Backend returns { author: { name, image, bio, book_count }, books: [...] }
+      if (data?.author) {
+        setSelectedAuthor((prev) => ({ ...prev, ...data.author }));
+      }
       const books = (data?.books || []).map(normalizeBook).filter(Boolean);
       setAuthorBooks(books);
     } catch {
@@ -82,13 +86,47 @@ function AuthorsPage() {
             Back to Authors
           </button>
 
-          <div className="flex items-center gap-3 mb-2">
-            <Users style={{ color: COLORS.secondary[500] }} size={28} />
-            <h1 className="text-3xl font-bold">{selectedAuthor}</h1>
+          {/* Author header: photo + name + about */}
+          <div
+            className="flex flex-col sm:flex-row gap-6 rounded-2xl border p-6 mb-10"
+            style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
+          >
+            <img
+              src={selectedAuthor.image}
+              alt={selectedAuthor.name}
+              className="w-28 h-28 rounded-full object-cover shrink-0 border-2"
+              style={{ borderColor: COLORS.border }}
+              onError={(e) => {
+                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  selectedAuthor.name
+                )}&size=256&background=random&bold=true`;
+              }}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-2">
+                <Users style={{ color: COLORS.secondary[500] }} size={26} />
+                <h1 className="text-3xl font-bold">{selectedAuthor.name}</h1>
+              </div>
+              <p className="text-sm mb-3" style={{ color: COLORS.text.tertiary }}>
+                {authorBooks.length} book{authorBooks.length !== 1 ? 's' : ''} in catalog
+              </p>
+              {selectedAuthor.bio && (
+                <div>
+                  <h2 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: COLORS.text.tertiary }}>
+                    About the author
+                  </h2>
+                  <p className="text-sm leading-relaxed" style={{ color: COLORS.text.secondary }}>
+                    {selectedAuthor.bio}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-          <p className="text-sm mb-8" style={{ color: COLORS.text.tertiary }}>
-            {authorBooks.length} book{authorBooks.length !== 1 ? 's' : ''} in catalog
-          </p>
+
+          <div className="flex items-center gap-2 mb-4">
+            <BookOpen size={18} style={{ color: COLORS.secondary[500] }} />
+            <h2 className="text-lg font-semibold">Books</h2>
+          </div>
 
           {booksLoading ? (
             <LoadingSpinner />
@@ -168,16 +206,30 @@ function AuthorsPage() {
             {authors.map((author) => (
               <button
                 key={author.name}
-                onClick={() => openAuthor(author.name)}
+                onClick={() => openAuthor(author)}
                 className="group text-left rounded-xl border p-5 flex items-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
               >
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{ backgroundColor: `${COLORS.primary[500]}22`, color: COLORS.primary[500] }}
-                >
-                  <Users size={20} />
-                </div>
+                {author.image ? (
+                  <img
+                    src={author.image}
+                    alt={author.name}
+                    loading="lazy"
+                    className="w-12 h-12 rounded-full object-cover shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    onError={(e) => {
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        author.name
+                      )}&size=128&background=random&bold=true`;
+                    }}
+                  />
+                ) : (
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{ backgroundColor: `${COLORS.primary[500]}22`, color: COLORS.primary[500] }}
+                  >
+                    <Users size={20} />
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold truncate" style={{ color: COLORS.text.primary }}>
                     {author.name}
