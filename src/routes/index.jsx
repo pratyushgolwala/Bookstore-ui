@@ -12,6 +12,7 @@ const CartPage         = lazy(() => import('../pages/Cart/CartPage'));
 const OrdersPage       = lazy(() => import('../pages/Orders/OrdersPage'));
 const ProfilePage      = lazy(() => import('../pages/Profile/ProfilePage'));
 const AdminPage        = lazy(() => import('../pages/Admin/AdminPage'));
+const AuthorDashboard  = lazy(() => import('../pages/Author/AuthorDashboard'));
 const DiscussionPage   = lazy(() => import('../pages/Discussion/DiscussionPage'));
 const ReviewsPage      = lazy(() => import('../pages/Reviews/ReviewsPage'));
 const WishlistPage     = lazy(() => import('../pages/Wishlist/WishlistPage'));
@@ -42,6 +43,7 @@ export function AppRoutes() {
         <Route path="orders"   element={<ProtectedRoute><OrdersPage /></ProtectedRoute>}   />
         <Route path="profile"  element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}  />
         <Route path="admin"    element={<ProtectedRoute><AdminPage /></ProtectedRoute>}    />
+        <Route path="author"   element={<ProtectedRoute><AuthorDashboard /></ProtectedRoute>} />
         <Route path="wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path="settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
 
