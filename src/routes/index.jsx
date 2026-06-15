@@ -7,6 +7,7 @@ import ProtectedRoute from '../components/common/ProtectedRoute';
 const LandingPage      = lazy(() => import('../pages/Landing/LandingPage'));
 const BooksPage        = lazy(() => import('../pages/Books/BooksPage'));
 const CategoriesPage   = lazy(() => import('../pages/Categories/CategoriesPage'));
+const AuthorsPage      = lazy(() => import('../pages/Authors/AuthorsPage'));
 const CartPage         = lazy(() => import('../pages/Cart/CartPage'));
 const OrdersPage       = lazy(() => import('../pages/Orders/OrdersPage'));
 const ProfilePage      = lazy(() => import('../pages/Profile/ProfilePage'));
@@ -29,6 +30,7 @@ export function AppRoutes() {
         {/* Public */}
         <Route index element={<LandingPage />} />
         <Route path="categories" element={<CategoriesPage />} />
+        <Route path="authors" element={<AuthorsPage />} />
 
         {/* Protected — require login */}
         <Route path="books"       element={<ProtectedRoute><BooksPage /></ProtectedRoute>}       />
