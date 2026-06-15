@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { MessageSquare, Plus, Pin, Lock, Clock, MessageCircle, Search, Filter, Send } from 'lucide-react';
 import COLORS from '../../constants/colors';
-import useToast from '../../hooks/useToast';
+import { emitToast } from '../../utils/toastBus';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 import { discussionsService } from '../../services/discussionsService';
 import './DiscussionPage.css';
@@ -14,7 +14,6 @@ import './DiscussionPage.css';
 function DiscussionPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const currentUser = useSelector(selectCurrentUser);
-  const { toast } = useToast();
 
   const [threads, setThreads] = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
@@ -46,7 +45,7 @@ function DiscussionPage() {
       const threadsData = response.data?.results || response.data || [];
       setThreads(threadsData);
     } catch (error) {
-      toast.error(error.message || 'Failed to load discussions');
+      emitToast('error', error.message || 'Failed to load discussions');
     } finally {
       setLoading(false);
     }
@@ -57,17 +56,17 @@ function DiscussionPage() {
       const response = await discussionsService.getThreadById(threadId);
       setSelectedThread(response.data);
     } catch (error) {
-      toast.error(error.message || 'Failed to load thread details');
+      emitToast('error', error.message || 'Failed to load thread details');
     }
   };
 
   const handleCreateThread = async () => {
     if (!isAuthenticated) {
-      toast.error('You need to login to create a thread.');
+      emitToast('error', 'You need to login to create a thread.');
       return;
     }
     if (!newThreadTitle.trim()) {
-      toast.warning('Please enter a thread title.');
+      emitToast('warning', 'Please enter a thread title.');
       return;
     }
 
@@ -77,24 +76,24 @@ function DiscussionPage() {
         category: newThreadCategory,
       });
       console.log('Create thread result:', result);
-      toast.success('Thread created successfully!');
+      emitToast('success', 'Thread created successfully!');
       setShowNewThreadModal(false);
       setNewThreadTitle('');
       setNewThreadCategory('general');
       fetchThreads();
     } catch (error) {
       console.error('Create thread error:', error);
-      toast.error(error.message || 'Failed to create thread');
+      emitToast('error', error.message || 'Failed to create thread');
     }
   };
 
   const handleAddPost = async () => {
     if (!isAuthenticated) {
-      toast.error('You need to login to post in discussions.');
+      emitToast('error', 'You need to login to post in discussions.');
       return;
     }
     if (!newPostContent.trim()) {
-      toast.warning('Please enter your message.');
+      emitToast('warning', 'Please enter your message.');
       return;
     }
 
@@ -103,12 +102,12 @@ function DiscussionPage() {
         content: newPostContent,
       });
       console.log('Add post result:', result);
-      toast.success('Post added successfully!');
+      emitToast('success', 'Post added successfully!');
       setNewPostContent('');
       fetchThreadDetails(selectedThread.id);
     } catch (error) {
       console.error('Add post error:', error);
-      toast.error(error.message || 'Failed to add post');
+      emitToast('error', error.message || 'Failed to add post');
     }
   };
 
@@ -149,7 +148,7 @@ function DiscussionPage() {
 
             <button
               className="create-thread-btn"
-              onClick={() => isAuthenticated ? setShowNewThreadModal(true) : toast.error('You need to login to create a thread.')}
+              onClick={() => isAuthenticated ? setShowNewThreadModal(true) : emitToast('error', 'You need to login to create a thread.')}
               style={{ background: COLORS.gradient.primary }}
             >
               <Plus size={18} />
