@@ -43,7 +43,18 @@ function SearchBar({ value = '', onSearch, placeholder = 'Search books or author
             onSearch('');
           }}
           aria-label="Clear search"
-          style={{ color: COLORS.text.tertiary }}
+          style={{
+            color: COLORS.text.tertiary,
+            background: 'none',
+            border: 'none',
+            padding: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            borderRadius: '4px',
+            flexShrink: 0,
+          }}
         >
           <X size={16} />
         </button>

@@ -129,16 +129,25 @@ function SignupBookFlow({ toast }) {
         const msg = data?.status?.message || 'Registration failed. Please check your details.';
         toast.error(msg);
         setIsLoading(false);
-        // Reset all form state and go back to page 1 (role selection)
         setErrors({});
-        setFormData({
-          first_name: '', last_name: '',
-          email: '', confirm_email: '',
-          password: '', confirm_password: '',
-          phone: '', acceptTerms: false,
-        });
-        setSelectedRole(null);
-        changePage('back', 1);
+
+        // If the error is email-related, go back to the email page (page 3)
+        // so the user can correct just the email — keep all other data intact.
+        const isEmailError = msg.toLowerCase().includes('email');
+        if (isEmailError) {
+          setFormData((prev) => ({ ...prev, email: '', confirm_email: '' }));
+          changePage('back', 3);
+        } else {
+          // For other errors (e.g. server error), reset fully and go to page 1
+          setFormData({
+            first_name: '', last_name: '',
+            email: '', confirm_email: '',
+            password: '', confirm_password: '',
+            phone: '', acceptTerms: false,
+          });
+          setSelectedRole(null);
+          changePage('back', 1);
+        }
         return;
       }
       // Success — now show the SuccessPage with animation
