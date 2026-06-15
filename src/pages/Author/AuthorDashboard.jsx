@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
   BookOpen, DollarSign, Star, TrendingUp, Plus, Pencil,
-  Trash2, Eye, EyeOff, PenTool, MessageSquare,
+  Trash2, Eye, EyeOff, PenTool, MessageSquare, AlertCircle,
 } from 'lucide-react';
-import { booksService } from '../../services/booksService';
-import { parseBooksResponse } from '../../utils/bookNormalizer';
+import { authorService } from '../../services/authorService';
 import { formatCurrency } from '../../utils/formatters';
 import { selectCurrentUser } from '../../store/slices/authSlice';
 import COLORS from '../../constants/colors';
@@ -16,17 +15,11 @@ import BookFormModal from './BookFormModal';
 /**
  * AuthorDashboard — landing page for users with the AUTHOR role.
  *
- * Authors need a workspace centred on publishing and managing their own
- * catalogue rather than browsing/buying. This page provides:
- *   - At-a-glance performance stats (titles, sales, royalties, rating)
- *   - A manager for their published works (publish / edit / unpublish / remove)
- *   - A "Publish New Book" form
- *   - Recent reader reviews
- *
- * NOTE: The backend has no author-scoped catalogue endpoint yet, so we seed the
- * author's "published works" from the live books feed and manage them in local
- * state. Wiring the publish/edit/remove actions to a real `/api/author/books/`
- * endpoint is a drop-in follow-up.
+ * An author studio backed by the real `/api/author/` endpoints:
+ *   - GET  /api/author/stats/    aggregate performance stats
+ *   - GET  /api/author/books/    the author's own catalogue (+ metrics)
+ *   - GET  /api/author/reviews/  recent reviews on the author's books
+ *   - POST/PATCH/DELETE + publish/unpublish for catalogue management
  */
 function AuthorDashboard() {
   const user = useSelector(selectCurrentUser);
@@ -34,85 +27,82 @@ function AuthorDashboard() {
     user?.full_name || user?.first_name || user?.email?.split('@')[0] || 'Author';
 
   const [works, setWorks] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [busyId, setBusyId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
 
-  // Seed the working catalogue from the live books feed.
-  useEffect(() => {
-    let cancelled = false;
-    booksService
-      .getBooks({ page: 1, pageSize: 8 })
-      .then((env) => {
-        if (cancelled) return;
-        const { books } = parseBooksResponse(env);
-        setWorks(
-          books.map((b, i) => ({
-            ...b,
-            published: true,
-            sales: 40 + ((i * 137 + (b.pageCount || 0)) % 900),
-            rating: (3.6 + ((i * 7) % 14) / 10).toFixed(1),
-          }))
-        );
-        setLoading(false);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setWorks([]);
-        setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [booksEnv, statsEnv, reviewsEnv] = await Promise.all([
+        authorService.getMyBooks(),
+        authorService.getStats(),
+        authorService.getReviews(),
+      ]);
+      setWorks(booksEnv?.data?.results ?? []);
+      setStats(statsEnv?.data ?? null);
+      setReviews(reviewsEnv?.data?.results ?? []);
+    } catch (err) {
+      setError(err.message || 'Failed to load your studio.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Derived performance stats.
-  const stats = useMemo(() => {
-    const published = works.filter((w) => w.published);
-    const totalSales = works.reduce((sum, w) => sum + (w.sales || 0), 0);
-    const royalties = works.reduce(
-      (sum, w) => sum + (w.sales || 0) * (Number(w.price) || 0) * 0.7,
-      0
-    );
-    const avgRating = works.length
-      ? (
-          works.reduce((sum, w) => sum + parseFloat(w.rating || 0), 0) /
-          works.length
-        ).toFixed(1)
-      : '—';
-    return { titles: published.length, totalSales, royalties, avgRating };
-  }, [works]);
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
 
-  const handleSave = (data) => {
-    if (editing) {
-      setWorks((prev) =>
-        prev.map((w) => (w.id === editing.id ? { ...w, ...data } : w))
-      );
-    } else {
-      setWorks((prev) => [
-        {
-          id: `draft-${Date.now()}`,
-          coverImageUrl: `https://picsum.photos/seed/${encodeURIComponent(
-            data.title || 'new'
-          )}/240/360`,
-          published: true,
-          sales: 0,
-          rating: '0.0',
-          ...data,
-        },
-        ...prev,
-      ]);
+  const handleSave = async (data) => {
+    try {
+      if (editing) {
+        await authorService.updateBook(editing.id, data);
+      } else {
+        await authorService.createBook(data);
+      }
+      setShowForm(false);
+      setEditing(null);
+      await loadAll();
+    } catch (err) {
+      // Surface the error but keep the modal open so the user can retry.
+      setError(err.message || 'Failed to save the book.');
     }
-    setShowForm(false);
-    setEditing(null);
   };
 
-  const togglePublished = (id) =>
-    setWorks((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, published: !w.published } : w))
-    );
+  const togglePublished = async (work) => {
+    setBusyId(work.id);
+    setError(null);
+    try {
+      if (work.is_active) {
+        await authorService.unpublishBook(work.id);
+      } else {
+        await authorService.publishBook(work.id);
+      }
+      await loadAll();
+    } catch (err) {
+      setError(err.message || 'Failed to update the book.');
+    } finally {
+      setBusyId(null);
+    }
+  };
 
-  const removeWork = (id) => setWorks((prev) => prev.filter((w) => w.id !== id));
+  const removeWork = async (work) => {
+    setBusyId(work.id);
+    setError(null);
+    try {
+      await authorService.removeBook(work.id);
+      await loadAll();
+    } catch (err) {
+      setError(err.message || 'Failed to remove the book.');
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const openEdit = (work) => {
     setEditing(work);
@@ -125,16 +115,30 @@ function AuthorDashboard() {
   };
 
   const statCards = [
-    { label: 'Published Titles', value: stats.titles, icon: BookOpen, color: COLORS.primary[500] },
-    { label: 'Copies Sold', value: stats.totalSales.toLocaleString(), icon: TrendingUp, color: COLORS.secondary[400] },
-    { label: 'Royalties (70%)', value: formatCurrency(stats.royalties), icon: DollarSign, color: COLORS.success },
-    { label: 'Avg. Rating', value: stats.avgRating, icon: Star, color: COLORS.accent[400] },
-  ];
-
-  const reviews = [
-    { id: 1, book: works[0]?.title || 'Your latest title', reader: 'A. Reader', rating: 5, text: 'Could not put it down — a masterclass in pacing.' },
-    { id: 2, book: works[1]?.title || 'Your second title', reader: 'M. Quill', rating: 4, text: 'Beautifully written, though the middle dragged a little.' },
-    { id: 3, book: works[2]?.title || 'Your third title', reader: 'J. Penn', rating: 5, text: 'Instantly recommended it to my whole book club.' },
+    {
+      label: 'Published Titles',
+      value: stats ? stats.published_titles : '—',
+      icon: BookOpen,
+      color: COLORS.primary[500],
+    },
+    {
+      label: 'Copies Sold',
+      value: stats ? (stats.units_sold ?? 0).toLocaleString() : '—',
+      icon: TrendingUp,
+      color: COLORS.secondary[400],
+    },
+    {
+      label: 'Royalties (70%)',
+      value: stats ? formatCurrency(stats.royalties ?? 0) : '—',
+      icon: DollarSign,
+      color: COLORS.success,
+    },
+    {
+      label: 'Avg. Rating',
+      value: stats && stats.avg_rating != null ? stats.avg_rating : '—',
+      icon: Star,
+      color: COLORS.accent[400],
+    },
   ];
 
   return (
@@ -162,6 +166,17 @@ function AuthorDashboard() {
           Publish New Book
         </Button>
       </div>
+
+      {/* Error banner */}
+      {error && (
+        <div
+          className="flex items-center gap-2 rounded-lg px-4 py-3 mb-6 text-sm"
+          style={{ backgroundColor: `${COLORS.error}22`, color: COLORS.error }}
+        >
+          <AlertCircle size={16} />
+          {error}
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -225,10 +240,10 @@ function AuthorDashboard() {
                   <div
                     key={w.id}
                     className="flex items-center gap-4 p-4"
-                    style={{ borderColor: COLORS.border }}
+                    style={{ borderColor: COLORS.border, opacity: busyId === w.id ? 0.5 : 1 }}
                   >
                     <img
-                      src={w.coverImageUrl}
+                      src={w.cover_url || `https://picsum.photos/seed/${encodeURIComponent(w.id)}/120/180`}
                       alt={w.title}
                       className="w-12 h-16 object-cover rounded-md shrink-0"
                       onError={(e) => {
@@ -238,26 +253,33 @@ function AuthorDashboard() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-semibold truncate">{w.title}</h3>
-                        <Badge variant={w.published ? 'success' : 'neutral'}>
-                          {w.published ? 'Live' : 'Draft'}
+                        <Badge variant={w.is_active ? 'success' : 'neutral'}>
+                          {w.is_active ? 'Live' : 'Draft'}
                         </Badge>
                       </div>
                       <p className="text-xs mt-0.5" style={{ color: COLORS.text.tertiary }}>
-                        {formatCurrency(Number(w.price) || 0)} · {(w.sales || 0).toLocaleString()} sold ·{' '}
-                        <Star size={11} className="inline -mt-0.5" style={{ color: COLORS.secondary[400] }} /> {w.rating}
+                        {formatCurrency(Number(w.price) || 0)} · {(w.units_sold || 0).toLocaleString()} sold
+                        {w.avg_rating != null && (
+                          <>
+                            {' · '}
+                            <Star size={11} className="inline -mt-0.5" style={{ color: COLORS.secondary[400] }} />{' '}
+                            {w.avg_rating}
+                          </>
+                        )}
                       </p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <IconBtn title="Edit" onClick={() => openEdit(w)}>
+                      <IconBtn title="Edit" onClick={() => openEdit(w)} disabled={busyId === w.id}>
                         <Pencil size={15} />
                       </IconBtn>
                       <IconBtn
-                        title={w.published ? 'Unpublish' : 'Publish'}
-                        onClick={() => togglePublished(w.id)}
+                        title={w.is_active ? 'Unpublish' : 'Publish'}
+                        onClick={() => togglePublished(w)}
+                        disabled={busyId === w.id}
                       >
-                        {w.published ? <EyeOff size={15} /> : <Eye size={15} />}
+                        {w.is_active ? <EyeOff size={15} /> : <Eye size={15} />}
                       </IconBtn>
-                      <IconBtn title="Remove" danger onClick={() => removeWork(w.id)}>
+                      <IconBtn title="Remove" danger onClick={() => removeWork(w)} disabled={busyId === w.id}>
                         <Trash2 size={15} />
                       </IconBtn>
                     </div>
@@ -275,35 +297,48 @@ function AuthorDashboard() {
             Recent Reviews
           </h2>
           <div className="space-y-3">
-            {reviews.map((r) => (
+            {loading ? (
+              <p className="text-sm" style={{ color: COLORS.text.tertiary }}>Loading…</p>
+            ) : reviews.length === 0 ? (
               <div
-                key={r.id}
-                className="rounded-xl p-4"
-                style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
+                className="rounded-xl p-5 text-sm"
+                style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}`, color: COLORS.text.tertiary }}
               >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-semibold truncate" style={{ color: COLORS.text.secondary }}>
-                    {r.book}
-                  </span>
-                  <span className="flex items-center gap-0.5 shrink-0">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        size={11}
-                        style={{ color: COLORS.secondary[400] }}
-                        fill={i < r.rating ? COLORS.secondary[400] : 'none'}
-                      />
-                    ))}
-                  </span>
-                </div>
-                <p className="text-sm leading-snug" style={{ color: COLORS.text.primary }}>
-                  &ldquo;{r.text}&rdquo;
-                </p>
-                <p className="text-xs mt-2" style={{ color: COLORS.text.tertiary }}>
-                  — {r.reader}
-                </p>
+                No reviews yet. They&apos;ll appear here as readers rate your books.
               </div>
-            ))}
+            ) : (
+              reviews.map((r) => (
+                <div
+                  key={r.id}
+                  className="rounded-xl p-4"
+                  style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-semibold truncate" style={{ color: COLORS.text.secondary }}>
+                      {r.book_title}
+                    </span>
+                    <span className="flex items-center gap-0.5 shrink-0">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          size={11}
+                          style={{ color: COLORS.secondary[400] }}
+                          fill={i < r.rating ? COLORS.secondary[400] : 'none'}
+                        />
+                      ))}
+                    </span>
+                  </div>
+                  {r.body && (
+                    <p className="text-sm leading-snug" style={{ color: COLORS.text.primary }}>
+                      &ldquo;{r.body}&rdquo;
+                    </p>
+                  )}
+                  <p className="text-xs mt-2" style={{ color: COLORS.text.tertiary }}>
+                    — {r.reader}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -322,12 +357,13 @@ function AuthorDashboard() {
   );
 }
 
-function IconBtn({ children, title, onClick, danger = false }) {
+function IconBtn({ children, title, onClick, danger = false, disabled = false }) {
   return (
     <button
       title={title}
       onClick={onClick}
-      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:-translate-y-0.5"
+      disabled={disabled}
+      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed"
       style={{
         backgroundColor: COLORS.surfaceLight,
         color: danger ? COLORS.error : COLORS.text.secondary,
