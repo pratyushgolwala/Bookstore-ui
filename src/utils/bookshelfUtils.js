@@ -1,6 +1,18 @@
 import { SPINE_COLORS } from '../constants/bookColors.js';
 
 /**
+ * Shelf layout constants — the single source of truth for how the 3D
+ * bookshelf is sectioned. The API page size is derived from these so each
+ * page of results fills the shelf exactly, with evenly-spaced sections.
+ */
+export const SECTIONS_PER_ROW = 4;
+export const ROWS_PER_PAGE = 2;
+export const BOOKS_PER_SECTION = 3;
+
+// 2 rows × 4 sections × 3 books = 24 books per page (fills the shelf exactly)
+export const SHELF_PAGE_SIZE = ROWS_PER_PAGE * SECTIONS_PER_ROW * BOOKS_PER_SECTION;
+
+/**
  * Groups a flat array of books into a record keyed by category.
  * @param {Array<{category: string}>} books - Array of book objects
  * @returns {Record<string, Array>} Object with category names as keys and arrays of books as values
