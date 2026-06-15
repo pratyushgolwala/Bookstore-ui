@@ -8,6 +8,7 @@ import {
 import COLORS from '../../constants/colors';
 import AuthPopup from '../auth-popup/AuthPopup';
 import { selectIsAuthenticated, selectCurrentUser, logout } from '../../store/slices/authSlice';
+import { selectCartCount } from '../../store/slices/cartSlice';
 import './Navbar.css';
 
 const BRAND = 'Folio';
@@ -22,6 +23,7 @@ function Navbar() {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const currentUser = useSelector(selectCurrentUser);
+  const cartCount = useSelector(selectCartCount);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authPopupOpen, setAuthPopupOpen] = useState(false);
@@ -137,6 +139,19 @@ function Navbar() {
 
           {/* ── RIGHT: Account ── */}
           <div className="navbar-right">
+            {/* Cart button — always visible */}
+            <button
+              className="cart-btn"
+              onClick={() => navigate('/cart')}
+              aria-label={`Cart — ${cartCount} item${cartCount !== 1 ? 's' : ''}`}
+            >
+              <ShoppingCart size={18} />
+              {cartCount > 0 && (
+                <span className="cart-badge">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </button>
             {isAuthenticated ? (
               <div
                 className="nav-item-wrapper"
@@ -209,6 +224,9 @@ function Navbar() {
               <div className="mobile-nav-group">
                 <div className="mobile-nav-label">Account</div>
                 <div className="mobile-submenu">
+                  <button className="mobile-nav-item" onClick={() => go('/cart')}>
+                    🛒 Cart {cartCount > 0 && `(${cartCount})`}
+                  </button>
                   {accountLinks.map((link) => (
                     <button key={link.label} className="mobile-nav-item" onClick={() => go(link.href)}>
                       {link.label}

@@ -121,6 +121,65 @@
 }
 
 /* ============================================
+   CART BUTTON
+   ============================================ */
+
+.cart-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(46, 139, 87, 0.12);
+  border: 1px solid rgba(46, 139, 87, 0.25);
+  color: #5bb583;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cart-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(46, 139, 87, 0.22);
+  box-shadow: 0 6px 20px rgba(46, 139, 87, 0.3);
+  color: #88c9a3;
+}
+
+.cart-btn:active {
+  transform: translateY(0) scale(0.93);
+}
+
+.cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #d4933e 0%, #e6a657 100%);
+  color: #0f0f0f;
+  font-size: 10px;
+  font-weight: 800;
+  font-family: 'Inter', -apple-system, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(212, 147, 62, 0.6);
+  border: 1.5px solid rgba(15, 15, 15, 0.8);
+  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes badgePop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* ============================================
    RIGHT — ACCOUNT
    ============================================ */
 
