@@ -8,6 +8,16 @@ import SearchBar from '../../components/ui/SearchBar';
 import COLORS from '../../constants/colors';
 
 /**
+ * Build a deterministic avatar URL for an author name.
+ * Used as a fallback when the backend does not supply an `image`.
+ */
+function avatarFor(name) {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name || 'Author'
+  )}&size=256&background=random&bold=true`;
+}
+
+/**
  * AuthorsPage — browse authors and view their books.
  *
  * Two views:
@@ -54,11 +64,27 @@ function AuthorsPage() {
     try {
       const res = await authorsService.getBooksByAuthor(author.name);
       const data = res?.data ?? res;
-      // Backend returns { author: { name, image, bio, book_count }, books: [...] }
-      if (data?.author) {
-        setSelectedAuthor((prev) => ({ ...prev, ...data.author }));
-      }
       const books = (data?.books || []).map(normalizeBook).filter(Boolean);
+
+      // Backend may return author as an object { name, image, bio, book_count }
+      // (current) or as a plain string (legacy). Handle both gracefully.
+      const meta =
+        data?.author && typeof data.author === 'object'
+          ? data.author
+          : { name: author.name };
+
+      setSelectedAuthor((prev) => {
+        const merged = { ...prev, ...meta };
+        // Guarantee an image and an "about" blurb even on the legacy backend.
+        if (!merged.image) merged.image = avatarFor(merged.name);
+        if (!merged.bio) {
+          merged.bio = `${merged.name} has ${books.length} book${
+            books.length !== 1 ? 's' : ''
+          } in our catalogue.`;
+        }
+        return merged;
+      });
+
       setAuthorBooks(books);
     } catch {
       setAuthorBooks([]);
@@ -92,14 +118,13 @@ function AuthorsPage() {
             style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
           >
             <img
-              src={selectedAuthor.image}
+              src={selectedAuthor.image || avatarFor(selectedAuthor.name)}
               alt={selectedAuthor.name}
               className="w-28 h-28 rounded-full object-cover shrink-0 border-2"
               style={{ borderColor: COLORS.border }}
               onError={(e) => {
-                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  selectedAuthor.name
-                )}&size=256&background=random&bold=true`;
+                e.target.onerror = null;
+                e.target.src = avatarFor(selectedAuthor.name);
               }}
             />
             <div className="flex-1 min-w-0">
@@ -210,26 +235,16 @@ function AuthorsPage() {
                 className="group text-left rounded-xl border p-5 flex items-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
               >
-                {author.image ? (
-                  <img
-                    src={author.image}
-                    alt={author.name}
-                    loading="lazy"
-                    className="w-12 h-12 rounded-full object-cover shrink-0 transition-transform duration-300 group-hover:scale-110"
-                    onError={(e) => {
-                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        author.name
-                      )}&size=128&background=random&bold=true`;
-                    }}
-                  />
-                ) : (
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
-                    style={{ backgroundColor: `${COLORS.primary[500]}22`, color: COLORS.primary[500] }}
-                  >
-                    <Users size={20} />
-                  </div>
-                )}
+                <img
+                  src={author.image || avatarFor(author.name)}
+                  alt={author.name}
+                  loading="lazy"
+                  className="w-12 h-12 rounded-full object-cover shrink-0 transition-transform duration-300 group-hover:scale-110"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = avatarFor(author.name);
+                  }}
+                />
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold truncate" style={{ color: COLORS.text.primary }}>
                     {author.name}
