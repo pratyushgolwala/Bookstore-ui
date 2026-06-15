@@ -4,7 +4,7 @@
 
 .toastContainer {
   position: fixed;
-  bottom: 28px;
+  top: 28px;
   right: 28px;
   z-index: 99999;
   display: flex;
@@ -121,15 +121,16 @@
 
 /* --- Success --- */
 .toastSuccess {
-  background-color: rgba(15, 15, 15, 0.95);
-  border-color: rgba(0, 208, 132, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 208, 132, 0.15), 0 0 24px rgba(0, 208, 132, 0.1);
-  color: #e8e8e8;
+  background-color: rgba(0, 30, 20, 0.97);
+  border-color: rgba(0, 208, 132, 0.7);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 208, 132, 0.4), 0 0 32px rgba(0, 208, 132, 0.2);
+  color: #f0fff8;
 }
 
 .toastSuccess .toastIcon { color: #00d084; }
+.toastSuccess .toastMessage { color: #c8ffe8; }
 .toastSuccess .toastGlow { background-color: #00d084; }
-.toastSuccess .toastClose { color: #a8a8a8; }
+.toastSuccess .toastClose { color: #80ffc0; }
 
 .progressSuccess {
   background: linear-gradient(90deg, #00d084, #00b87a);
@@ -137,50 +138,53 @@
 
 /* --- Error --- */
 .toastError {
-  background-color: rgba(15, 15, 15, 0.95);
-  border-color: rgba(212, 128, 128, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 128, 128, 0.15), 0 0 24px rgba(212, 128, 128, 0.1);
-  color: #e8e8e8;
+  background-color: rgba(30, 10, 10, 0.97);
+  border-color: rgba(255, 80, 80, 0.7);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 80, 80, 0.4), 0 0 32px rgba(255, 80, 80, 0.2);
+  color: #fff0f0;
 }
 
-.toastError .toastIcon { color: #d48080; }
-.toastError .toastGlow { background-color: #d48080; }
-.toastError .toastClose { color: #a8a8a8; }
+.toastError .toastIcon { color: #ff5050; }
+.toastError .toastMessage { color: #ffd0d0; }
+.toastError .toastGlow { background-color: #ff5050; }
+.toastError .toastClose { color: #ffaaaa; }
 
 .progressError {
-  background: linear-gradient(90deg, #d48080, #c06060);
+  background: linear-gradient(90deg, #ff5050, #cc3333);
 }
 
 /* --- Warning --- */
 .toastWarning {
-  background-color: rgba(15, 15, 15, 0.95);
-  border-color: rgba(212, 147, 62, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 147, 62, 0.15), 0 0 24px rgba(212, 147, 62, 0.1);
-  color: #e8e8e8;
+  background-color: rgba(30, 20, 5, 0.97);
+  border-color: rgba(255, 180, 50, 0.7);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 180, 50, 0.4), 0 0 32px rgba(255, 180, 50, 0.2);
+  color: #fffbe8;
 }
 
-.toastWarning .toastIcon { color: #d4933e; }
-.toastWarning .toastGlow { background-color: #d4933e; }
-.toastWarning .toastClose { color: #a8a8a8; }
+.toastWarning .toastIcon { color: #ffb432; }
+.toastWarning .toastMessage { color: #ffe8a0; }
+.toastWarning .toastGlow { background-color: #ffb432; }
+.toastWarning .toastClose { color: #ffd080; }
 
 .progressWarning {
-  background: linear-gradient(90deg, #d4933e, #b87c30);
+  background: linear-gradient(90deg, #ffb432, #cc8800);
 }
 
 /* --- Info --- */
 .toastInfo {
-  background-color: rgba(15, 15, 15, 0.95);
-  border-color: rgba(46, 139, 87, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(46, 139, 87, 0.15), 0 0 24px rgba(46, 139, 87, 0.1);
-  color: #e8e8e8;
+  background-color: rgba(10, 10, 30, 0.97);
+  border-color: rgba(100, 120, 255, 0.7);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(100, 120, 255, 0.4), 0 0 32px rgba(100, 120, 255, 0.2);
+  color: #f0f0ff;
 }
 
-.toastInfo .toastIcon { color: #5c5c8f; }
-.toastInfo .toastGlow { background-color: #5c5c8f; }
-.toastInfo .toastClose { color: #a8a8a8; }
+.toastInfo .toastIcon { color: #6478ff; }
+.toastInfo .toastMessage { color: #c8d0ff; }
+.toastInfo .toastGlow { background-color: #6478ff; }
+.toastInfo .toastClose { color: #aab0ff; }
 
 .progressInfo {
-  background: linear-gradient(90deg, #5c5c8f, #d4933e);
+  background: linear-gradient(90deg, #6478ff, #4455cc);
 }
 
 /* ============================================
@@ -227,7 +231,8 @@
 
 @media (max-width: 480px) {
   .toastContainer {
-    bottom: 16px;
+    top: 16px;
+    bottom: auto;
     right: 12px;
     left: 12px;
     max-width: 100%;

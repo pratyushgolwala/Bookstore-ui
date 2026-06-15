@@ -1,11 +1,15 @@
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/Navbar/Navbar';
+import ToastContainer from '../components/Toast/ToastContainer';
+import useToast from '../hooks/useToast';
 import COLORS from '../constants/colors';
 
 /**
  * MainLayout — wraps all public-facing pages with professional styling
  */
 function MainLayout() {
+  const { toasts, removeToast } = useToast();
+
   return (
     <div className="flex flex-col min-h-screen relative" style={{ backgroundColor: COLORS.background }}>
       <Navbar />
@@ -169,6 +173,9 @@ function MainLayout() {
           </div>
         </div>
       </footer>
+
+      {/* Global toast notifications — top-right, available on all pages */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

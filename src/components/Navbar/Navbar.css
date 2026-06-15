@@ -307,10 +307,14 @@
   border: none;
   cursor: pointer;
   padding: 6px;
+  width: 40px;
+  height: 40px;
   color: #e8e8e8;
   display: none;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 1023px) {

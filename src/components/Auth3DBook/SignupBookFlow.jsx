@@ -107,14 +107,11 @@ function SignupBookFlow({ toast }) {
     changePage('forward', currentPage + 1);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const errs = validateCurrentPage();
     if (Object.keys(errs).length) { setErrors(errs); return; }
-    setIsAnimating(true);
-    setTimeout(() => { setCurrentPage(6); setIsAnimating(false); }, 850);
-  };
 
-  const submitSignup = async () => {
+    // Call the API immediately — only show SuccessPage on success
     setIsLoading(true);
     setErrors({});
     try {
@@ -129,21 +126,43 @@ function SignupBookFlow({ toast }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        const msg = data?.status?.message || 'Registration failed';
+        const msg = data?.status?.message || 'Registration failed. Please check your details.';
         toast.error(msg);
-        setErrors({ submit: msg });
         setIsLoading(false);
-        changePage('back', 5);
+        // Reset all form state and go back to page 1 (role selection)
+        setErrors({});
+        setFormData({
+          first_name: '', last_name: '',
+          email: '', confirm_email: '',
+          password: '', confirm_password: '',
+          phone: '', acceptTerms: false,
+        });
+        setSelectedRole(null);
+        changePage('back', 1);
         return;
       }
-      toast.success('Account created! Check your email for a verification link.');
-      setTimeout(() => navigate('/login'), 1500);
+      // Success — now show the SuccessPage with animation
+      setIsLoading(false);
+      setIsAnimating(true);
+      setTimeout(() => { setCurrentPage(6); setIsAnimating(false); }, 850);
     } catch {
       toast.error('Connection error. Please try again.');
-      setErrors({ submit: 'Connection error. Please try again.' });
       setIsLoading(false);
-      changePage('back', 5);
+      setErrors({});
+      setFormData({
+        first_name: '', last_name: '',
+        email: '', confirm_email: '',
+        password: '', confirm_password: '',
+        phone: '', acceptTerms: false,
+      });
+      setSelectedRole(null);
+      changePage('back', 1);
     }
+  };
+
+  // submitSignup is now only used by SuccessPage's "Go to login" button
+  const submitSignup = () => {
+    navigate('/login');
   };
 
   // Page content map
@@ -169,8 +188,7 @@ function SignupBookFlow({ toast }) {
           acceptTerms={formData.acceptTerms}
           onAcceptTermsChange={(v) => updateFormData('acceptTerms', v)}
           onPrevious={handlePrevious} onSubmit={handleSubmit}
-          isLoading={isLoading} errors={errors} />,
-    6: <SuccessPage onRedirectToLogin={submitSignup} isLoading={isLoading} />,
+          isLoading={isLoading} errors={errors} />,    6: <SuccessPage onRedirectToLogin={submitSignup} isLoading={isLoading} />,
   };
 
   // CSS class for each phase
