@@ -14,6 +14,8 @@ const ProfilePage      = lazy(() => import('../pages/Profile/ProfilePage'));
 const AdminPage        = lazy(() => import('../pages/Admin/AdminPage'));
 const DiscussionPage   = lazy(() => import('../pages/Discussion/DiscussionPage'));
 const ReviewsPage      = lazy(() => import('../pages/Reviews/ReviewsPage'));
+const WishlistPage     = lazy(() => import('../pages/Wishlist/WishlistPage'));
+const SettingsPage     = lazy(() => import('../pages/Settings/SettingsPage'));
 const NotFoundPage     = lazy(() => import('../pages/NotFound/NotFoundPage'));
 const VerifyEmailPage  = lazy(() => import('../pages/Auth/VerifyEmailPage'));
 
@@ -29,17 +31,19 @@ export function AppRoutes() {
       <Route element={<MainLayout />}>
         {/* Public */}
         <Route index element={<LandingPage />} />
-        <Route path="categories" element={<CategoriesPage />} />
-        <Route path="authors" element={<AuthorsPage />} />
+        <Route path="categories"  element={<CategoriesPage />} />
+        <Route path="authors"     element={<AuthorsPage />} />
+        <Route path="discussions" element={<DiscussionPage />} />
+        <Route path="reviews"     element={<ReviewsPage />} />
 
         {/* Protected — require login */}
-        <Route path="books"       element={<ProtectedRoute><BooksPage /></ProtectedRoute>}       />
-        <Route path="cart"        element={<ProtectedRoute><CartPage /></ProtectedRoute>}        />
-        <Route path="orders"      element={<ProtectedRoute><OrdersPage /></ProtectedRoute>}     />
-        <Route path="profile"     element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}    />
-        <Route path="admin"       element={<ProtectedRoute><AdminPage /></ProtectedRoute>}      />
-        <Route path="discussions" element={<ProtectedRoute><DiscussionPage /></ProtectedRoute>}  />
-        <Route path="reviews"     element={<ProtectedRoute><ReviewsPage /></ProtectedRoute>}    />
+        <Route path="books"    element={<ProtectedRoute><BooksPage /></ProtectedRoute>}    />
+        <Route path="cart"     element={<ProtectedRoute><CartPage /></ProtectedRoute>}     />
+        <Route path="orders"   element={<ProtectedRoute><OrdersPage /></ProtectedRoute>}   />
+        <Route path="profile"  element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}  />
+        <Route path="admin"    element={<ProtectedRoute><AdminPage /></ProtectedRoute>}    />
+        <Route path="wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
+        <Route path="settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>

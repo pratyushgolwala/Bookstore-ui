@@ -7,6 +7,7 @@ import { emitToast } from '../../utils/toastBus';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import Badge from '../ui/Badge';
+import WishlistButton from '../ui/WishlistButton';
 
 /**
  * BookDetailCard — a polished modal overlay showing full book details.
@@ -76,9 +77,13 @@ export default function BookDetailCard({ book, onClose }) {
 
         {/* Cover */}
         <div
-          className="md:w-2/5 flex items-center justify-center p-6"
+          className="md:w-2/5 flex items-center justify-center p-6 relative"
           style={{ background: COLORS.gradient.dark }}
         >
+          {/* Wishlist heart — top-right of the image section */}
+          <div className="absolute top-3 right-3 z-10">
+            <WishlistButton book={book} size={18} />
+          </div>
           <img
             src={book.coverImageUrl}
             alt={`Cover of ${book.title}`}
