@@ -75,7 +75,7 @@ function Navbar() {
   const accountLinks = [
     // "My Books" is author-only — added conditionally below
     ...(currentUser?.role === 'AUTHOR'
-      ? [{ label: 'My Books', href: '/my-books', icon: <Library size={15} /> }]
+      ? [{ label: 'My Books', href: '/author', icon: <Library size={15} /> }]
       : []),
     { label: 'Wishlist', href: '/wishlist', icon: <Heart size={15} /> },
     { label: 'Orders', href: '/orders', icon: <ShoppingCart size={15} /> },
