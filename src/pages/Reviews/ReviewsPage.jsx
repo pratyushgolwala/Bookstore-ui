@@ -77,7 +77,14 @@ function ReviewsPage() {
     try {
       setLoading(true);
       const res = await reviewsService.getReviews();
-      setReviews(res.data?.results || res.data || []);
+      // Response shape: { status: {...}, data: { count, results: [...] } | [...] }
+      const payload = res?.data;
+      const list = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.results)
+          ? payload.results
+          : [];
+      setReviews(list);
     } catch (err) {
       emitToast('error', err.message || 'Failed to load reviews');
     } finally {
@@ -108,10 +115,12 @@ function ReviewsPage() {
     if (!isAuthenticated) { emitToast('error', 'You need to login to mark reviews as helpful.'); return; }
     try {
       const res = await reviewsService.toggleHelpful(reviewId);
+      // Response: { status: {...}, data: { is_helpful, helpful_count } }
+      const d = res?.data || {};
       setReviews(prev => prev.map(r =>
-        r.id === reviewId ? { ...r, is_helpful: res.data.is_helpful, helpful_count: res.data.helpful_count } : r
+        r.id === reviewId ? { ...r, is_helpful: d.is_helpful, helpful_count: d.helpful_count } : r
       ));
-      emitToast('success', res.data.is_helpful ? '👍 Marked as helpful!' : 'Removed from helpful');
+      emitToast('success', d.is_helpful ? '👍 Marked as helpful!' : 'Removed from helpful');
     } catch (err) {
       emitToast('error', err.message || 'Failed to update');
     }
