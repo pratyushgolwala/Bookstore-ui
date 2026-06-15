@@ -6,7 +6,7 @@ import COLORS from '../../constants/colors';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import useBookshelf from '../../hooks/useBookshelf';
 import BookCard from '../../components/ui/BookCard';
-import { selectIsAuthenticated } from '../../store/slices/authSlice';
+import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 
 const BookshelfScene = React.lazy(() => import('../../components/Bookshelf/BookshelfScene'));
 
@@ -18,15 +18,19 @@ const BookshelfScene = React.lazy(() => import('../../components/Bookshelf/Books
 function LandingPage() {
   const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const currentUser = useSelector(selectCurrentUser);
   const { books } = useBookshelf();
   const featured = books.slice(0, 6);
 
-  // Redirect authenticated users to the interactive bookshelf page
+  // Redirect authenticated users to their role-appropriate landing page
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/books', { replace: true });
+      const role = currentUser?.role;
+      if (role === 'AUTHOR') navigate('/author', { replace: true });
+      else if (role === 'ADMIN') navigate('/admin', { replace: true });
+      else navigate('/books', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, currentUser, navigate]);
 
   return (
     <div className="w-full" style={{ backgroundColor: COLORS.background }}>
