@@ -5,6 +5,7 @@ import Auth3DBook from '../components/Auth3DBook/Auth3DBook';
 
 const LandingPage     = lazy(() => import('../pages/Landing/LandingPage'));
 const BooksPage       = lazy(() => import('../pages/Books/BooksPage'));
+const CategoriesPage  = lazy(() => import('../pages/Categories/CategoriesPage'));
 const CartPage        = lazy(() => import('../pages/Cart/CartPage'));
 const OrdersPage      = lazy(() => import('../pages/Orders/OrdersPage'));
 const ProfilePage     = lazy(() => import('../pages/Profile/ProfilePage'));
@@ -24,6 +25,7 @@ export function AppRoutes() {
       <Route element={<MainLayout />}>
         <Route index          element={<LandingPage />}  />
         <Route path="books"   element={<BooksPage />}    />
+        <Route path="categories" element={<CategoriesPage />} />
         <Route path="cart"    element={<CartPage />}     />
         <Route path="orders"  element={<OrdersPage />}   />
         <Route path="profile" element={<ProfilePage />}  />
