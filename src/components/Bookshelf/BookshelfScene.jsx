@@ -5,55 +5,73 @@ import * as THREE from 'three';
 import BookSpine from './BookSpine';
 import BookshelfFrame from './BookshelfFrame';
 import { computeSpineThickness } from '../../utils/bookshelfUtils.js';
+import {
+  SECTIONS_PER_ROW,
+  ROWS_PER_PAGE,
+  BOOKS_PER_SECTION,
+  SHELF_PAGE_SIZE,
+} from '../../utils/bookshelfUtils.js';
 import { createLibraryBackdrop } from '../../utils/textureGenerators.js';
 
 const SHELF_WIDTH = 15;       // interior usable width
 const ROW_HEIGHT = 3.0;       // vertical spacing between shelf planks
 const ROW_DEPTH = 1.6;        // shelf depth
-const BOOK_GAP = 0.05;        // gap between books
-const SECTIONS_PER_ROW = 4;   // compartments per shelf row
 const DIVIDER_THICKNESS = 0.16;
 const SECTION_MARGIN = 0.3;   // inner padding within each section
 
+// Re-export so callers (e.g. tests) can reach it from the scene too
+export { SHELF_PAGE_SIZE };
+
 /**
- * Lay books into rows split into equal-width SECTIONS (like a real library).
- * Books fill section-by-section, left-to-right, then wrap to the next row.
+ * Lay books into a fixed grid of sections (like a real library shelf):
+ * each section holds up to BOOKS_PER_SECTION books, EVENLY spaced across the
+ * section width so every compartment looks filled and balanced.
  */
 function layoutBooks(books) {
   const placements = [];
 
-  // Width available for books inside one section
   const sectionOuterWidth = SHELF_WIDTH / SECTIONS_PER_ROW;
   const sectionInnerWidth = sectionOuterWidth - SECTION_MARGIN * 2;
-
-  let row = 0;
-  let section = 0;
-  // cursor is the left edge within the current section's inner area
-  let cursor = 0;
-
   const sectionLeftEdge = (s) =>
     -SHELF_WIDTH / 2 + s * sectionOuterWidth + SECTION_MARGIN;
 
-  books.forEach((book, index) => {
-    const thickness = computeSpineThickness(book.pageCount);
+  // Chunk books into fixed-size sections
+  const sectionCount = Math.ceil(books.length / BOOKS_PER_SECTION);
 
-    // If the book doesn't fit in the current section, advance section
-    if (cursor + thickness > sectionInnerWidth) {
-      section += 1;
-      cursor = 0;
-      // If we've run out of sections, wrap to next row
-      if (section >= SECTIONS_PER_ROW) {
-        section = 0;
-        row += 1;
-      }
-    }
+  for (let sec = 0; sec < sectionCount; sec += 1) {
+    const sectionBooks = books.slice(
+      sec * BOOKS_PER_SECTION,
+      sec * BOOKS_PER_SECTION + BOOKS_PER_SECTION
+    );
+    const row = Math.floor(sec / SECTIONS_PER_ROW);
+    const sectionInRow = sec % SECTIONS_PER_ROW;
 
-    const x = sectionLeftEdge(section) + cursor + thickness / 2;
-    placements.push({ book, x, row, section, index, thickness });
-    cursor += thickness + BOOK_GAP;
-  });
+    // Even spacing: distribute the leftover width as equal gaps,
+    // including margins before the first and after the last book.
+    const thicknesses = sectionBooks.map((b) => computeSpineThickness(b.pageCount));
+    const totalThickness = thicknesses.reduce((sum, t) => sum + t, 0);
+    const gap = Math.max(
+      0.04,
+      (sectionInnerWidth - totalThickness) / (sectionBooks.length + 1)
+    );
 
-  const rowCount = row + 1;
+    let cursor = sectionLeftEdge(sectionInRow) + gap;
+    sectionBooks.forEach((book, i) => {
+      const thickness = thicknesses[i];
+      const x = cursor + thickness / 2;
+      placements.push({
+        book,
+        x,
+        row,
+        section: sectionInRow,
+        index: sec * BOOKS_PER_SECTION + i,
+        thickness,
+      });
+      cursor += thickness + gap;
+    });
+  }
+
+  const rowCount = Math.max(ROWS_PER_PAGE, Math.ceil(sectionCount / SECTIONS_PER_ROW));
   return { placements, rowCount };
 }
 

@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { booksService } from '../../services/booksService';
 import { parseBooksResponse, normalizeBooks } from '../../utils/bookNormalizer';
+import { SHELF_PAGE_SIZE } from '../../utils/bookshelfUtils';
 import { MOCK_BOOKS } from '../../data/mockBooks';
 
 /**
@@ -8,7 +9,8 @@ import { MOCK_BOOKS } from '../../data/mockBooks';
  * search, and graceful fallback to mock data when the API is unreachable.
  */
 
-const DEFAULT_PAGE_SIZE = 24;
+// Page size matches the 3D shelf capacity so every page fills it exactly.
+const DEFAULT_PAGE_SIZE = SHELF_PAGE_SIZE;
 
 const initialPagination = {
   count: 0,
