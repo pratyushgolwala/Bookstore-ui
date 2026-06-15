@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Users,
@@ -19,63 +19,17 @@ import COLORS from '../../constants/colors';
 
 /**
  * Build a deterministic avatar URL for an author name.
- * Used as a fallback when no real Open Library photo is available.
+ *
+ * The authors list uses these generated avatars directly (the URL is served by
+ * the ui-avatars CDN, so the browser loads it without hitting our API). This
+ * keeps the gallery free of per-card backend calls — important because the
+ * global IP throttle counts every /api request. The real Open Library photo is
+ * resolved only on the author detail page (a single request).
  */
 function avatarFor(name) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(
     name || 'Author'
   )}&size=256&background=random&bold=true`;
-}
-
-/**
- * AuthorAvatar — shows a generated avatar immediately, then lazily upgrades to
- * the real Open Library photo once the card scrolls into view. Falls back to
- * the avatar if no photo exists (the backend returns a 404-on-miss image URL).
- */
-function AuthorAvatar({ name, className, style }) {
-  const ref = useRef(null);
-  const [src, setSrc] = useState(() => avatarFor(name));
-  const [requested, setRequested] = useState(false);
-
-  useEffect(() => {
-    if (requested) return undefined;
-    const el = ref.current;
-    if (!el) return undefined;
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          io.disconnect();
-          setRequested(true);
-          authorsService
-            .getAuthorImage(name)
-            .then((res) => {
-              const img = (res?.data ?? res)?.image;
-              if (img) setSrc(img);
-            })
-            .catch(() => {});
-        }
-      },
-      { rootMargin: '150px' }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [name, requested]);
-
-  return (
-    <img
-      ref={ref}
-      src={src}
-      alt={name}
-      loading="lazy"
-      className={className}
-      style={style}
-      onError={(e) => {
-        e.target.onerror = null;
-        e.target.src = avatarFor(name);
-      }}
-    />
-  );
 }
 
 const SORT_OPTIONS = [
@@ -486,10 +440,16 @@ function AuthorsPage() {
                   className="rounded-full p-0.5 transition-all duration-300 group-hover:p-1"
                   style={{ background: COLORS.gradient.accent }}
                 >
-                  <AuthorAvatar
-                    name={author.name}
+                  <img
+                    src={author.image || avatarFor(author.name)}
+                    alt={author.name}
+                    loading="lazy"
                     className="w-20 h-20 rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
                     style={{ border: `2px solid ${COLORS.surface}` }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = avatarFor(author.name);
+                    }}
                   />
                 </div>
 
