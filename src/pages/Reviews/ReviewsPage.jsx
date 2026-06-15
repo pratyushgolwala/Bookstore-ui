@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Star, StarHalf, BookOpen, ThumbsUp, Filter, Search } from 'lucide-react';
 import COLORS from '../../constants/colors';
-import useToast from '../../hooks/useToast';
+import { emitToast } from '../../utils/toastBus';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
 import { reviewsService } from '../../services/reviewsService';
 import './ReviewsPage.css';
@@ -13,7 +13,6 @@ import './ReviewsPage.css';
  */
 function ReviewsPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
-  const { toast } = useToast();
 
   const [reviews, setReviews] = useState([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -41,7 +40,7 @@ function ReviewsPage() {
       setReviews(reviewsData);
     } catch (error) {
       console.error('Fetch reviews error:', error);
-      toast.error(error.message || 'Failed to load reviews');
+      emitToast('error', error.message || 'Failed to load reviews');
     } finally {
       setLoading(false);
     }
@@ -49,36 +48,36 @@ function ReviewsPage() {
 
   const handleSubmitReview = async () => {
     if (!isAuthenticated) {
-      toast.error('You need to login to post a review.');
+      emitToast('error', 'You need to login to post a review.');
       return;
     }
 
     if (!newReview.book_title.trim()) {
-      toast.warning('Please enter a book title.');
+      emitToast('warning', 'Please enter a book title.');
       return;
     }
 
     if (!newReview.title.trim() || !newReview.body.trim()) {
-      toast.warning('Please fill in all fields.');
+      emitToast('warning', 'Please fill in all fields.');
       return;
     }
 
     try {
       const result = await reviewsService.createReview(newReview);
       console.log('Create review result:', result);
-      toast.success('Review submitted successfully!');
+      emitToast('success', 'Review submitted successfully!');
       setShowReviewForm(false);
       setNewReview({ book_title: '', rating: 5, title: '', body: '' });
       fetchReviews();
     } catch (error) {
       console.error('Submit review error:', error);
-      toast.error(error.message || 'Failed to submit review');
+      emitToast('error', error.message || 'Failed to submit review');
     }
   };
 
   const handleToggleHelpful = async (reviewId) => {
     if (!isAuthenticated) {
-      toast.error('You need to login to mark reviews as helpful.');
+      emitToast('error', 'You need to login to mark reviews as helpful.');
       return;
     }
 
@@ -95,9 +94,9 @@ function ReviewsPage() {
         }
         return review;
       }));
-      toast.success(response.data.is_helpful ? 'Marked as helpful!' : 'Removed from helpful');
+      emitToast('success', response.data.is_helpful ? 'Marked as helpful!' : 'Removed from helpful');
     } catch (error) {
-      toast.error(error.message || 'Failed to update helpful status');
+      emitToast('error', error.message || 'Failed to update helpful status');
     }
   };
 
@@ -166,7 +165,7 @@ function ReviewsPage() {
 
             <button
               className="write-review-btn"
-              onClick={() => isAuthenticated ? setShowReviewForm(true) : toast.error('You need to login to write a review.')}
+              onClick={() => isAuthenticated ? setShowReviewForm(true) : emitToast('error', 'You need to login to write a review.')}
               style={{ background: COLORS.gradient.accent }}
             >
               <Star size={18} />
