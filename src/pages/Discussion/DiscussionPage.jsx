@@ -1,374 +1,403 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { MessageSquare, Plus, Pin, Lock, Clock, MessageCircle, Search, Filter, Send } from 'lucide-react';
+import {
+  MessageSquare, Plus, Pin, Lock, Clock,
+  MessageCircle, Search, ChevronDown, Send, X, User
+} from 'lucide-react';
 import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 import { discussionsService } from '../../services/discussionsService';
 import './DiscussionPage.css';
 
-/**
- * DiscussionPage — Reddit/Threads-style discussion forum
- * Read-only for anonymous users, full access for authenticated users
- */
+function CustomDropdown({ options, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+
+  return (
+    <div className="cdrop-wrapper" ref={ref}>
+      <button className="cdrop-trigger" onClick={() => setOpen(!open)}
+        style={{ backgroundColor: COLORS.surface, borderColor: open ? COLORS.primary[500] : COLORS.border, color: COLORS.text.primary }}>
+        <span>{selected?.label}</span>
+        <ChevronDown size={16} className={`cdrop-arrow ${open ? 'open' : ''}`} style={{ color: COLORS.text.tertiary }} />
+      </button>
+      {open && (
+        <div className="cdrop-menu" style={{ backgroundColor: COLORS.surfaceLight, borderColor: COLORS.border }}>
+          {options.map(opt => (
+            <button key={opt.value} className="cdrop-item"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              style={{
+                color: opt.value === value ? COLORS.primary[600] : COLORS.text.primary,
+                backgroundColor: opt.value === value ? COLORS.primary[500] + '18' : 'transparent',
+              }}>
+              {opt.label}
+              {opt.value === value && <span>✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DiscussionPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
-  const currentUser = useSelector(selectCurrentUser);
+  const currentUser     = useSelector(selectCurrentUser);
 
-  const [threads, setThreads] = useState([]);
+  const [threads, setThreads]               = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
+  const [threadLoading, setThreadLoading]   = useState(false);
   const [newThreadTitle, setNewThreadTitle] = useState('');
+  const [newThreadBody, setNewThreadBody]   = useState('');
   const [newThreadCategory, setNewThreadCategory] = useState('general');
   const [newPostContent, setNewPostContent] = useState('');
   const [showNewThreadModal, setShowNewThreadModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery]       = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]               = useState(true);
+  const [submitting, setSubmitting]         = useState(false);
 
   const categories = [
-    { value: 'all', label: 'All Categories' },
-    { value: 'general', label: 'General Discussion' },
-    { value: 'recommendations', label: 'Book Recommendations' },
-    { value: 'authors', label: 'Author Discussions' },
-    { value: 'events', label: 'Events & Book Clubs' },
-    { value: 'help', label: 'Help & Support' },
+    { value: 'all',             label: 'All Categories' },
+    { value: 'general',         label: '💬 General Discussion' },
+    { value: 'recommendations', label: '📚 Book Recommendations' },
+    { value: 'authors',         label: '✍️ Author Discussions' },
+    { value: 'events',          label: '🎉 Events & Book Clubs' },
+    { value: 'help',            label: '🙋 Help & Support' },
   ];
 
-  useEffect(() => {
-    fetchThreads();
-  }, []);
+  const catLabel = (val) => categories.find(c => c.value === val)?.label?.replace(/^\S+\s/, '') || val;
+
+  useEffect(() => { fetchThreads(); }, []);
 
   const fetchThreads = async () => {
     try {
       setLoading(true);
-      const response = await discussionsService.getThreads();
-      const threadsData = response.data?.results || response.data || [];
-      setThreads(threadsData);
-    } catch (error) {
-      emitToast('error', error.message || 'Failed to load discussions');
+      const res = await discussionsService.getThreads();
+      setThreads(res.data?.results || res.data || []);
+    } catch (err) {
+      emitToast('error', err.message || 'Failed to load discussions');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchThreadDetails = async (threadId) => {
+  const openThread = async (threadId) => {
+    setThreadLoading(true);
+    setSelectedThread({ id: threadId, loading: true });
     try {
-      const response = await discussionsService.getThreadById(threadId);
-      setSelectedThread(response.data);
-    } catch (error) {
-      emitToast('error', error.message || 'Failed to load thread details');
+      const res = await discussionsService.getThreadById(threadId);
+      setSelectedThread(res.data);
+    } catch (err) {
+      emitToast('error', err.message || 'Failed to load thread');
+      setSelectedThread(null);
+    } finally {
+      setThreadLoading(false);
     }
   };
 
   const handleCreateThread = async () => {
-    if (!isAuthenticated) {
-      emitToast('error', 'You need to login to create a thread.');
-      return;
-    }
-    if (!newThreadTitle.trim()) {
-      emitToast('warning', 'Please enter a thread title.');
-      return;
-    }
-
+    if (!isAuthenticated) { emitToast('error', 'You need to login to create a thread.'); return; }
+    if (!newThreadTitle.trim()) { emitToast('warning', 'Please enter a thread title.'); return; }
     try {
-      const result = await discussionsService.createThread({
-        title: newThreadTitle,
-        category: newThreadCategory,
-      });
-      console.log('Create thread result:', result);
-      emitToast('success', 'Thread created successfully!');
+      setSubmitting(true);
+      await discussionsService.createThread({ title: newThreadTitle, category: newThreadCategory });
+      emitToast('success', '🧵 Thread created successfully!');
       setShowNewThreadModal(false);
       setNewThreadTitle('');
+      setNewThreadBody('');
       setNewThreadCategory('general');
       fetchThreads();
-    } catch (error) {
-      console.error('Create thread error:', error);
-      emitToast('error', error.message || 'Failed to create thread');
+    } catch (err) {
+      emitToast('error', err.message || 'Failed to create thread');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleAddPost = async () => {
-    if (!isAuthenticated) {
-      emitToast('error', 'You need to login to post in discussions.');
-      return;
-    }
-    if (!newPostContent.trim()) {
-      emitToast('warning', 'Please enter your message.');
-      return;
-    }
-
+    if (!isAuthenticated) { emitToast('error', 'You need to login to reply.'); return; }
+    if (!newPostContent.trim()) { emitToast('warning', 'Please write something.'); return; }
     try {
-      const result = await discussionsService.addPostToThread(selectedThread.id, {
-        content: newPostContent,
-      });
-      console.log('Add post result:', result);
-      emitToast('success', 'Post added successfully!');
+      await discussionsService.addPostToThread(selectedThread.id, { content: newPostContent });
+      emitToast('success', 'Reply posted!');
       setNewPostContent('');
-      fetchThreadDetails(selectedThread.id);
-    } catch (error) {
-      console.error('Add post error:', error);
-      emitToast('error', error.message || 'Failed to add post');
+      openThread(selectedThread.id);
+    } catch (err) {
+      emitToast('error', err.message || 'Failed to post reply');
     }
   };
 
-  const getTimeAgo = (dateString) => {
-    const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
-    if (seconds < 60) return 'just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return new Date(dateString).toLocaleDateString();
+  const timeAgo = (d) => {
+    const s = Math.floor((Date.now() - new Date(d)) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+    if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+    if (s < 604800) return `${Math.floor(s / 86400)}d ago`;
+    return new Date(d).toLocaleDateString();
   };
 
-  const filteredThreads = threads.filter(thread => {
-    const matchesSearch = thread.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || thread.category === filterCategory;
-    return matchesSearch && matchesCategory;
+  const filtered = threads.filter(t => {
+    const matchQ = t.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchC = filterCategory === 'all' || t.category === filterCategory;
+    return matchQ && matchC;
   });
 
+  const pinned  = filtered.filter(t => t.is_pinned);
+  const regular = filtered.filter(t => !t.is_pinned);
+  const sorted  = [...pinned, ...regular];
+
   return (
-    <div className="discussion-page" style={{ backgroundColor: COLORS.background, minHeight: '100vh' }}>
-      <div className="discussion-container">
-        {/* Header */}
-        <div className="discussion-header">
-          <div className="header-content">
-            <div className="header-title-section">
-              <div className="header-icon" style={{ background: COLORS.gradient.primary }}>
-                <MessageSquare size={28} color="#fff" />
+    <div className="disc-page" style={{ backgroundColor: COLORS.background }}>
+      <div className="disc-container">
+
+        {/* ── Header ── */}
+        <div className="disc-header">
+          <div className="disc-header-top">
+            <div className="disc-title-row">
+              <div className="disc-icon" style={{ background: COLORS.gradient.primary }}>
+                <MessageSquare size={26} color="#fff" />
               </div>
               <div>
-                <h1 className="page-title" style={{ color: COLORS.text.primary }}>
-                  Community Discussions
-                </h1>
-                <p className="page-subtitle" style={{ color: COLORS.text.secondary }}>
-                  Share your thoughts and connect with fellow readers
-                </p>
+                <h1 className="disc-title" style={{ color: COLORS.text.primary }}>Community Discussions</h1>
+                <p className="disc-subtitle" style={{ color: COLORS.text.secondary }}>Share thoughts, ask questions, connect with readers</p>
               </div>
             </div>
-
-            <button
-              className="create-thread-btn"
+            <button className="new-thread-btn"
               onClick={() => isAuthenticated ? setShowNewThreadModal(true) : emitToast('error', 'You need to login to create a thread.')}
-              style={{ background: COLORS.gradient.primary }}
-            >
-              <Plus size={18} />
-              New Thread
+              style={{ background: COLORS.gradient.primary }}>
+              <Plus size={18} /> New Thread
             </button>
           </div>
 
-          {/* Search and Filters */}
-          <div className="discussion-filters">
-            <div className="search-box" style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}>
-              <Search size={18} color={COLORS.text.tertiary} />
-              <input
-                type="text"
-                placeholder="Search discussions..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ color: COLORS.text.primary, backgroundColor: 'transparent' }}
-              />
+          <div className="disc-filters">
+            <div className="disc-search" style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}>
+              <Search size={16} color={COLORS.text.tertiary} />
+              <input type="text" placeholder="Search threads…"
+                value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                style={{ color: COLORS.text.primary, backgroundColor: 'transparent' }} />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: COLORS.text.tertiary }}>
+                  <X size={14} />
+                </button>
+              )}
             </div>
-
-            <div className="custom-dropdown" style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}>
-              <Filter size={18} color={COLORS.text.tertiary} />
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                style={{ color: COLORS.text.primary, backgroundColor: 'transparent' }}
-              >
-                {categories.map(cat => (
-                  <option key={cat.value} value={cat.value} style={{ backgroundColor: COLORS.surface, color: COLORS.text.primary }}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <CustomDropdown options={categories} value={filterCategory} onChange={setFilterCategory} />
           </div>
         </div>
 
-        {/* Threads List */}
-        <div className="threads-grid">
+        {/* ── Thread count ── */}
+        {!loading && (
+          <p className="thread-count" style={{ color: COLORS.text.tertiary }}>
+            {sorted.length} thread{sorted.length !== 1 ? 's' : ''}
+            {filterCategory !== 'all' ? ` in ${catLabel(filterCategory)}` : ''}
+          </p>
+        )}
+
+        {/* ── Thread List ── */}
+        <div className="thread-list">
           {loading ? (
-            <div className="loading-state" style={{ color: COLORS.text.secondary }}>
-              <MessageSquare size={48} className="loading-icon" />
-              <p>Loading discussions...</p>
+            <div className="state-box">
+              <div className="spinner" />
+              <p style={{ color: COLORS.text.secondary }}>Loading discussions…</p>
             </div>
-          ) : filteredThreads.length === 0 ? (
-            <div className="empty-state" style={{ color: COLORS.text.secondary }}>
-              <MessageSquare size={64} opacity={0.3} />
-              <h3 style={{ color: COLORS.text.primary }}>No threads found</h3>
-              <p>Be the first to start a discussion!</p>
+          ) : sorted.length === 0 ? (
+            <div className="state-box">
+              <MessageSquare size={56} color={COLORS.text.tertiary} />
+              <h3 style={{ color: COLORS.text.primary }}>No threads yet</h3>
+              <p style={{ color: COLORS.text.secondary }}>Start the first discussion!</p>
             </div>
-          ) : (
-            filteredThreads.map((thread) => (
-              <div
-                key={thread.id}
-                className="thread-card"
-                onClick={() => fetchThreadDetails(thread.id)}
-                style={{
-                  backgroundColor: COLORS.surface,
-                  borderColor: COLORS.border,
-                }}
-              >
-                <div className="thread-header-row">
+          ) : sorted.map(thread => (
+            <div key={thread.id} className="thread-row"
+              onClick={() => openThread(thread.id)}
+              style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}>
+
+              <div className="thread-row-left">
+                <div className="thread-avatar" style={{ background: COLORS.gradient.primary }}>
+                  {(thread.author_name || '?').charAt(0).toUpperCase()}
+                </div>
+                <div className="thread-info">
                   <div className="thread-badges">
                     {thread.is_pinned && (
-                      <span className="thread-badge pinned" style={{ backgroundColor: COLORS.primary[900] + '40', color: COLORS.primary[600] }}>
-                        <Pin size={12} />
-                        Pinned
+                      <span className="badge badge-pin" style={{ backgroundColor: COLORS.primary[500] + '22', color: COLORS.primary[600] }}>
+                        <Pin size={11} /> Pinned
                       </span>
                     )}
                     {thread.is_locked && (
-                      <span className="thread-badge locked" style={{ backgroundColor: COLORS.neutral[700] + '40', color: COLORS.neutral[500] }}>
-                        <Lock size={12} />
-                        Locked
+                      <span className="badge badge-lock" style={{ backgroundColor: COLORS.neutral[700] + '44', color: COLORS.neutral[500] }}>
+                        <Lock size={11} /> Locked
                       </span>
                     )}
-                    <span className="thread-category" style={{ backgroundColor: COLORS.primary[500] + '20', color: COLORS.primary[600] }}>
-                      {categories.find(c => c.value === thread.category)?.label || thread.category}
+                    <span className="badge badge-cat" style={{ backgroundColor: COLORS.primary[500] + '18', color: COLORS.primary[600] }}>
+                      {catLabel(thread.category)}
                     </span>
                   </div>
-                </div>
-
-                <h3 className="thread-title" style={{ color: COLORS.text.primary }}>
-                  {thread.title}
-                </h3>
-
-                <div className="thread-meta">
-                  <span style={{ color: COLORS.text.secondary }}>
-                    by <strong style={{ color: COLORS.primary[600] }}>{thread.author_name}</strong>
-                  </span>
-                  <span className="thread-stats" style={{ color: COLORS.text.tertiary }}>
-                    <MessageCircle size={14} />
-                    {thread.post_count} replies
-                  </span>
-                  <span className="thread-time" style={{ color: COLORS.text.tertiary }}>
-                    <Clock size={14} />
-                    {getTimeAgo(thread.last_post_at || thread.created_at)}
-                  </span>
+                  <h3 className="thread-row-title" style={{ color: COLORS.text.primary }}>{thread.title}</h3>
+                  <div className="thread-meta" style={{ color: COLORS.text.tertiary }}>
+                    <span style={{ color: COLORS.text.secondary }}>
+                      by <strong style={{ color: COLORS.primary[600] }}>{thread.author_name}</strong>
+                    </span>
+                    <span className="meta-dot">·</span>
+                    <Clock size={13} />
+                    <span>{timeAgo(thread.last_post_at || thread.created_at)}</span>
+                  </div>
                 </div>
               </div>
-            ))
-          )}
+
+              <div className="thread-row-right">
+                <MessageCircle size={16} color={COLORS.text.tertiary} />
+                <span style={{ color: COLORS.text.tertiary, fontSize: '0.9rem', fontWeight: 600 }}>
+                  {thread.post_count || 0}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Thread Detail Modal */}
+        {/* ── Thread Detail Modal ── */}
         {selectedThread && (
           <div className="modal-overlay" onClick={() => setSelectedThread(null)}>
-            <div className="thread-modal" onClick={(e) => e.stopPropagation()} style={{ backgroundColor: COLORS.surface }}>
-              <div className="modal-header" style={{ borderColor: COLORS.border }}>
-                <div>
-                  <h2 style={{ color: COLORS.text.primary }}>{selectedThread.title}</h2>
-                  <p style={{ color: COLORS.text.secondary }}>
-                    Started by <strong>{selectedThread.author_name}</strong> • {getTimeAgo(selectedThread.created_at)}
-                  </p>
+            <div className="thread-modal" onClick={e => e.stopPropagation()}
+              style={{ backgroundColor: COLORS.surface }}>
+
+              <div className="modal-head" style={{ borderColor: COLORS.border }}>
+                <div className="modal-head-info">
+                  {selectedThread.loading ? (
+                    <p style={{ color: COLORS.text.secondary }}>Loading…</p>
+                  ) : (
+                    <>
+                      <h2 style={{ color: COLORS.text.primary }}>{selectedThread.title}</h2>
+                      <p style={{ color: COLORS.text.secondary, margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>
+                        by <strong style={{ color: COLORS.primary[600] }}>{selectedThread.author_name}</strong>
+                        &nbsp;·&nbsp;{timeAgo(selectedThread.created_at)}
+                        &nbsp;·&nbsp;<span style={{ color: COLORS.text.tertiary }}>{selectedThread.post_count || 0} replies</span>
+                      </p>
+                    </>
+                  )}
                 </div>
-                <button className="modal-close" onClick={() => setSelectedThread(null)} style={{ color: COLORS.text.secondary }}>
-                  ✕
+                <button className="modal-close-btn" onClick={() => setSelectedThread(null)}
+                  style={{ color: COLORS.text.secondary }}>
+                  <X size={20} />
                 </button>
               </div>
 
               <div className="modal-body">
-                {selectedThread.posts?.map((post, index) => (
-                  <div key={post.id} className="post-card" style={{ backgroundColor: index === 0 ? COLORS.primary[500] + '10' : COLORS.surfaceLight, borderColor: COLORS.border }}>
-                    <div className="post-header">
-                      <div>
-                        <strong style={{ color: COLORS.primary[600] }}>{post.author_name}</strong>
-                        <span style={{ color: COLORS.text.tertiary }}> • {getTimeAgo(post.created_at)}</span>
-                        {post.is_edited && <span style={{ color: COLORS.text.tertiary, fontSize: '0.8rem' }}> (edited)</span>}
-                        {index === 0 && <span style={{ color: COLORS.primary[600], fontSize: '0.75rem', marginLeft: '0.5rem', fontWeight: 600 }}>OP</span>}
+                {threadLoading ? (
+                  <div className="state-box"><div className="spinner" /></div>
+                ) : (
+                  <>
+                    {(selectedThread.posts || []).length === 0 ? (
+                      <div className="state-box" style={{ padding: '2rem' }}>
+                        <MessageSquare size={36} color={COLORS.text.tertiary} />
+                        <p style={{ color: COLORS.text.secondary }}>No replies yet. Be the first!</p>
                       </div>
-                    </div>
-                    <p className="post-content" style={{ color: COLORS.text.primary }}>{post.content}</p>
-                  </div>
-                ))}
+                    ) : (selectedThread.posts || []).map((post, idx) => (
+                      <div key={post.id} className={`post-bubble ${idx === 0 ? 'post-op' : ''}`}
+                        style={{
+                          backgroundColor: idx === 0 ? COLORS.primary[500] + '12' : COLORS.surfaceLight,
+                          borderColor: idx === 0 ? COLORS.primary[500] + '40' : COLORS.border,
+                        }}>
+                        <div className="post-meta">
+                          <div className="post-avatar" style={{ background: COLORS.gradient.primary }}>
+                            {(post.author_name || '?').charAt(0).toUpperCase()}
+                          </div>
+                          <strong style={{ color: COLORS.primary[600] }}>{post.author_name}</strong>
+                          {idx === 0 && <span className="op-tag" style={{ backgroundColor: COLORS.primary[500] + '30', color: COLORS.primary[600] }}>OP</span>}
+                          {currentUser?.email === post.author_email && <span className="you-tag" style={{ backgroundColor: COLORS.secondary[500] + '25', color: COLORS.secondary[500] }}>You</span>}
+                          <span style={{ color: COLORS.text.tertiary, fontSize: '0.8rem' }}>{timeAgo(post.created_at)}</span>
+                          {post.is_edited && <span style={{ color: COLORS.text.tertiary, fontSize: '0.75rem' }}>(edited)</span>}
+                        </div>
+                        <p className="post-text" style={{ color: COLORS.text.primary }}>{post.content}</p>
+                      </div>
+                    ))}
 
-                {/* Add Post Form */}
-                <div className="add-post-section" style={{ backgroundColor: COLORS.surfaceLight, borderColor: COLORS.border }}>
-                  <textarea
-                    className="post-textarea"
-                    placeholder={isAuthenticated ? "Share your thoughts..." : "Login to join the discussion..."}
-                    value={newPostContent}
-                    onChange={(e) => setNewPostContent(e.target.value)}
-                    disabled={!isAuthenticated || selectedThread.is_locked}
-                    style={{
-                      backgroundColor: COLORS.surface,
-                      color: COLORS.text.primary,
-                      borderColor: COLORS.border,
-                    }}
-                  />
-                  <button
-                    className="post-submit-btn"
-                    onClick={handleAddPost}
-                    disabled={!isAuthenticated || selectedThread.is_locked}
-                    style={{
-                      background: isAuthenticated && !selectedThread.is_locked ? COLORS.gradient.primary : COLORS.neutral[600],
-                      cursor: isAuthenticated && !selectedThread.is_locked ? 'pointer' : 'not-allowed',
-                    }}
-                  >
-                    <Send size={18} />
-                    Post Reply
-                  </button>
-                </div>
+                    {/* Reply box */}
+                    <div className="reply-box" style={{ borderColor: COLORS.border }}>
+                      {isAuthenticated ? (
+                        <>
+                          <div className="reply-row">
+                            <div className="reply-avatar" style={{ background: COLORS.gradient.primary }}>
+                              <User size={14} color="#fff" />
+                            </div>
+                            <textarea
+                              className="reply-textarea"
+                              placeholder={selectedThread.is_locked ? 'This thread is locked.' : 'Write a reply…'}
+                              value={newPostContent}
+                              onChange={e => setNewPostContent(e.target.value)}
+                              disabled={selectedThread.is_locked}
+                              rows={3}
+                              style={{ backgroundColor: COLORS.surfaceLight, color: COLORS.text.primary, borderColor: COLORS.border }}
+                              onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handleAddPost(); }}
+                            />
+                          </div>
+                          <div className="reply-actions">
+                            <span style={{ color: COLORS.text.tertiary, fontSize: '0.8rem' }}>Ctrl+Enter to send</span>
+                            <button className="reply-btn"
+                              onClick={handleAddPost}
+                              disabled={selectedThread.is_locked || !newPostContent.trim()}
+                              style={{ background: selectedThread.is_locked ? COLORS.neutral[600] : COLORS.gradient.primary }}>
+                              <Send size={16} /> Post Reply
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="login-cta" style={{ backgroundColor: COLORS.surfaceLight, borderColor: COLORS.border }}>
+                          <MessageSquare size={20} color={COLORS.primary[600]} />
+                          <p style={{ color: COLORS.text.secondary }}>
+                            <button onClick={() => emitToast('info', 'Please login to join the discussion.')}
+                              style={{ background: 'none', border: 'none', color: COLORS.primary[600], fontWeight: 600, cursor: 'pointer' }}>
+                              Login
+                            </button>
+                            {' '}to join this discussion
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* New Thread Modal */}
+        {/* ── New Thread Modal ── */}
         {showNewThreadModal && (
           <div className="modal-overlay" onClick={() => setShowNewThreadModal(false)}>
-            <div className="new-thread-modal" onClick={(e) => e.stopPropagation()} style={{ backgroundColor: COLORS.surface }}>
-              <div className="modal-header" style={{ borderColor: COLORS.border }}>
+            <div className="modal-card" onClick={e => e.stopPropagation()}
+              style={{ backgroundColor: COLORS.surface }}>
+              <div className="modal-head" style={{ borderColor: COLORS.border }}>
                 <h2 style={{ color: COLORS.text.primary }}>Create New Thread</h2>
-                <button className="modal-close" onClick={() => setShowNewThreadModal(false)} style={{ color: COLORS.text.secondary }}>
-                  ✕
-                </button>
+                <button className="modal-close-btn" onClick={() => setShowNewThreadModal(false)}
+                  style={{ color: COLORS.text.secondary }}><X size={20} /></button>
               </div>
-
               <div className="modal-body">
-                <div className="form-group">
+                <div className="form-field">
                   <label style={{ color: COLORS.text.secondary }}>Thread Title</label>
-                  <input
-                    type="text"
+                  <input type="text" placeholder="What do you want to discuss?"
                     value={newThreadTitle}
-                    onChange={(e) => setNewThreadTitle(e.target.value)}
-                    placeholder="Enter a descriptive title..."
-                    style={{
-                      backgroundColor: COLORS.surfaceLight,
-                      color: COLORS.text.primary,
-                      borderColor: COLORS.border,
-                    }}
+                    onChange={e => setNewThreadTitle(e.target.value)}
+                    style={{ backgroundColor: COLORS.surfaceLight, color: COLORS.text.primary, borderColor: COLORS.border }}
+                    autoFocus
                   />
                 </div>
-
-                <div className="form-group">
+                <div className="form-field">
                   <label style={{ color: COLORS.text.secondary }}>Category</label>
-                  <div className="custom-dropdown" style={{ backgroundColor: COLORS.surfaceLight, borderColor: COLORS.border }}>
-                    <select
-                      value={newThreadCategory}
-                      onChange={(e) => setNewThreadCategory(e.target.value)}
-                      style={{
-                        backgroundColor: 'transparent',
-                        color: COLORS.text.primary,
-                      }}
-                    >
-                      {categories.slice(1).map(cat => (
-                        <option key={cat.value} value={cat.value} style={{ backgroundColor: COLORS.surface, color: COLORS.text.primary }}>
-                          {cat.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <CustomDropdown
+                    options={categories.filter(c => c.value !== 'all')}
+                    value={newThreadCategory}
+                    onChange={setNewThreadCategory}
+                  />
                 </div>
-
-                <button
-                  className="submit-thread-btn"
-                  onClick={handleCreateThread}
-                  style={{ background: COLORS.gradient.primary }}
-                >
-                  <Plus size={18} />
-                  Create Thread
+                <button className="submit-btn" onClick={handleCreateThread} disabled={submitting}
+                  style={{ background: COLORS.gradient.primary, opacity: submitting ? 0.7 : 1, boxShadow: '0 4px 14px rgba(46,139,87,0.35)' }}>
+                  {submitting ? 'Creating…' : '🧵 Create Thread'}
                 </button>
               </div>
             </div>

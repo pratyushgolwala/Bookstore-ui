@@ -1,379 +1,308 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Star, StarHalf, BookOpen, ThumbsUp, Filter, Search } from 'lucide-react';
+import { Star, BookOpen, ThumbsUp, Search, ChevronDown, X } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
 import { reviewsService } from '../../services/reviewsService';
 import './ReviewsPage.css';
 
-/**
- * ReviewsPage — Book reviews platform
- * Read-only for anonymous users, write access for authenticated users
- */
+function CustomDropdown({ options, value, onChange, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div className="cdrop-wrapper" ref={ref}>
+      <button className="cdrop-trigger" onClick={() => setOpen(!open)}
+        style={{ backgroundColor: COLORS.surface, borderColor: open ? COLORS.primary[500] : COLORS.border, color: COLORS.text.primary }}>
+        <span>{selected?.label || placeholder}</span>
+        <ChevronDown size={16} className={`cdrop-arrow ${open ? 'open' : ''}`} style={{ color: COLORS.text.tertiary }} />
+      </button>
+      {open && (
+        <div className="cdrop-menu" style={{ backgroundColor: COLORS.surfaceLight, borderColor: COLORS.border }}>
+          {options.map(opt => (
+            <button key={opt.value} className={`cdrop-item ${opt.value === value ? 'active' : ''}`}
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              style={{
+                color: opt.value === value ? COLORS.primary[600] : COLORS.text.primary,
+                backgroundColor: opt.value === value ? COLORS.primary[500] + '18' : 'transparent',
+              }}>
+              {opt.label}
+              {opt.value === value && <span className="cdrop-check">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ReviewsPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
 
-  const [reviews, setReviews] = useState([]);
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const [newReview, setNewReview] = useState({
-    book_title: '',
-    rating: 5,
-    title: '',
-    body: '',
-  });
-  const [searchQuery, setSearchQuery] = useState('');
+  const [reviews, setReviews]           = useState([]);
+  const [showForm, setShowForm]         = useState(false);
+  const [submitting, setSubmitting]     = useState(false);
+  const [newReview, setNewReview]       = useState({ book_title: '', rating: 5, title: '', body: '' });
+  const [searchQuery, setSearchQuery]   = useState('');
   const [filterRating, setFilterRating] = useState('all');
-  const [sortBy, setSortBy] = useState('recent');
-  const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy]             = useState('recent');
+  const [loading, setLoading]           = useState(true);
 
-  // Fetch reviews from API
-  useEffect(() => {
-    fetchReviews();
-  }, []);
+  const ratingOptions = [
+    { value: 'all', label: 'All Ratings' },
+    { value: '5',   label: '⭐⭐⭐⭐⭐  5 Stars' },
+    { value: '4',   label: '⭐⭐⭐⭐  4 Stars' },
+    { value: '3',   label: '⭐⭐⭐  3 Stars' },
+    { value: '2',   label: '⭐⭐  2 Stars' },
+    { value: '1',   label: '⭐  1 Star' },
+  ];
+
+  const sortOptions = [
+    { value: 'recent', label: 'Most Recent' },
+    { value: 'rating', label: 'Highest Rated' },
+    { value: 'helpful', label: 'Most Helpful' },
+  ];
+
+  useEffect(() => { fetchReviews(); }, []);
 
   const fetchReviews = async () => {
     try {
       setLoading(true);
-      const response = await reviewsService.getReviews();
-      const reviewsData = response.data?.results || response.data || [];
-      setReviews(reviewsData);
-    } catch (error) {
-      console.error('Fetch reviews error:', error);
-      emitToast('error', error.message || 'Failed to load reviews');
+      const res = await reviewsService.getReviews();
+      setReviews(res.data?.results || res.data || []);
+    } catch (err) {
+      emitToast('error', err.message || 'Failed to load reviews');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmitReview = async () => {
-    if (!isAuthenticated) {
-      emitToast('error', 'You need to login to post a review.');
-      return;
-    }
-
-    if (!newReview.book_title.trim()) {
-      emitToast('warning', 'Please enter a book title.');
-      return;
-    }
-
-    if (!newReview.title.trim() || !newReview.body.trim()) {
-      emitToast('warning', 'Please fill in all fields.');
-      return;
-    }
+  const handleSubmit = async () => {
+    if (!isAuthenticated) { emitToast('error', 'You need to login to post a review.'); return; }
+    if (!newReview.book_title.trim()) { emitToast('warning', 'Please enter a book title.'); return; }
+    if (!newReview.body.trim())       { emitToast('warning', 'Please write your review.'); return; }
 
     try {
-      const result = await reviewsService.createReview(newReview);
-      console.log('Create review result:', result);
+      setSubmitting(true);
+      await reviewsService.createReview(newReview);
       emitToast('success', 'Review submitted successfully!');
-      setShowReviewForm(false);
+      setShowForm(false);
       setNewReview({ book_title: '', rating: 5, title: '', body: '' });
       fetchReviews();
-    } catch (error) {
-      console.error('Submit review error:', error);
-      emitToast('error', error.message || 'Failed to submit review');
+    } catch (err) {
+      emitToast('error', err.message || 'Failed to submit review');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleToggleHelpful = async (reviewId) => {
-    if (!isAuthenticated) {
-      emitToast('error', 'You need to login to mark reviews as helpful.');
-      return;
-    }
-
+    if (!isAuthenticated) { emitToast('error', 'You need to login to mark reviews as helpful.'); return; }
     try {
-      const response = await reviewsService.toggleHelpful(reviewId);
-      // Update local state
-      setReviews(reviews.map(review => {
-        if (review.id === reviewId) {
-          return {
-            ...review,
-            is_helpful: response.data.is_helpful,
-            helpful_count: response.data.helpful_count,
-          };
-        }
-        return review;
-      }));
-      emitToast('success', response.data.is_helpful ? 'Marked as helpful!' : 'Removed from helpful');
-    } catch (error) {
-      emitToast('error', error.message || 'Failed to update helpful status');
+      const res = await reviewsService.toggleHelpful(reviewId);
+      setReviews(prev => prev.map(r =>
+        r.id === reviewId ? { ...r, is_helpful: res.data.is_helpful, helpful_count: res.data.helpful_count } : r
+      ));
+      emitToast('success', res.data.is_helpful ? '👍 Marked as helpful!' : 'Removed from helpful');
+    } catch (err) {
+      emitToast('error', err.message || 'Failed to update');
     }
   };
 
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
+  const renderStars = (rating, size = 16) =>
+    [1, 2, 3, 4, 5].map(i => (
+      <Star key={i} size={size}
+        fill={i <= rating ? COLORS.secondary[500] : 'transparent'}
+        color={i <= rating ? COLORS.secondary[500] : COLORS.neutral[600]} />
+    ));
 
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={`full-${i}`} size={18} fill={COLORS.secondary[500]} color={COLORS.secondary[500]} />);
-    }
-
-    if (hasHalfStar) {
-      stars.push(<StarHalf key="half" size={18} fill={COLORS.secondary[500]} color={COLORS.secondary[500]} />);
-    }
-
-    const remaining = 5 - Math.ceil(rating);
-    for (let i = 0; i < remaining; i++) {
-      stars.push(<Star key={`empty-${i}`} size={18} color={COLORS.neutral[600]} />);
-    }
-
-    return stars;
+  const timeAgo = (d) => {
+    const s = Math.floor((Date.now() - new Date(d)) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+    if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+    if (s < 604800) return `${Math.floor(s / 86400)}d ago`;
+    return new Date(d).toLocaleDateString();
   };
 
-  const getTimeAgo = (dateString) => {
-    const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
-    if (seconds < 60) return 'just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const filteredReviews = reviews.filter(review => {
-    const matchesSearch = 
-      review.book_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      review.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      review.user_name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRating = filterRating === 'all' || Math.floor(review.rating) === parseInt(filterRating);
-    return matchesSearch && matchesRating;
-  }).sort((a, b) => {
-    if (sortBy === 'recent') return new Date(b.created_at) - new Date(a.created_at);
-    if (sortBy === 'rating') return b.rating - a.rating;
-    return 0;
-  });
+  const filtered = reviews
+    .filter(r => {
+      const q = searchQuery.toLowerCase();
+      const matchQ = (r.book_title || '').toLowerCase().includes(q)
+        || (r.title || '').toLowerCase().includes(q)
+        || (r.user_name || '').toLowerCase().includes(q);
+      const matchR = filterRating === 'all' || Math.floor(r.rating) === parseInt(filterRating);
+      return matchQ && matchR;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'recent')  return new Date(b.created_at) - new Date(a.created_at);
+      if (sortBy === 'rating')  return b.rating - a.rating;
+      if (sortBy === 'helpful') return (b.helpful_count || 0) - (a.helpful_count || 0);
+      return 0;
+    });
 
   return (
-    <div className="reviews-page" style={{ backgroundColor: COLORS.background, minHeight: '100vh' }}>
+    <div className="reviews-page" style={{ backgroundColor: COLORS.background }}>
       <div className="reviews-container">
-        {/* Header */}
+
+        {/* ── Header ── */}
         <div className="reviews-header">
-          <div className="header-content">
+          <div className="header-top">
             <div className="header-title-section">
               <div className="header-icon" style={{ background: COLORS.gradient.accent }}>
                 <BookOpen size={28} color="#fff" />
               </div>
               <div>
-                <h1 className="page-title" style={{ color: COLORS.text.primary }}>
-                  Book Reviews
-                </h1>
+                <h1 className="page-title" style={{ color: COLORS.text.primary }}>Book Reviews</h1>
                 <p className="page-subtitle" style={{ color: COLORS.text.secondary }}>
                   Read honest reviews from our community
                 </p>
               </div>
             </div>
-
-            <button
-              className="write-review-btn"
-              onClick={() => isAuthenticated ? setShowReviewForm(true) : emitToast('error', 'You need to login to write a review.')}
-              style={{ background: COLORS.gradient.accent }}
-            >
+            <button className="write-review-btn"
+              onClick={() => isAuthenticated ? setShowForm(true) : emitToast('error', 'You need to login to write a review.')}
+              style={{ background: COLORS.gradient.accent }}>
               <Star size={18} />
               Write a Review
             </button>
           </div>
 
-          {/* Filters */}
+          {/* ── Filters ── */}
           <div className="reviews-filters">
-            <div className="search-box" style={{ borderColor: COLORS.border }}>
-              <Search size={18} color={COLORS.text.tertiary} />
-              <input
-                type="text"
-                placeholder="Search reviews..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ color: COLORS.text.primary, backgroundColor: 'transparent' }}
-              />
+            <div className="search-box" style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}>
+              <Search size={16} color={COLORS.text.tertiary} />
+              <input type="text" placeholder="Search reviews, books, authors…"
+                value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                style={{ color: COLORS.text.primary, backgroundColor: 'transparent' }} />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: COLORS.text.tertiary }}>
+                  <X size={14} />
+                </button>
+              )}
             </div>
-
-            <div className="filter-dropdown" style={{ borderColor: COLORS.border }}>
-              <Filter size={18} color={COLORS.text.tertiary} />
-              <select
-                value={filterRating}
-                onChange={(e) => setFilterRating(e.target.value)}
-                style={{ color: COLORS.text.primary, backgroundColor: COLORS.surface }}
-              >
-                <option value="all">All Ratings</option>
-                <option value="5">5 Stars</option>
-                <option value="4">4 Stars</option>
-                <option value="3">3 Stars</option>
-                <option value="2">2 Stars</option>
-                <option value="1">1 Star</option>
-              </select>
-            </div>
-
-            <div className="sort-dropdown" style={{ borderColor: COLORS.border }}>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                style={{ color: COLORS.text.primary, backgroundColor: COLORS.surface }}
-              >
-                <option value="recent">Most Recent</option>
-                <option value="rating">Highest Rated</option>
-              </select>
-            </div>
+            <CustomDropdown options={ratingOptions} value={filterRating} onChange={setFilterRating} placeholder="All Ratings" />
+            <CustomDropdown options={sortOptions}   value={sortBy}       onChange={setSortBy}       placeholder="Sort By" />
           </div>
         </div>
 
-        {/* Reviews Grid */}
+        {/* ── Reviews Grid ── */}
         <div className="reviews-grid">
           {loading ? (
-            <div className="loading-state" style={{ color: COLORS.text.secondary }}>
-              <BookOpen size={48} className="loading-icon" />
-              <p>Loading reviews...</p>
+            <div className="state-box">
+              <div className="spinner" />
+              <p style={{ color: COLORS.text.secondary }}>Loading reviews…</p>
             </div>
-          ) : filteredReviews.length === 0 ? (
-            <div className="empty-state" style={{ color: COLORS.text.secondary }}>
-              <BookOpen size={64} opacity={0.3} />
-              <h3 style={{ color: COLORS.text.primary }}>No reviews found</h3>
-              <p>Be the first to share your thoughts on a book!</p>
+          ) : filtered.length === 0 ? (
+            <div className="state-box">
+              <BookOpen size={56} color={COLORS.text.tertiary} />
+              <h3 style={{ color: COLORS.text.primary }}>No reviews yet</h3>
+              <p style={{ color: COLORS.text.secondary }}>Be the first to share your thoughts!</p>
             </div>
-          ) : (
-            filteredReviews.map((review) => (
-              <div
-                key={review.id}
-                className="review-card"
-                style={{
-                  backgroundColor: COLORS.surface,
-                  borderColor: COLORS.border,
-                }}
-              >
-                <div className="review-header">
-                  <div>
-                    <h3 className="review-title" style={{ color: COLORS.text.primary }}>
-                      {review.title}
-                    </h3>
-                    <p className="book-title" style={{ color: COLORS.secondary[500] }}>
-                      {review.book_title}
-                    </p>
-                  </div>
-                  <div className="review-rating">{renderStars(review.rating)}</div>
+          ) : filtered.map(review => (
+            <div key={review.id} className="review-card"
+              style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}>
+
+              <div className="review-top">
+                <div className="review-top-left">
+                  <h3 className="review-title" style={{ color: COLORS.text.primary }}>{review.title || 'Untitled Review'}</h3>
+                  <p className="review-book" style={{ color: COLORS.secondary[500] }}>📚 {review.book_title}</p>
                 </div>
-
-                <p className="review-body" style={{ color: COLORS.text.secondary }}>
-                  {review.body}
-                </p>
-
-                <div className="review-footer">
-                  <div className="reviewer-info">
-                    <div className="reviewer-avatar" style={{ background: COLORS.gradient.primary }}>
-                      {review.user_name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="reviewer-name" style={{ color: COLORS.text.primary }}>
-                        {review.user_name}
-                      </p>
-                      <p className="review-time" style={{ color: COLORS.text.tertiary }}>
-                        {getTimeAgo(review.created_at)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    className="helpful-btn"
-                    onClick={() => handleToggleHelpful(review.id)}
-                    style={{ 
-                      color: review.is_helpful ? COLORS.secondary[500] : COLORS.text.tertiary,
-                      borderColor: review.is_helpful ? COLORS.secondary[500] : COLORS.border,
-                      backgroundColor: review.is_helpful ? COLORS.secondary[500] + '20' : 'transparent'
-                    }}
-                  >
-                    <ThumbsUp size={16} fill={review.is_helpful ? COLORS.secondary[500] : 'none'} />
-                    {review.helpful_count > 0 ? review.helpful_count : 'Helpful'}
-                  </button>
-                </div>
+                <div className="review-stars">{renderStars(review.rating)}</div>
               </div>
-            ))
-          )}
-        </div>
 
-        {/* Review Form Modal */}
-        {showReviewForm && (
-          <div className="modal-overlay" onClick={() => setShowReviewForm(false)}>
-            <div className="review-form-modal" onClick={(e) => e.stopPropagation()} style={{ backgroundColor: COLORS.surface }}>
-              <div className="modal-header" style={{ borderColor: COLORS.border }}>
-                <h2 style={{ color: COLORS.text.primary }}>Write a Review</h2>
-                <button className="modal-close" onClick={() => setShowReviewForm(false)} style={{ color: COLORS.text.secondary }}>
-                  ✕
+              <p className="review-body" style={{ color: COLORS.text.secondary }}>{review.body}</p>
+
+              <div className="review-footer">
+                <div className="reviewer-row">
+                  <div className="reviewer-avatar" style={{ background: COLORS.gradient.primary }}>
+                    {(review.user_name || '?').charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="reviewer-name" style={{ color: COLORS.text.primary }}>{review.user_name || 'Anonymous'}</p>
+                    <p className="reviewer-time" style={{ color: COLORS.text.tertiary }}>{timeAgo(review.created_at)}</p>
+                  </div>
+                </div>
+                <button className={`helpful-btn ${review.is_helpful ? 'helpful-active' : ''}`}
+                  onClick={() => handleToggleHelpful(review.id)}
+                  style={{
+                    borderColor: review.is_helpful ? COLORS.secondary[500] : COLORS.border,
+                    color: review.is_helpful ? COLORS.secondary[500] : COLORS.text.tertiary,
+                    backgroundColor: review.is_helpful ? COLORS.secondary[500] + '18' : 'transparent',
+                  }}>
+                  <ThumbsUp size={15} fill={review.is_helpful ? COLORS.secondary[500] : 'none'} />
+                  <span>{review.helpful_count > 0 ? review.helpful_count : ''} Helpful</span>
                 </button>
               </div>
+            </div>
+          ))}
+        </div>
 
+        {/* ── Write Review Modal ── */}
+        {showForm && (
+          <div className="modal-overlay" onClick={() => setShowForm(false)}>
+            <div className="modal-card" onClick={e => e.stopPropagation()}
+              style={{ backgroundColor: COLORS.surface }}>
+              <div className="modal-head" style={{ borderColor: COLORS.border }}>
+                <h2 style={{ color: COLORS.text.primary }}>Write a Review</h2>
+                <button className="modal-close-btn" onClick={() => setShowForm(false)}
+                  style={{ color: COLORS.text.secondary }}>
+                  <X size={20} />
+                </button>
+              </div>
               <div className="modal-body">
-                <div className="form-group">
+                <div className="form-field">
                   <label style={{ color: COLORS.text.secondary }}>Book Title</label>
-                  <input
-                    type="text"
+                  <input type="text" placeholder="e.g. The Midnight Library"
                     value={newReview.book_title}
-                    onChange={(e) => setNewReview({ ...newReview, book_title: e.target.value })}
-                    placeholder="Enter the exact book title..."
-                    style={{
-                      backgroundColor: COLORS.surfaceLight,
-                      color: COLORS.text.primary,
-                      borderColor: COLORS.border,
-                    }}
-                  />
-                  <p style={{ color: COLORS.text.tertiary, fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                    Please enter the exact book title as it appears in our store
-                  </p>
+                    onChange={e => setNewReview({ ...newReview, book_title: e.target.value })}
+                    style={{ backgroundColor: COLORS.surfaceLight, color: COLORS.text.primary, borderColor: COLORS.border }} />
+                  <span className="field-hint" style={{ color: COLORS.text.tertiary }}>Enter the book title as it appears in our store</span>
                 </div>
 
-                <div className="form-group">
-                  <label style={{ color: COLORS.text.secondary }}>Rating</label>
-                  <div className="rating-selector">
-                    {[1, 2, 3, 4, 5].map((rating) => (
-                      <button
-                        key={rating}
-                        type="button"
-                        onClick={() => setNewReview({ ...newReview, rating })}
-                        className="rating-star-btn"
-                      >
-                        <Star
-                          size={32}
-                          fill={rating <= newReview.rating ? COLORS.secondary[500] : 'transparent'}
-                          color={rating <= newReview.rating ? COLORS.secondary[500] : COLORS.neutral[600]}
-                        />
+                <div className="form-field">
+                  <label style={{ color: COLORS.text.secondary }}>Your Rating</label>
+                  <div className="star-picker">
+                    {[1,2,3,4,5].map(r => (
+                      <button key={r} type="button" className="star-pick-btn"
+                        onClick={() => setNewReview({ ...newReview, rating: r })}>
+                        <Star size={34}
+                          fill={r <= newReview.rating ? COLORS.secondary[500] : 'transparent'}
+                          color={r <= newReview.rating ? COLORS.secondary[500] : COLORS.neutral[500]} />
                       </button>
                     ))}
+                    <span className="rating-label" style={{ color: COLORS.text.secondary }}>
+                      {['','Terrible','Poor','Okay','Good','Excellent'][newReview.rating]}
+                    </span>
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label style={{ color: COLORS.text.secondary }}>Review Title</label>
-                  <input
-                    type="text"
+                <div className="form-field">
+                  <label style={{ color: COLORS.text.secondary }}>Review Title <span style={{ color: COLORS.text.tertiary }}>(optional)</span></label>
+                  <input type="text" placeholder="Sum up your experience…"
                     value={newReview.title}
-                    onChange={(e) => setNewReview({ ...newReview, title: e.target.value })}
-                    placeholder="Sum up your review in one line"
-                    style={{
-                      backgroundColor: COLORS.surfaceLight,
-                      color: COLORS.text.primary,
-                      borderColor: COLORS.border,
-                    }}
-                  />
+                    onChange={e => setNewReview({ ...newReview, title: e.target.value })}
+                    style={{ backgroundColor: COLORS.surfaceLight, color: COLORS.text.primary, borderColor: COLORS.border }} />
                 </div>
 
-                <div className="form-group">
+                <div className="form-field">
                   <label style={{ color: COLORS.text.secondary }}>Your Review</label>
-                  <textarea
-                    value={newReview.body}
-                    onChange={(e) => setNewReview({ ...newReview, body: e.target.value })}
-                    placeholder="Share your thoughts about this book..."
-                    rows={6}
-                    style={{
-                      backgroundColor: COLORS.surfaceLight,
-                      color: COLORS.text.primary,
-                      borderColor: COLORS.border,
-                    }}
-                  />
+                  <textarea placeholder="Share what you loved or didn't love about this book…"
+                    rows={5} value={newReview.body}
+                    onChange={e => setNewReview({ ...newReview, body: e.target.value })}
+                    style={{ backgroundColor: COLORS.surfaceLight, color: COLORS.text.primary, borderColor: COLORS.border }} />
                 </div>
 
-                <button
-                  className="submit-review-btn"
-                  onClick={handleSubmitReview}
-                  style={{ background: COLORS.gradient.accent }}
-                >
-                  <Star size={18} />
-                  Submit Review
+                <button className="submit-btn" onClick={handleSubmit} disabled={submitting}
+                  style={{ background: COLORS.gradient.accent, opacity: submitting ? 0.7 : 1 }}>
+                  {submitting ? 'Submitting…' : '⭐ Submit Review'}
                 </button>
               </div>
             </div>

@@ -48,8 +48,12 @@ async function request(method, endpoint, body = null, retry = true) {
   if (!res.ok) {
     const json = await res.json().catch(() => null);
     const message =
-      json?.status?.message ||
-      json?.detail ||
+      json?.status?.message ||          // our envelope: { status: { message } }
+      json?.detail ||                   // DRF default
+      json?.message ||
+      (typeof json === 'object' && json !== null
+        ? Object.values(json).flat().join(' ')
+        : null) ||
       `Request failed (${res.status})`;
     throw new Error(message);
   }
