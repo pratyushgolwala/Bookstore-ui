@@ -1,10 +1,18 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, BookOpen, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
+import {
+  Users,
+  BookOpen,
+  ArrowRight,
+  ArrowLeft,
+  AlertCircle,
+  Library,
+  Eye,
+  ArrowUpDown,
+} from 'lucide-react';
 import { authorsService } from '../../services/authorsService';
 import { normalizeBook } from '../../utils/bookNormalizer';
 import { formatCurrency } from '../../utils/formatters';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
 import SearchBar from '../../components/ui/SearchBar';
 import BookDetailCard from '../../components/Bookshelf/BookDetailCard';
 import COLORS from '../../constants/colors';
@@ -24,7 +32,7 @@ function avatarFor(name) {
  * the real Open Library photo once the card scrolls into view. Falls back to
  * the avatar if no photo exists (the backend returns a 404-on-miss image URL).
  */
-function AuthorAvatar({ name, className }) {
+function AuthorAvatar({ name, className, style }) {
   const ref = useRef(null);
   const [src, setSrc] = useState(() => avatarFor(name));
   const [requested, setRequested] = useState(false);
@@ -61,6 +69,7 @@ function AuthorAvatar({ name, className }) {
       alt={name}
       loading="lazy"
       className={className}
+      style={style}
       onError={(e) => {
         e.target.onerror = null;
         e.target.src = avatarFor(name);
@@ -76,12 +85,42 @@ const SORT_OPTIONS = [
   { value: 'name_desc', label: 'Name (Z–A)' },
 ];
 
+/** Skeleton placeholder card shown while authors load. */
+function AuthorCardSkeleton() {
+  return (
+    <div
+      className="rounded-2xl border p-5 flex flex-col items-center gap-3 animate-pulse"
+      style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
+    >
+      <div className="w-20 h-20 rounded-full" style={{ backgroundColor: COLORS.surfaceLight }} />
+      <div className="h-3.5 w-3/4 rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
+      <div className="h-3 w-1/3 rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
+    </div>
+  );
+}
+
+/** Skeleton placeholder for the book grid. */
+function BookSkeleton() {
+  return (
+    <div
+      className="rounded-xl border overflow-hidden animate-pulse"
+      style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
+    >
+      <div style={{ aspectRatio: '2/3', backgroundColor: COLORS.surfaceLight }} />
+      <div className="p-3 space-y-2">
+        <div className="h-3 w-full rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
+        <div className="h-3 w-1/2 rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
+      </div>
+    </div>
+  );
+}
+
 /**
  * AuthorsPage — browse authors and view their books.
  *
  * Two views:
- *  1. Author list (grid of authors with photo + book count + sort)
- *  2. Author detail (author photo, about/bio, and books by that author)
+ *  1. Author list (gallery of authors with photo + book count + search/sort)
+ *  2. Author detail (author hero, about/bio, and books by that author)
  */
 function AuthorsPage() {
   const [authors, setAuthors] = useState([]);
@@ -196,67 +235,96 @@ function AuthorsPage() {
     }
   }, [authors, sortBy]);
 
-  // Author detail view
+  /* ─────────────────────────── Author detail view ─────────────────────────── */
   if (selectedAuthor) {
+    const totalBooks = selectedAuthor.book_count ?? authorBooks.length;
     return (
       <div className="min-h-screen" style={{ backgroundColor: COLORS.background, color: COLORS.text.primary }}>
-        <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="max-w-7xl mx-auto px-6 py-8">
           <button
             onClick={goBack}
-            className="flex items-center gap-2 mb-6 text-sm font-medium transition-colors hover:opacity-80"
+            className="flex items-center gap-2 mb-6 text-sm font-medium transition-all hover:gap-3"
             style={{ color: COLORS.secondary[500] }}
           >
             <ArrowLeft size={16} />
             Back to Authors
           </button>
 
-          {/* Author header: photo + name + about */}
+          {/* Author hero */}
           <div
-            className="flex flex-col sm:flex-row gap-6 rounded-2xl border p-6 mb-10"
-            style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
+            className="relative overflow-hidden rounded-3xl border p-8 mb-10"
+            style={{ borderColor: COLORS.border, background: COLORS.gradient.dark }}
           >
-            <img
-              src={selectedAuthor.image || avatarFor(selectedAuthor.name)}
-              alt={selectedAuthor.name}
-              className="w-28 h-28 rounded-full object-cover shrink-0 border-2"
-              style={{ borderColor: COLORS.border }}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = avatarFor(selectedAuthor.name);
-              }}
+            {/* decorative glow */}
+            <div
+              className="absolute -top-24 -right-24 w-72 h-72 rounded-full opacity-20 blur-3xl pointer-events-none"
+              style={{ background: COLORS.gradient.glow }}
             />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
-                <Users style={{ color: COLORS.secondary[500] }} size={26} />
-                <h1 className="text-3xl font-bold">{selectedAuthor.name}</h1>
+            <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-7">
+              <div className="shrink-0 rounded-full p-1" style={{ background: COLORS.gradient.accent }}>
+                <img
+                  src={selectedAuthor.image || avatarFor(selectedAuthor.name)}
+                  alt={selectedAuthor.name}
+                  className="w-32 h-32 rounded-full object-cover"
+                  style={{ border: `3px solid ${COLORS.surface}` }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = avatarFor(selectedAuthor.name);
+                  }}
+                />
               </div>
-              <p className="text-sm mb-3" style={{ color: COLORS.text.tertiary }}>
-                {authorBooks.length} book{authorBooks.length !== 1 ? 's' : ''} in catalog
-              </p>
-              {selectedAuthor.bio && (
-                <div>
-                  <h2 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: COLORS.text.tertiary }}>
-                    About the author
-                  </h2>
-                  <p className="text-sm leading-relaxed" style={{ color: COLORS.text.secondary }}>
+
+              <div className="flex-1 min-w-0 text-center sm:text-left">
+                <span
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full mb-3"
+                  style={{ backgroundColor: `${COLORS.secondary[500]}22`, color: COLORS.secondary[500] }}
+                >
+                  <Users size={12} /> Author
+                </span>
+                <h1 className="text-3xl sm:text-4xl font-bold leading-tight mb-3" style={{ color: COLORS.text.primary }}>
+                  {selectedAuthor.name}
+                </h1>
+
+                {/* stat chips */}
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-4">
+                  <span
+                    className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg"
+                    style={{ backgroundColor: COLORS.surface, color: COLORS.text.secondary, border: `1px solid ${COLORS.border}` }}
+                  >
+                    <Library size={14} style={{ color: COLORS.primary[500] }} />
+                    {totalBooks} book{totalBooks !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                {selectedAuthor.bio && (
+                  <p className="text-sm leading-relaxed max-w-2xl" style={{ color: COLORS.text.secondary }}>
                     {selectedAuthor.bio}
                   </p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mb-4">
+          {/* Books section */}
+          <div className="flex items-center gap-2 mb-5">
             <BookOpen size={18} style={{ color: COLORS.secondary[500] }} />
-            <h2 className="text-lg font-semibold">Books</h2>
+            <h2 className="text-lg font-semibold">Books by {selectedAuthor.name}</h2>
           </div>
 
           {booksLoading ? (
-            <LoadingSpinner />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+              {Array.from({ length: 10 }).map((_, i) => <BookSkeleton key={i} />)}
+            </div>
           ) : authorBooks.length === 0 ? (
-            <p style={{ color: COLORS.text.secondary }}>No books found for this author.</p>
+            <div
+              className="flex flex-col items-center justify-center text-center py-16 rounded-2xl border"
+              style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
+            >
+              <BookOpen size={40} style={{ color: COLORS.text.tertiary }} className="mb-3" />
+              <p style={{ color: COLORS.text.secondary }}>No books found for this author.</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
               {authorBooks.map((book) => (
                 <div
                   key={book.id}
@@ -269,7 +337,7 @@ function AuthorsPage() {
                       setSelectedBook(book);
                     }
                   }}
-                  className="group rounded-xl border overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  className="group rounded-xl border overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
                   style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
                 >
                   <div className="relative overflow-hidden" style={{ aspectRatio: '2/3' }}>
@@ -282,12 +350,24 @@ function AuthorsPage() {
                         e.target.src = `https://picsum.photos/seed/${encodeURIComponent(book.id)}/240/360`;
                       }}
                     />
+                    {/* hover overlay */}
+                    <div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-3"
+                      style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent 65%)' }}
+                    >
+                      <span
+                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
+                        style={{ background: COLORS.gradient.primary, color: COLORS.text.inverse }}
+                      >
+                        <Eye size={13} /> View details
+                      </span>
+                    </div>
                   </div>
                   <div className="p-3">
-                    <h3 className="text-sm font-semibold line-clamp-2" style={{ color: COLORS.text.primary }}>
+                    <h3 className="text-sm font-semibold line-clamp-2 leading-snug" style={{ color: COLORS.text.primary }}>
                       {book.title}
                     </h3>
-                    <p className="text-base font-bold mt-1" style={{ color: COLORS.secondary[500] }}>
+                    <p className="text-base font-bold mt-1.5" style={{ color: COLORS.secondary[500] }}>
                       {formatCurrency(book.price)}
                     </p>
                   </div>
@@ -305,48 +385,65 @@ function AuthorsPage() {
     );
   }
 
-  // Authors list view
+  /* ──────────────────────────── Authors list view ─────────────────────────── */
   return (
     <div className="min-h-screen" style={{ backgroundColor: COLORS.background, color: COLORS.text.primary }}>
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <Users style={{ color: COLORS.secondary[500] }} size={28} />
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Hero header */}
+        <div
+          className="relative overflow-hidden rounded-3xl border p-8 mb-8"
+          style={{ borderColor: COLORS.border, background: COLORS.gradient.dark }}
+        >
+          <div
+            className="absolute -top-20 -right-16 w-64 h-64 rounded-full opacity-20 blur-3xl pointer-events-none"
+            style={{ background: COLORS.gradient.glow }}
+          />
+          <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-bold leading-none">Authors</h1>
-              <p className="text-sm mt-1" style={{ color: COLORS.text.tertiary }}>
-                {authors.length} authors in catalog
+              <div
+                className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4"
+                style={{ background: COLORS.gradient.accent }}
+              >
+                <Users size={24} style={{ color: COLORS.text.inverse }} />
+              </div>
+              <h1 className="text-4xl font-bold leading-none mb-2">Authors</h1>
+              <p className="text-sm" style={{ color: COLORS.text.secondary }}>
+                Explore {authors.length} author{authors.length !== 1 ? 's' : ''} and discover their books
               </p>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div style={{ width: '280px' }}>
-              <SearchBar value={search} onSearch={setSearch} placeholder="Search authors..." />
+
+            {/* Toolbar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="sm:w-72">
+                <SearchBar value={search} onSearch={setSearch} placeholder="Search authors..." />
+              </div>
+              <div
+                className="flex items-center gap-2 rounded-xl px-3"
+                style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
+              >
+                <ArrowUpDown size={15} style={{ color: COLORS.text.tertiary }} />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  aria-label="Sort authors"
+                  className="text-sm py-2.5 pr-1 outline-none cursor-pointer bg-transparent"
+                  style={{ color: COLORS.text.primary }}
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value} style={{ backgroundColor: COLORS.surface }}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              aria-label="Sort authors"
-              className="text-sm rounded-xl px-3 py-2.5 outline-none cursor-pointer"
-              style={{
-                backgroundColor: COLORS.surface,
-                color: COLORS.text.primary,
-                border: `1px solid ${COLORS.border}`,
-              }}
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
         {error && (
           <div
-            className="mb-6 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
-            style={{ backgroundColor: `${COLORS.error}1a`, color: COLORS.error }}
+            className="mb-6 px-4 py-3 rounded-xl flex items-center gap-2 text-sm"
+            style={{ backgroundColor: `${COLORS.error}1a`, color: COLORS.error, border: `1px solid ${COLORS.error}33` }}
           >
             <AlertCircle size={16} />
             {error}
@@ -354,23 +451,49 @@ function AuthorsPage() {
         )}
 
         {loading ? (
-          <LoadingSpinner />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+            {Array.from({ length: 10 }).map((_, i) => <AuthorCardSkeleton key={i} />)}
+          </div>
         ) : sortedAuthors.length === 0 ? (
-          <p style={{ color: COLORS.text.secondary }}>No authors found.</p>
+          <div
+            className="flex flex-col items-center justify-center text-center py-20 rounded-2xl border"
+            style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
+          >
+            <Users size={44} style={{ color: COLORS.text.tertiary }} className="mb-3" />
+            <p className="font-medium" style={{ color: COLORS.text.primary }}>No authors found</p>
+            <p className="text-sm mt-1" style={{ color: COLORS.text.tertiary }}>
+              Try a different search term.
+            </p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
             {sortedAuthors.map((author) => (
               <button
                 key={author.name}
                 onClick={() => openAuthor(author)}
-                className="group text-left rounded-xl border p-5 flex items-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                className="group relative text-center rounded-2xl border p-6 flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
                 style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
               >
-                <AuthorAvatar
-                  name={author.name}
-                  className="w-12 h-12 rounded-full object-cover shrink-0 transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="flex-1 min-w-0">
+                {/* book count badge */}
+                <span
+                  className="absolute top-3 right-3 text-[11px] font-bold px-2 py-0.5 rounded-full"
+                  style={{ backgroundColor: `${COLORS.secondary[500]}22`, color: COLORS.secondary[500] }}
+                >
+                  {author.book_count}
+                </span>
+
+                <div
+                  className="rounded-full p-0.5 transition-all duration-300 group-hover:p-1"
+                  style={{ background: COLORS.gradient.accent }}
+                >
+                  <AuthorAvatar
+                    name={author.name}
+                    className="w-20 h-20 rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    style={{ border: `2px solid ${COLORS.surface}` }}
+                  />
+                </div>
+
+                <div className="min-w-0 w-full">
                   <h3 className="text-sm font-semibold truncate" style={{ color: COLORS.text.primary }}>
                     {author.name}
                   </h3>
@@ -378,11 +501,13 @@ function AuthorsPage() {
                     {author.book_count} book{author.book_count !== 1 ? 's' : ''}
                   </p>
                 </div>
-                <ArrowRight
-                  size={16}
-                  className="shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-1"
+
+                <span
+                  className="flex items-center gap-1 text-xs font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0"
                   style={{ color: COLORS.secondary[500] }}
-                />
+                >
+                  View books <ArrowRight size={13} />
+                </span>
               </button>
             ))}
           </div>
