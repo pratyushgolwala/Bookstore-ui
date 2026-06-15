@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Minus, Plus, Trash2, ShoppingBag, ArrowRight,
   Tag, ChevronRight, Sparkles, Truck, Shield, RotateCcw,
-  BookOpen, X,
+  BookOpen, X, Lock,
 } from 'lucide-react';
 import {
   selectCartItems,
@@ -15,6 +15,7 @@ import {
   clearCart,
   setQuantity,
 } from '../../store/slices/cartSlice';
+import { selectIsAuthenticated } from '../../store/slices/authSlice';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import Button from '../../components/ui/Button';
@@ -35,6 +36,7 @@ const coverUrl = (item) =>
 function CartPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const items    = useSelector(selectCartItems);
   const subtotal = useSelector(selectCartTotal);
 
@@ -81,6 +83,43 @@ function CartPage() {
     setCouponCode('');
     setCouponError('');
   };
+
+  /* ── Not logged in ─────────────────────────────────────── */
+  if (!isAuthenticated) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center text-center px-6 pb-16"
+        style={{ minHeight: 'calc(100vh - 72px)', backgroundColor: COLORS.background }}
+      >
+        <div
+          className="w-28 h-28 rounded-full flex items-center justify-center mb-8"
+          style={{
+            background: `radial-gradient(circle, ${COLORS.primary[200]} 0%, ${COLORS.primary[50]} 100%)`,
+            border: `1px solid ${COLORS.primary[300]}`,
+            boxShadow: `0 0 48px ${COLORS.primary[500]}22`,
+          }}
+        >
+          <Lock size={44} style={{ color: COLORS.primary[700] }} strokeWidth={1.5} />
+        </div>
+
+        <h1 className="text-3xl font-bold mb-3" style={{ color: COLORS.text.primary }}>
+          Please log in to view your cart
+        </h1>
+        <p className="mb-8 max-w-sm leading-relaxed" style={{ color: COLORS.text.secondary }}>
+          Your cart is tied to your account. Sign in to see saved items and continue shopping.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button size="lg" onClick={() => navigate('/login')} rightIcon={<ArrowRight size={18} />}>
+            Sign In
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => navigate('/books')}>
+            Browse the Library
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   /* ── Empty state ───────────────────────────────────────── */
   if (items.length === 0) {

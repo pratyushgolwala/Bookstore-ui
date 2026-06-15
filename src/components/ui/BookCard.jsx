@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { ShoppingCart, Check } from 'lucide-react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addItem } from '../../store/slices/cartSlice';
+import { selectIsAuthenticated } from '../../store/slices/authSlice';
+import { emitToast } from '../../utils/toastBus';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import Badge from './Badge';
@@ -12,11 +14,24 @@ import Badge from './Badge';
  */
 function BookCard({ book, onSelect }) {
   const dispatch = useDispatch();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const [added, setAdded] = useState(false);
 
   const quickAdd = (e) => {
     e.stopPropagation();
-    dispatch(addItem({ id: book.id, title: book.title, price: book.price, quantity: 1 }));
+    if (!isAuthenticated) {
+      emitToast('warning', 'Please log in to add books to your cart.');
+      return;
+    }
+    dispatch(addItem({
+      id: book.id,
+      title: book.title,
+      price: book.price,
+      quantity: 1,
+      author: book.author,
+      coverImageUrl: book.coverImageUrl,
+    }));
+    emitToast('success', `"${book.title}" added to cart.`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
