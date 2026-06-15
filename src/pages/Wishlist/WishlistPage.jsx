@@ -11,6 +11,7 @@ import { emitToast } from '../../utils/toastBus';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import Button from '../../components/ui/Button';
+import AuthorLink from '../../components/ui/AuthorLink';
 
 const cover = (item) =>
   item.coverImageUrl || `https://picsum.photos/seed/${item.id}/240/360`;
@@ -111,7 +112,11 @@ function WishlistPage() {
                 {book.title}
               </h3>
               {book.author && (
-                <p className="text-xs mt-0.5" style={{ color: COLORS.text.tertiary }}>{book.author}</p>
+                <AuthorLink
+                  author={book.author}
+                  className="text-xs mt-0.5 block w-fit max-w-full"
+                  style={{ color: COLORS.text.tertiary }}
+                />
               )}
               <p className="text-sm font-bold mt-1" style={{ color: COLORS.secondary[500] }}>
                 {formatCurrency(book.price)}

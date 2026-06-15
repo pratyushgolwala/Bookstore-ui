@@ -8,6 +8,7 @@ import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import Badge from '../ui/Badge';
 import WishlistButton from '../ui/WishlistButton';
+import AuthorLink from '../ui/AuthorLink';
 
 /**
  * BookDetailCard — a polished modal overlay showing full book details.
@@ -107,7 +108,7 @@ export default function BookDetailCard({ book, onClose }) {
             {book.title}
           </h2>
           <p className="text-sm" style={{ color: COLORS.text.secondary }}>
-            by <span style={{ color: COLORS.secondary[500] }}>{book.author}</span>
+            by <AuthorLink author={book.author} onNavigate={onClose} />
           </p>
 
           {book.description && (
