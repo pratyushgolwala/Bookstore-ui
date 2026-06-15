@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import Auth3DBook from '../components/Auth3DBook/Auth3DBook';
+import ProtectedRoute from '../components/common/ProtectedRoute';
 
 const LandingPage     = lazy(() => import('../pages/Landing/LandingPage'));
 const BooksPage       = lazy(() => import('../pages/Books/BooksPage'));
@@ -22,12 +23,16 @@ export function AppRoutes() {
 
       {/* Main app routes - with MainLayout */}
       <Route element={<MainLayout />}>
-        <Route index          element={<LandingPage />}  />
-        <Route path="books"   element={<BooksPage />}    />
-        <Route path="cart"    element={<CartPage />}     />
-        <Route path="orders"  element={<OrdersPage />}   />
-        <Route path="profile" element={<ProfilePage />}  />
-        <Route path="admin"   element={<AdminPage />}    />
+        {/* Public */}
+        <Route index element={<LandingPage />} />
+
+        {/* Protected — require login */}
+        <Route path="books"   element={<ProtectedRoute><BooksPage /></ProtectedRoute>}   />
+        <Route path="cart"    element={<ProtectedRoute><CartPage /></ProtectedRoute>}    />
+        <Route path="orders"  element={<ProtectedRoute><OrdersPage /></ProtectedRoute>}  />
+        <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="admin"   element={<ProtectedRoute><AdminPage /></ProtectedRoute>}   />
+
         <Route path="*"       element={<NotFoundPage />} />
       </Route>
     </Routes>
