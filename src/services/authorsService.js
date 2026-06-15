@@ -13,4 +13,8 @@ export const authorsService = {
   /** Fetch books by a specific author. */
   getBooksByAuthor: (authorName) =>
     apiClient.get(`/api/authors/${encodeURIComponent(authorName)}/books/`),
+
+  /** Resolve a single author's photo (Open Library, with avatar fallback). */
+  getAuthorImage: (authorName) =>
+    apiClient.get(`/api/authors/image/?name=${encodeURIComponent(authorName)}`),
 };
