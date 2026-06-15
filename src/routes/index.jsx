@@ -1,23 +1,24 @@
-import { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import Auth3DBook from '../components/Auth3DBook/Auth3DBook';
 import ProtectedRoute from '../components/common/ProtectedRoute';
+import lazyWithReload from '../utils/lazyWithReload';
 
-const LandingPage      = lazy(() => import('../pages/Landing/LandingPage'));
-const BooksPage        = lazy(() => import('../pages/Books/BooksPage'));
-const CategoriesPage   = lazy(() => import('../pages/Categories/CategoriesPage'));
-const AuthorsPage      = lazy(() => import('../pages/Authors/AuthorsPage'));
-const CartPage         = lazy(() => import('../pages/Cart/CartPage'));
-const OrdersPage       = lazy(() => import('../pages/Orders/OrdersPage'));
-const ProfilePage      = lazy(() => import('../pages/Profile/ProfilePage'));
-const AdminPage        = lazy(() => import('../pages/Admin/AdminPage'));
-const DiscussionPage   = lazy(() => import('../pages/Discussion/DiscussionPage'));
-const ReviewsPage      = lazy(() => import('../pages/Reviews/ReviewsPage'));
-const WishlistPage     = lazy(() => import('../pages/Wishlist/WishlistPage'));
-const SettingsPage     = lazy(() => import('../pages/Settings/SettingsPage'));
-const NotFoundPage     = lazy(() => import('../pages/NotFound/NotFoundPage'));
-const VerifyEmailPage  = lazy(() => import('../pages/Auth/VerifyEmailPage'));
+const LandingPage      = lazyWithReload(() => import('../pages/Landing/LandingPage'));
+const BooksPage        = lazyWithReload(() => import('../pages/Books/BooksPage'));
+const CategoriesPage   = lazyWithReload(() => import('../pages/Categories/CategoriesPage'));
+const AuthorsPage      = lazyWithReload(() => import('../pages/Authors/AuthorsPage'));
+const CartPage         = lazyWithReload(() => import('../pages/Cart/CartPage'));
+const OrdersPage       = lazyWithReload(() => import('../pages/Orders/OrdersPage'));
+const ProfilePage      = lazyWithReload(() => import('../pages/Profile/ProfilePage'));
+const AdminPage        = lazyWithReload(() => import('../pages/Admin/AdminPage'));
+const AuthorDashboard  = lazyWithReload(() => import('../pages/Author/AuthorDashboard'));
+const DiscussionPage   = lazyWithReload(() => import('../pages/Discussion/DiscussionPage'));
+const ReviewsPage      = lazyWithReload(() => import('../pages/Reviews/ReviewsPage'));
+const WishlistPage     = lazyWithReload(() => import('../pages/Wishlist/WishlistPage'));
+const SettingsPage     = lazyWithReload(() => import('../pages/Settings/SettingsPage'));
+const NotFoundPage     = lazyWithReload(() => import('../pages/NotFound/NotFoundPage'));
+const VerifyEmailPage  = lazyWithReload(() => import('../pages/Auth/VerifyEmailPage'));
 
 export function AppRoutes() {
   return (
@@ -42,6 +43,7 @@ export function AppRoutes() {
         <Route path="orders"   element={<ProtectedRoute><OrdersPage /></ProtectedRoute>}   />
         <Route path="profile"  element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}  />
         <Route path="admin"    element={<ProtectedRoute><AdminPage /></ProtectedRoute>}    />
+        <Route path="author"   element={<ProtectedRoute><AuthorDashboard /></ProtectedRoute>} />
         <Route path="wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path="settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
 
