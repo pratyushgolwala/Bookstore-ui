@@ -94,9 +94,9 @@ function BooksPage() {
           <div
             className="fixed z-40 flex items-center gap-3 px-4 py-3 rounded-l-2xl transition-transform duration-300"
             style={{
-              top: '120px',
+              top: '80px',
               right: 0,
-              transform: panelOpen ? 'translateX(0)' : 'translateX(calc(100% + 4px))',
+              transform: panelOpen ? 'translateX(0)' : 'translateX(calc(100% + 48px))',
               backgroundColor: COLORS.surface,
               border: `1px solid ${COLORS.border}`,
               borderRight: 'none',
@@ -109,25 +109,25 @@ function BooksPage() {
             {showToggle && <ViewToggle viewMode={effectiveView} setViewMode={setViewMode} />}
           </div>
 
-          {/* Tab handle */}
+          {/* Tab handle — always pinned to right edge, never overlaps content */}
           <button
             onClick={() => setPanelOpen((o) => !o)}
-            className="fixed z-50 flex items-center justify-center transition-all duration-300 hover:brightness-110"
+            className="fixed z-50 flex items-center justify-center transition-colors duration-200 hover:brightness-110"
             style={{
-              top: '120px',
-              right: panelOpen ? 'calc(min(100vw, 320px))' : '0',
-              width: '40px',
-              height: '46px',
-              borderRadius: '12px 0 0 12px',
+              top: '80px',
+              right: 0,
+              width: '36px',
+              height: '42px',
+              borderRadius: '10px 0 0 10px',
               background: COLORS.gradient.primary,
               color: '#fff',
               border: 'none',
               cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(92,92,143,0.4)',
+              boxShadow: '-2px 4px 16px rgba(0,0,0,0.4)',
             }}
             aria-label={panelOpen ? 'Close controls' : 'Open controls'}
           >
-            {panelOpen ? <X size={18} /> : <SlidersHorizontal size={18} />}
+            {panelOpen ? <X size={16} /> : <SlidersHorizontal size={16} />}
           </button>
         </>
       )}
