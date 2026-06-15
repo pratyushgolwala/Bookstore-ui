@@ -89,35 +89,21 @@ function BooksPage() {
 
       {/* ── Floating control tab — visible when scrolled down ── */}
       {!atTop && (
-        <>
-          {/* Slide-out panel */}
-          <div
-            className="fixed z-40 flex items-center gap-3 px-4 py-3 rounded-l-2xl transition-transform duration-300"
-            style={{
-              top: '80px',
-              right: 0,
-              transform: panelOpen ? 'translateX(0)' : 'translateX(calc(100% + 48px))',
-              backgroundColor: COLORS.surface,
-              border: `1px solid ${COLORS.border}`,
-              borderRight: 'none',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-            }}
-          >
-            <div style={{ width: '230px' }}>
-              <SearchBar value={search} onSearch={runSearch} placeholder="Search…" />
-            </div>
-            {showToggle && <ViewToggle viewMode={effectiveView} setViewMode={setViewMode} />}
-          </div>
-
-          {/* Tab handle — always pinned to right edge, never overlaps content */}
+        <div
+          className="fixed z-50 flex items-stretch transition-transform duration-300"
+          style={{
+            top: '80px',
+            right: 0,
+            transform: panelOpen ? 'translateX(0)' : 'translateX(calc(100% - 36px))',
+          }}
+        >
+          {/* Toggle handle — sits on the LEFT of the panel */}
           <button
             onClick={() => setPanelOpen((o) => !o)}
-            className="fixed z-50 flex items-center justify-center transition-colors duration-200 hover:brightness-110"
+            className="flex items-center justify-center transition-colors duration-200 hover:brightness-110"
             style={{
-              top: '80px',
-              right: 0,
               width: '36px',
-              height: '42px',
+              flexShrink: 0,
               borderRadius: '10px 0 0 10px',
               background: COLORS.gradient.primary,
               color: '#fff',
@@ -129,7 +115,23 @@ function BooksPage() {
           >
             {panelOpen ? <X size={16} /> : <SlidersHorizontal size={16} />}
           </button>
-        </>
+
+          {/* Panel body — search + view toggle */}
+          <div
+            className="flex items-center gap-3 px-4 py-3"
+            style={{
+              backgroundColor: COLORS.surface,
+              border: `1px solid ${COLORS.border}`,
+              borderLeft: 'none',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            }}
+          >
+            <div style={{ width: '230px' }}>
+              <SearchBar value={search} onSearch={runSearch} placeholder="Search…" />
+            </div>
+            {showToggle && <ViewToggle viewMode={effectiveView} setViewMode={setViewMode} />}
+          </div>
+        </div>
       )}
 
       {/* Offline banner */}
