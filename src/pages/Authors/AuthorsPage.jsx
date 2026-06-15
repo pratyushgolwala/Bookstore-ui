@@ -6,6 +6,7 @@ import { normalizeBook } from '../../utils/bookNormalizer';
 import { formatCurrency } from '../../utils/formatters';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import SearchBar from '../../components/ui/SearchBar';
+import BookDetailCard from '../../components/Bookshelf/BookDetailCard';
 import COLORS from '../../constants/colors';
 
 /**
@@ -98,6 +99,7 @@ function AuthorsPage() {
   const [selectedAuthor, setSelectedAuthor] = useState(null); // full author object
   const [authorBooks, setAuthorBooks] = useState([]);
   const [booksLoading, setBooksLoading] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null); // book detail modal
 
   // Fetch authors list
   useEffect(() => {
@@ -258,7 +260,16 @@ function AuthorsPage() {
               {authorBooks.map((book) => (
                 <div
                   key={book.id}
-                  className="group rounded-xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedBook(book)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedBook(book);
+                    }
+                  }}
+                  className="group rounded-xl border overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                   style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
                 >
                   <div className="relative overflow-hidden" style={{ aspectRatio: '2/3' }}>
@@ -285,6 +296,11 @@ function AuthorsPage() {
             </div>
           )}
         </div>
+
+        {/* Book detail modal */}
+        {selectedBook && (
+          <BookDetailCard book={selectedBook} onClose={() => setSelectedBook(null)} />
+        )}
       </div>
     );
   }
