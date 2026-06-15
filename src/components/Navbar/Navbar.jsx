@@ -73,7 +73,10 @@ function Navbar() {
   ];
 
   const accountLinks = [
-    { label: 'My Books', href: '/my-books', icon: <Library size={15} /> },
+    // "My Books" is author-only — added conditionally below
+    ...(currentUser?.role === 'AUTHOR'
+      ? [{ label: 'My Books', href: '/my-books', icon: <Library size={15} /> }]
+      : []),
     { label: 'Wishlist', href: '/wishlist', icon: <Heart size={15} /> },
     { label: 'Orders', href: '/orders', icon: <ShoppingCart size={15} /> },
     { label: 'Settings', href: '/settings', icon: <Settings size={15} /> },
