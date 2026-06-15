@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Users, BookOpen, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import { authorsService } from '../../services/authorsService';
 import { normalizeBook } from '../../utils/bookNormalizer';
@@ -9,7 +9,7 @@ import COLORS from '../../constants/colors';
 
 /**
  * Build a deterministic avatar URL for an author name.
- * Used as a fallback when the backend does not supply an `image`.
+ * Used as a fallback when no real Open Library photo is available.
  */
 function avatarFor(name) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -18,10 +18,67 @@ function avatarFor(name) {
 }
 
 /**
+ * AuthorAvatar — shows a generated avatar immediately, then lazily upgrades to
+ * the real Open Library photo once the card scrolls into view. Falls back to
+ * the avatar if no photo exists (the backend returns a 404-on-miss image URL).
+ */
+function AuthorAvatar({ name, className }) {
+  const ref = useRef(null);
+  const [src, setSrc] = useState(() => avatarFor(name));
+  const [requested, setRequested] = useState(false);
+
+  useEffect(() => {
+    if (requested) return undefined;
+    const el = ref.current;
+    if (!el) return undefined;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          setRequested(true);
+          authorsService
+            .getAuthorImage(name)
+            .then((res) => {
+              const img = (res?.data ?? res)?.image;
+              if (img) setSrc(img);
+            })
+            .catch(() => {});
+        }
+      },
+      { rootMargin: '150px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [name, requested]);
+
+  return (
+    <img
+      ref={ref}
+      src={src}
+      alt={name}
+      loading="lazy"
+      className={className}
+      onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = avatarFor(name);
+      }}
+    />
+  );
+}
+
+const SORT_OPTIONS = [
+  { value: 'books_desc', label: 'Most books' },
+  { value: 'books_asc', label: 'Fewest books' },
+  { value: 'name_asc', label: 'Name (A–Z)' },
+  { value: 'name_desc', label: 'Name (Z–A)' },
+];
+
+/**
  * AuthorsPage — browse authors and view their books.
  *
  * Two views:
- *  1. Author list (grid of authors with photo + book count)
+ *  1. Author list (grid of authors with photo + book count + sort)
  *  2. Author detail (author photo, about/bio, and books by that author)
  */
 function AuthorsPage() {
@@ -29,6 +86,7 @@ function AuthorsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('books_desc');
 
   // Author detail state
   const [selectedAuthor, setSelectedAuthor] = useState(null); // full author object
@@ -97,6 +155,22 @@ function AuthorsPage() {
     setSelectedAuthor(null);
     setAuthorBooks([]);
   };
+
+  // Apply the chosen sort/filter to the loaded authors (client-side).
+  const sortedAuthors = useMemo(() => {
+    const list = [...authors];
+    switch (sortBy) {
+      case 'books_asc':
+        return list.sort((a, b) => (a.book_count || 0) - (b.book_count || 0));
+      case 'name_asc':
+        return list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      case 'name_desc':
+        return list.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+      case 'books_desc':
+      default:
+        return list.sort((a, b) => (b.book_count || 0) - (a.book_count || 0));
+    }
+  }, [authors, sortBy]);
 
   // Author detail view
   if (selectedAuthor) {
@@ -207,8 +281,27 @@ function AuthorsPage() {
               </p>
             </div>
           </div>
-          <div style={{ width: '280px' }}>
-            <SearchBar value={search} onSearch={setSearch} placeholder="Search authors..." />
+          <div className="flex items-center gap-3">
+            <div style={{ width: '280px' }}>
+              <SearchBar value={search} onSearch={setSearch} placeholder="Search authors..." />
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              aria-label="Sort authors"
+              className="text-sm rounded-xl px-3 py-2.5 outline-none cursor-pointer"
+              style={{
+                backgroundColor: COLORS.surface,
+                color: COLORS.text.primary,
+                border: `1px solid ${COLORS.border}`,
+              }}
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -224,26 +317,20 @@ function AuthorsPage() {
 
         {loading ? (
           <LoadingSpinner />
-        ) : authors.length === 0 ? (
+        ) : sortedAuthors.length === 0 ? (
           <p style={{ color: COLORS.text.secondary }}>No authors found.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {authors.map((author) => (
+            {sortedAuthors.map((author) => (
               <button
                 key={author.name}
                 onClick={() => openAuthor(author)}
                 className="group text-left rounded-xl border p-5 flex items-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
               >
-                <img
-                  src={author.image || avatarFor(author.name)}
-                  alt={author.name}
-                  loading="lazy"
+                <AuthorAvatar
+                  name={author.name}
                   className="w-12 h-12 rounded-full object-cover shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = avatarFor(author.name);
-                  }}
                 />
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold truncate" style={{ color: COLORS.text.primary }}>
