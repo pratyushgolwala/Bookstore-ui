@@ -29,9 +29,10 @@ function roundedRectShape(w, h, r) {
  *
  * Behaviour:
  *   - hover (interactive): eases slightly forward + gold glow
- *   - pulling=true: smoothly slides out of the shelf, rotates to face the
- *     viewer and scales up; once it reaches the target it calls onPullComplete
- *     (which opens the detail card) — one continuous transition.
+ *   - pulling=true: the book slides forward out of the shelf, grows, and
+ *     simultaneously FADES OUT. Roughly halfway through the fade we fire
+ *     onPullComplete so the HTML detail card appears exactly as the book
+ *     dissolves — a seamless hand-off with nothing left lingering behind.
  */
 function BookSpine({
   book,
@@ -46,6 +47,16 @@ function BookSpine({
   const [hovered, setHovered] = useState(false);
   const groupRef = useRef();
   const completedRef = useRef(false);
+
+  // Animation progress for the pull-out transition (0 → 1)
+  const progressRef = useRef(0);
+
+  // Collect material refs so we can fade them per-frame
+  const materialsRef = useRef([]);
+  const textRef = useRef();
+  const registerMat = (m) => {
+    if (m && !materialsRef.current.includes(m)) materialsRef.current.push(m);
+  };
 
   const thickness = computeSpineThickness(book.pageCount);
   const depth = 1.15;
@@ -66,36 +77,59 @@ function BookSpine({
     });
   }, [thickness, height, depth]);
 
-  // Animate per-frame: either the pull-out transition or the hover ease
+  const setOpacity = (o) => {
+    materialsRef.current.forEach((m) => {
+      m.transparent = true;
+      m.opacity = o;
+      m.depthWrite = o > 0.95; // stop writing depth as it fades so it vanishes cleanly
+    });
+    if (textRef.current) {
+      textRef.current.fillOpacity = o;
+      textRef.current.outlineOpacity = o;
+    }
+  };
+
   useFrame(() => {
     const g = groupRef.current;
     if (!g) return;
 
     if (pulling) {
-      // Ease group toward the pull target (in front of the shelf)
+      // Advance progress toward 1
+      progressRef.current = Math.min(1, progressRef.current + 0.035);
+      const p = progressRef.current;
+
+      // Move forward — but only travel ~65% of the way to the target,
+      // since the book dissolves before fully arriving.
       const [tx, ty, tz] = pullTarget;
-      g.position.x = THREE.MathUtils.lerp(g.position.x, tx, 0.12);
-      g.position.y = THREE.MathUtils.lerp(g.position.y, ty, 0.12);
-      g.position.z = THREE.MathUtils.lerp(g.position.z, tz, 0.12);
+      const ease = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      g.position.x = THREE.MathUtils.lerp(position[0], tx, ease * 0.75);
+      g.position.y = THREE.MathUtils.lerp(position[1], ty, ease * 0.75);
+      g.position.z = THREE.MathUtils.lerp(position[2], tz, ease * 0.85);
 
-      // Rotate so the cover/spine turns to face the viewer a touch
-      g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, -Math.PI / 2, 0.12);
+      // Turn the cover toward the viewer
+      g.rotation.y = THREE.MathUtils.lerp(0, -Math.PI / 2, ease);
 
-      // Scale up as it comes forward
-      const s = THREE.MathUtils.lerp(g.scale.x, 2.4, 0.12);
+      // Grow as it advances
+      const s = 1 + ease * 1.4;
       g.scale.set(s, s, s);
 
-      // Detect arrival → fire completion once
-      const dist = Math.hypot(g.position.x - tx, g.position.y - ty, g.position.z - tz);
-      if (!completedRef.current && dist < 0.35) {
+      // Fade: stays solid until ~35% progress, then fades out by ~85%
+      const fade = THREE.MathUtils.clamp(1 - (p - 0.35) / 0.5, 0, 1);
+      setOpacity(fade);
+
+      // Hand off to the detail card around the midpoint of the fade
+      if (!completedRef.current && p >= 0.55) {
         completedRef.current = true;
         onPullComplete?.();
       }
       return;
     }
 
-    // Not pulling — reset completion latch and run hover ease
+    // Not pulling — reset everything and run the hover ease
     completedRef.current = false;
+    progressRef.current = 0;
+    setOpacity(1);
+
     const targetZ = hovered ? 0.5 : 0;
     g.position.x = THREE.MathUtils.lerp(g.position.x, position[0], 0.18);
     g.position.y = THREE.MathUtils.lerp(g.position.y, position[1], 0.18);
@@ -141,6 +175,7 @@ function BookSpine({
       >
         <primitive object={bodyGeo} attach="geometry" />
         <meshStandardMaterial
+          ref={registerMat}
           map={spineTexture}
           color={color}
           roughness={0.62}
@@ -153,27 +188,28 @@ function BookSpine({
       {/* Page block */}
       <mesh position={[0, 0, -depth - 0.02]}>
         <boxGeometry args={[thickness * 0.86, height * 0.96, 0.04]} />
-        <meshStandardMaterial color={pageColor} roughness={0.95} metalness={0} />
+        <meshStandardMaterial ref={registerMat} color={pageColor} roughness={0.95} metalness={0} />
       </mesh>
 
       {/* Headbands */}
       <mesh position={[0, height / 2 - 0.04, 0.02]}>
         <boxGeometry args={[thickness * 0.9, 0.05, 0.05]} />
-        <meshStandardMaterial color={headbandColor} roughness={0.4} metalness={0.25} />
+        <meshStandardMaterial ref={registerMat} color={headbandColor} roughness={0.4} metalness={0.25} />
       </mesh>
       <mesh position={[0, -height / 2 + 0.04, 0.02]}>
         <boxGeometry args={[thickness * 0.9, 0.05, 0.05]} />
-        <meshStandardMaterial color={headbandColor} roughness={0.4} metalness={0.25} />
+        <meshStandardMaterial ref={registerMat} color={headbandColor} roughness={0.4} metalness={0.25} />
       </mesh>
 
       {/* Decorative gold band */}
       <mesh position={[0, height * 0.28, 0.04]}>
         <boxGeometry args={[thickness * 0.8, 0.02, 0.02]} />
-        <meshStandardMaterial color="#d4933e" roughness={0.35} metalness={0.4} />
+        <meshStandardMaterial ref={registerMat} color="#d4933e" roughness={0.35} metalness={0.4} />
       </mesh>
 
       {/* Spine title */}
       <Text
+        ref={textRef}
         position={[0, 0, 0.12]}
         rotation={[0, 0, -Math.PI / 2]}
         fontSize={Math.min(0.14, Math.max(0.08, thickness * 0.35))}
