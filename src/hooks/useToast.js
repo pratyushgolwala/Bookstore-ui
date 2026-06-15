@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { playToastSound } from '../utils/playSound';
 
 /**
  * useToast — manages toast notifications
@@ -9,6 +10,7 @@ function useToast() {
 
   const addToast = useCallback((type, message, duration = 4000) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    playToastSound(type); // plays on success/error (autoplay-safe, mute-aware)
     setToasts((prev) => [...prev, { id, type, message, duration }]);
   }, []);
 
