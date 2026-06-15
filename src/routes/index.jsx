@@ -2,9 +2,12 @@ import { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import Auth3DBook from '../components/Auth3DBook/Auth3DBook';
+import ProtectedRoute from '../components/common/ProtectedRoute';
 
 const LandingPage      = lazy(() => import('../pages/Landing/LandingPage'));
 const BooksPage        = lazy(() => import('../pages/Books/BooksPage'));
+const CategoriesPage   = lazy(() => import('../pages/Categories/CategoriesPage'));
+const AuthorsPage      = lazy(() => import('../pages/Authors/AuthorsPage'));
 const CartPage         = lazy(() => import('../pages/Cart/CartPage'));
 const OrdersPage       = lazy(() => import('../pages/Orders/OrdersPage'));
 const ProfilePage      = lazy(() => import('../pages/Profile/ProfilePage'));
@@ -24,15 +27,21 @@ export function AppRoutes() {
 
       {/* Main app routes - with MainLayout */}
       <Route element={<MainLayout />}>
-        <Route index            element={<LandingPage />}     />
-        <Route path="books"     element={<BooksPage />}       />
-        <Route path="cart"      element={<CartPage />}        />
-        <Route path="orders"    element={<OrdersPage />}      />
-        <Route path="profile"   element={<ProfilePage />}     />
-        <Route path="admin"     element={<AdminPage />}       />
-        <Route path="discussions" element={<DiscussionPage />} />
-        <Route path="reviews"   element={<ReviewsPage />}     />
-        <Route path="*"         element={<NotFoundPage />}    />
+        {/* Public */}
+        <Route index element={<LandingPage />} />
+        <Route path="categories" element={<CategoriesPage />} />
+        <Route path="authors" element={<AuthorsPage />} />
+
+        {/* Protected — require login */}
+        <Route path="books"       element={<ProtectedRoute><BooksPage /></ProtectedRoute>}       />
+        <Route path="cart"        element={<ProtectedRoute><CartPage /></ProtectedRoute>}        />
+        <Route path="orders"      element={<ProtectedRoute><OrdersPage /></ProtectedRoute>}     />
+        <Route path="profile"     element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}    />
+        <Route path="admin"       element={<ProtectedRoute><AdminPage /></ProtectedRoute>}      />
+        <Route path="discussions" element={<ProtectedRoute><DiscussionPage /></ProtectedRoute>}  />
+        <Route path="reviews"     element={<ProtectedRoute><ReviewsPage /></ProtectedRoute>}    />
+
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );
