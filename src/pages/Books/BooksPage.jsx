@@ -1,4 +1,5 @@
 import React, { Suspense, useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { LayoutGrid, Box, BookMarked, AlertCircle, Search, SlidersHorizontal, X } from 'lucide-react';
 import useViewport from '../../hooks/useViewport';
 import useBookshelf from '../../hooks/useBookshelf';
@@ -31,6 +32,18 @@ function BooksPage() {
     runSearch,
     search,
   } = useBookshelf();
+
+  // Pick up search term from URL query param (e.g. from category navigation)
+  const [searchParams] = useSearchParams();
+  const initialSearchRef = useRef(false);
+  useEffect(() => {
+    if (initialSearchRef.current) return;
+    const q = searchParams.get('search');
+    if (q) {
+      initialSearchRef.current = true;
+      runSearch(q);
+    }
+  }, [searchParams, runSearch]);
 
   const [viewMode, setViewMode] = useState(isMobile || !hasWebGL ? 'grid' : 'shelf');
   const effectiveView = isMobile || !hasWebGL ? 'grid' : viewMode;

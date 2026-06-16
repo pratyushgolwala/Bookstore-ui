@@ -81,7 +81,14 @@ function DiscussionPage() {
     try {
       setLoading(true);
       const res = await discussionsService.getThreads();
-      setThreads(res.data?.results || res.data || []);
+      // Response shape: { status: {...}, data: { count, results: [...] } | [...] }
+      const payload = res?.data;
+      const list = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.results)
+          ? payload.results
+          : [];
+      setThreads(list);
     } catch (err) {
       emitToast('error', err.message || 'Failed to load discussions');
     } finally {
@@ -94,7 +101,9 @@ function DiscussionPage() {
     setSelectedThread({ id: threadId, loading: true });
     try {
       const res = await discussionsService.getThreadById(threadId);
-      setSelectedThread(res.data);
+      // Response shape: { status: {...}, data: { id, title, posts: [...], ... } }
+      const thread = res?.data || res;
+      setSelectedThread(thread);
     } catch (err) {
       emitToast('error', err.message || 'Failed to load thread');
       setSelectedThread(null);
