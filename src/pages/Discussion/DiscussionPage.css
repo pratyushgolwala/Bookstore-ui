@@ -1,4 +1,4 @@
-.disc-page { padding: 3rem 1.5rem; min-height: 100vh; }
+.disc-page { padding: 1.5rem 1.5rem; padding-top: 100px; min-height: 100vh; }
 .disc-container { max-width: 900px; margin: 0 auto; }
 
 /* Header */
