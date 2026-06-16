@@ -83,6 +83,16 @@ export const COLORS = {
     inverse: '#160e07',
   },
 
+  // Parchment — light cream page surface for content pages (post-login).
+  // Brown cards sit on this for a warm vintage contrast.
+  parchment: {
+    bg: '#E4D6A9',          // page background
+    surface: '#221710',     // cards stay dark brown (pop against cream)
+    text: '#2c1e12',        // dark brown text directly on parchment
+    textSoft: '#5c3a22',    // muted brown text on parchment
+    border: '#c9b07a',      // warm tan border on parchment
+  },
+
   // Gradients — brown → caramel → cream
   gradient: {
     primary: 'linear-gradient(135deg, #995F2F 0%, #622B14 100%)',

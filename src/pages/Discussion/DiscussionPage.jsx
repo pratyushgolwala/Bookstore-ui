@@ -177,7 +177,7 @@ function DiscussionPage() {
   const sorted  = [...pinned, ...regular];
 
   return (
-    <div className="disc-page" style={{ backgroundColor: COLORS.background }}>
+    <div className="disc-page" style={{ backgroundColor: COLORS.parchment.bg }}>
       <div className="disc-container">
 
         {/* ── Header ── */}
@@ -188,8 +188,8 @@ function DiscussionPage() {
                 <MessageSquare size={26} color="#fff" />
               </div>
               <div>
-                <h1 className="disc-title" style={{ color: COLORS.text.primary }}>Community Discussions</h1>
-                <p className="disc-subtitle" style={{ color: COLORS.text.secondary }}>Share thoughts, ask questions, connect with readers</p>
+                <h1 className="disc-title" style={{ color: COLORS.parchment.text }}>Community Discussions</h1>
+                <p className="disc-subtitle" style={{ color: COLORS.parchment.textSoft }}>Share thoughts, ask questions, connect with readers</p>
               </div>
             </div>
             <button className="new-thread-btn"

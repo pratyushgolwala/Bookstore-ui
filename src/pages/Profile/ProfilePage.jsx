@@ -26,7 +26,7 @@ function ProfilePage() {
   return (
     <div
       className="px-6 py-8 max-w-4xl mx-auto"
-      style={{ minHeight: 'calc(100vh - 72px)', color: COLORS.text.primary }}
+      style={{ minHeight: 'calc(100vh - 72px)', backgroundColor: COLORS.parchment.bg, color: COLORS.parchment.text }}
     >
       {/* Header card */}
       <div
