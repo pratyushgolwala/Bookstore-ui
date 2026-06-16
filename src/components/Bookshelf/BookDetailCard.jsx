@@ -10,6 +10,7 @@ import Badge from '../ui/Badge';
 import WishlistButton from '../ui/WishlistButton';
 import AuthorLink from '../ui/AuthorLink';
 import BookReviews from '../ui/BookReviews';
+import MetalButton from '../ui/MetalButton';
 
 /**
  * BookDetailCard — a polished modal overlay showing full book details.
@@ -139,15 +140,15 @@ export default function BookDetailCard({ book, onClose }) {
                 <span className="text-3xl font-bold" style={{ color: COLORS.secondary[500] }}>
                   {formatCurrency(book.price)}
                 </span>
-                <button
+                <MetalButton
+                  variant="gold"
                   onClick={handleAddToCart}
                   disabled={!inStock}
-                  className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ background: COLORS.gradient.primary, color: COLORS.text.inverse }}
+                  className="gap-2"
                 >
                   {added ? <Check size={18} /> : <ShoppingCart size={18} />}
                   {added ? 'Added!' : 'Add to Cart'}
-                </button>
+                </MetalButton>
               </div>
             </div>
           </div>

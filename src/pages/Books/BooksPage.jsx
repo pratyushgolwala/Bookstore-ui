@@ -1,6 +1,6 @@
 import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutGrid, Box, BookMarked, AlertCircle, Search, SlidersHorizontal, X } from 'lucide-react';
+import { LayoutGrid, Box, BookMarked, AlertCircle, Search, SlidersHorizontal, X, Shuffle } from 'lucide-react';
 import useViewport from '../../hooks/useViewport';
 import useBookshelf from '../../hooks/useBookshelf';
 import BookshelfErrorBoundary from '../../components/Bookshelf/BookshelfErrorBoundary';
@@ -9,6 +9,7 @@ import FallbackGrid from '../../components/FallbackGrid/FallbackGrid';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
+import LiquidButton from '../../components/ui/LiquidButton';
 import COLORS from '../../constants/colors';
 
 const BookshelfScene = React.lazy(() => import('../../components/Bookshelf/BookshelfScene'));
@@ -182,6 +183,20 @@ function BooksPage() {
             >
               Drag to pan · Scroll to zoom · Click a book for details
             </div>
+
+            {/* Floating "Surprise Me" — glass button distorts the shelf behind it */}
+            {books.length > 0 && (
+              <div className="absolute top-4 right-4 z-10">
+                <LiquidButton
+                  size="lg"
+                  onClick={() => selectBook(books[Math.floor(Math.random() * books.length)])}
+                  style={{ color: COLORS.text.primary }}
+                >
+                  <Shuffle size={16} />
+                  Surprise Me
+                </LiquidButton>
+              </div>
+            )}
           </div>
         ) : (
           <div className="pb-4">
