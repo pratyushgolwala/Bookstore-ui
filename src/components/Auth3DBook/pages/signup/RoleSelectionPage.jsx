@@ -6,20 +6,20 @@ function RoleSelectionPage({ onRoleSelect, onBackToLogin }) {
     {
       id: 'CUSTOMER',
       icon: <Users size={22} />,
-      iconColor: '#d4933e',
+      iconColor: '#995F2F',
       title: 'Browse & Buy Books',
       desc: 'Discover books and build your personal library',
-      accent: 'rgba(212,147,62,0.12)',
-      border: 'rgba(212,147,62,0.25)',
+      accent: 'rgba(153,95,47,0.12)',
+      border: 'rgba(153,95,47,0.25)',
     },
     {
       id: 'AUTHOR',
       icon: <PenTool size={22} />,
-      iconColor: '#d48080',
+      iconColor: '#c2562f',
       title: 'Publish Your Books',
       desc: 'Share your stories with readers worldwide',
-      accent: 'rgba(212,128,128,0.12)',
-      border: 'rgba(212,128,128,0.25)',
+      accent: 'rgba(194,86,47,0.12)',
+      border: 'rgba(194,86,47,0.25)',
     },
   ];
 
@@ -58,7 +58,7 @@ function RoleSelectionPage({ onRoleSelect, onBackToLogin }) {
               {role.icon}
             </div>
             <div>
-              <p style={{ margin: '0 0 3px', fontSize: '14px', fontWeight: '600', color: '#f0f0f0', fontFamily: 'Inter, sans-serif' }}>{role.title}</p>
+              <p style={{ margin: '0 0 3px', fontSize: '14px', fontWeight: '600', color: '#f0e6d0', fontFamily: 'Inter, sans-serif' }}>{role.title}</p>
               <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter, sans-serif' }}>{role.desc}</p>
             </div>
           </button>

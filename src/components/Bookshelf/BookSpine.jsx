@@ -162,7 +162,7 @@ function BookSpine({
   };
 
   const pageColor = '#efe7d6';
-  const headbandColor = '#d4933e';
+  const headbandColor = '#E4D6A9';
   const spineTitle = book.title.length > 32 ? `${book.title.slice(0, 30)}…` : book.title;
 
   return (
@@ -180,7 +180,7 @@ function BookSpine({
           color={color}
           roughness={0.62}
           metalness={0.06}
-          emissive={hovered ? '#d4933e' : '#000000'}
+          emissive={hovered ? '#E4D6A9' : '#000000'}
           emissiveIntensity={hovered ? 0.22 : 0}
         />
       </mesh>
@@ -204,7 +204,7 @@ function BookSpine({
       {/* Decorative gold band */}
       <mesh position={[0, height * 0.28, 0.04]}>
         <boxGeometry args={[thickness * 0.8, 0.02, 0.02]} />
-        <meshStandardMaterial ref={registerMat} color="#d4933e" roughness={0.35} metalness={0.4} />
+        <meshStandardMaterial ref={registerMat} color="#E4D6A9" roughness={0.35} metalness={0.4} />
       </mesh>
 
       {/* Spine title */}

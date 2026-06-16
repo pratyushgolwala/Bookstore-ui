@@ -24,7 +24,7 @@ function SuccessPage({ onRedirectToLogin, isLoading }) {
       </p>
 
       <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.28)', marginBottom: '20px', fontFamily: 'Inter, sans-serif' }}>
-        Redirecting in <span style={{ color: '#d4933e', fontWeight: '600' }}>{countdown}s</span>
+        Redirecting in <span style={{ color: '#995F2F', fontWeight: '600' }}>{countdown}s</span>
       </p>
 
       <button onClick={onRedirectToLogin} disabled={isLoading} className={styles.formButton}>

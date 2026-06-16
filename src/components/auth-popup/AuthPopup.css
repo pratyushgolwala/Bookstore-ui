@@ -49,7 +49,7 @@
 }
 
 .auth-popup-close:hover {
-  background: rgba(212, 147, 62, 0.1);
+  background: rgba(153, 95, 47, 0.1);
 }
 
 .auth-popup-content {
@@ -141,7 +141,7 @@
 }
 
 .auth-popup-btn.ghost:hover {
-  background: rgba(212, 147, 62, 0.1);
+  background: rgba(153, 95, 47, 0.1);
   transform: translateY(-2px);
 }
 

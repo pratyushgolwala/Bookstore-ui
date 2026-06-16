@@ -12,8 +12,8 @@ function EmailValidationPage({ email, onEmailChange, onNext, error, submitError,
 
       {/* Error banner */}
       {submitError && (
-        <div style={{ padding: '10px 14px', background: 'rgba(212,128,128,0.1)', border: '1px solid rgba(212,128,128,0.3)', borderRadius: '8px', marginBottom: '16px' }}>
-          <p style={{ margin: 0, fontSize: '13px', color: '#d48080' }}>{submitError}</p>
+        <div style={{ padding: '10px 14px', background: 'rgba(194,86,47,0.1)', border: '1px solid rgba(194,86,47,0.3)', borderRadius: '8px', marginBottom: '16px' }}>
+          <p style={{ margin: 0, fontSize: '13px', color: '#c2562f' }}>{submitError}</p>
         </div>
       )}
 

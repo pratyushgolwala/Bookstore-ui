@@ -1,26 +1,18 @@
-import React, { Suspense, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Book, ArrowRight, ChevronDown, Truck, ShieldCheck, Sparkles, BookOpen } from 'lucide-react';
+import { ArrowRight, Book, BookOpen, Truck, ShieldCheck, Sparkles, Quote } from 'lucide-react';
 import COLORS from '../../constants/colors';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import useBookshelf from '../../hooks/useBookshelf';
-import BookCard from '../../components/ui/BookCard';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 
-const BookshelfScene = React.lazy(() => import('../../components/Bookshelf/BookshelfScene'));
-
 /**
- * LandingPage — Professional landing page with animated background
- * and a decorative 3D bookshelf in the hero section.
- * Redirects authenticated users to the books page.
+ * LandingPage — split hero: marketing copy on the left, an artistic stacked-book
+ * visual on the right. Warm vintage library palette. Redirects authed users.
  */
 function LandingPage() {
   const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const currentUser = useSelector(selectCurrentUser);
-  const { books } = useBookshelf();
-  const featured = books.slice(0, 6);
 
   // Redirect authenticated users to their role-appropriate landing page
   useEffect(() => {
@@ -34,43 +26,47 @@ function LandingPage() {
 
   return (
     <div className="w-full" style={{ backgroundColor: COLORS.background }}>
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated gradient background */}
+      {/* ── HERO ── */}
+      <section className="relative min-h-screen flex items-center overflow-hidden">
+        {/* Warm radial ambience */}
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(-45deg, ${COLORS.primary[50]}, ${COLORS.secondary[50]}, ${COLORS.accent[50]}, ${COLORS.primary[100]})`,
-            backgroundSize: '400% 400%',
-            animation: 'gradient 20s ease infinite',
+            background: `radial-gradient(120% 120% at 15% 20%, ${COLORS.neutral[200]} 0%, ${COLORS.background} 55%)`,
           }}
-        ></div>
+        />
+        {/* Subtle animated glow blobs */}
+        <div
+          className="absolute -top-20 -left-24 w-[480px] h-[480px] rounded-full blur-3xl opacity-30"
+          style={{ background: COLORS.gradient.primary, animation: 'float1 14s ease-in-out infinite' }}
+        />
+        <div
+          className="absolute bottom-0 right-0 w-[420px] h-[420px] rounded-full blur-3xl opacity-25"
+          style={{ background: COLORS.gradient.accent, animation: 'float2 18s ease-in-out infinite' }}
+        />
 
-        {/* 3D Bookshelf — decorative, non-interactive, positioned behind hero content */}
-        <div className="absolute inset-0 z-0 opacity-60 pointer-events-none">
-          <Suspense fallback={<LoadingSpinner />}>
-            <BookshelfScene books={books} interactive={false} onBookSelect={() => {}} />
-          </Suspense>
-        </div>
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 grid lg:grid-cols-2 gap-12 items-center py-24">
+          {/* ── LEFT: copy ── */}
+          <div className="text-center lg:text-left">
+            <span
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-6"
+              style={{ backgroundColor: COLORS.surfaceLight, color: COLORS.secondary[500], border: `1px solid ${COLORS.border}` }}
+            >
+              <Sparkles size={13} /> A cozy corner for book lovers
+            </span>
 
-        {/* Overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/75 to-black/70 z-[1]"></div>
-
-        {/* Content */}
-        <div className="relative z-10 max-w-3xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
-          {/* Hero Content */}
-          <div className="mb-12">
             <h1
-              className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6"
+              className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] mb-6"
               style={{ color: COLORS.text.primary }}
             >
               Discover Your
               <br />
               <span
                 style={{
-                  background: COLORS.gradient.primary,
+                  background: COLORS.gradient.accent,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
                 }}
               >
                 Next Great Read
@@ -78,102 +74,59 @@ function LandingPage() {
             </h1>
 
             <p
-              className="text-lg md:text-xl leading-relaxed max-w-xl mx-auto mb-10"
+              className="text-lg md:text-xl leading-relaxed max-w-xl mx-auto lg:mx-0 mb-10"
               style={{ color: COLORS.text.secondary }}
             >
-              Explore a curated collection of books, connect with authors, and join a community of passionate readers.
+              Explore a curated collection of timeless stories, connect with authors,
+              and join a community of passionate readers.
             </p>
-          </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <button
-              onClick={() => navigate('/books')}
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-semibold text-white transition-all hover:shadow-lg hover:scale-105 active:scale-95"
-              style={{
-                background: COLORS.gradient.primary,
-              }}
-            >
-              Explore Books
-              <ArrowRight size={20} />
-            </button>
-
-            <button
-              onClick={() => navigate('/register')}
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-semibold transition-all hover:scale-105 active:scale-95"
-              style={{
-                color: COLORS.text.primary,
-                borderWidth: '2px',
-                borderColor: COLORS.primary[400],
-                backgroundColor: COLORS.surface,
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = COLORS.surfaceLight;
-                e.target.style.borderColor = COLORS.primary[500];
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = COLORS.surface;
-                e.target.style.borderColor = COLORS.primary[400];
-              }}
-            >
-              Become an Author
-              <Book size={20} />
-            </button>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-6 max-w-md mx-auto">
-            {[
-              { number: '10K+', label: 'Books' },
-              { number: '50K+', label: 'Readers' },
-              { number: '1K+', label: 'Authors' },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="p-4 rounded-lg backdrop-blur-sm transition-all hover:scale-105 active:scale-95 cursor-pointer group"
-                style={{
-                  backgroundColor: COLORS.surfaceLight,
-                  borderWidth: '1px',
-                  borderColor: COLORS.primary[400],
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = `0 8px 24px ${COLORS.primary[500]}40`;
-                  e.currentTarget.style.borderColor = COLORS.primary[500];
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.borderColor = COLORS.primary[400];
-                }}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-14">
+              <button
+                onClick={() => navigate('/books')}
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all hover:shadow-xl hover:scale-105 active:scale-95"
+                style={{ background: COLORS.gradient.primary, color: COLORS.text.primary }}
               >
-                <div
-                  className="text-2xl md:text-3xl font-bold mb-1 group-hover:scale-110 transition-transform"
-                  style={{ color: COLORS.primary[500] }}
-                >
-                  {stat.number}
-                </div>
-                <p
-                  className="text-sm font-medium"
-                  style={{ color: COLORS.text.secondary }}
-                >
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+                Explore Books <ArrowRight size={20} />
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95"
+                style={{ color: COLORS.text.primary, border: `2px solid ${COLORS.primary[500]}`, backgroundColor: 'transparent' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = COLORS.surfaceLight; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+              >
+                Become an Author <Book size={20} />
+              </button>
+            </div>
 
-        {/* Scroll indicator */}
-        <div
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer hover:scale-125 transition-transform z-10"
-          onClick={() => {
-            document.querySelector('#cta-section')?.scrollIntoView({ behavior: 'smooth' });
-          }}
-        >
-          <ChevronDown size={28} style={{ color: COLORS.primary[500] }} />
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4 max-w-md mx-auto lg:mx-0">
+              {[
+                { number: '10K+', label: 'Books' },
+                { number: '50K+', label: 'Readers' },
+                { number: '1K+', label: 'Authors' },
+              ].map((stat) => (
+                <div key={stat.label} className="text-center lg:text-left">
+                  <div className="text-2xl md:text-3xl font-bold" style={{ color: COLORS.secondary[500] }}>
+                    {stat.number}
+                  </div>
+                  <p className="text-sm font-medium mt-1" style={{ color: COLORS.text.tertiary }}>
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── RIGHT: artistic stacked-books visual ── */}
+          <div className="relative hidden lg:flex items-center justify-center h-[520px]">
+            <BookArt />
+          </div>
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* ── FEATURES ── */}
       <section className="py-20 px-6 sm:px-8 lg:px-12" style={{ backgroundColor: COLORS.background }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
@@ -197,18 +150,11 @@ function LandingPage() {
                   className="p-7 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-2xl"
                   style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
                 >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                    style={{ background: COLORS.gradient.primary }}
-                  >
-                    <Icon size={24} color={COLORS.text.inverse} />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: COLORS.gradient.primary }}>
+                    <Icon size={24} color={COLORS.text.primary} />
                   </div>
-                  <h3 className="text-lg font-bold mb-2" style={{ color: COLORS.text.primary }}>
-                    {f.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: COLORS.text.secondary }}>
-                    {f.desc}
-                  </p>
+                  <h3 className="text-lg font-bold mb-2" style={{ color: COLORS.text.primary }}>{f.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: COLORS.text.secondary }}>{f.desc}</p>
                 </div>
               );
             })}
@@ -216,84 +162,44 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Featured Books Section */}
-      {featured.length > 0 && (
-        <section className="py-16 px-6 sm:px-8 lg:px-12" style={{ backgroundColor: COLORS.neutral[100] }}>
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-2">
-                <Sparkles style={{ color: COLORS.secondary[500] }} size={24} />
-                <h2 className="text-2xl md:text-3xl font-bold" style={{ color: COLORS.text.primary }}>
-                  Featured Books
-                </h2>
-              </div>
-              <button
-                onClick={() => navigate('/books')}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80"
-                style={{ color: COLORS.secondary[500] }}
-              >
-                View all <ArrowRight size={16} />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {featured.map((book) => (
-                <BookCard key={book.id} book={book} onSelect={() => navigate('/books')} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* ── QUOTE STRIP ── */}
+      <section className="py-16 px-6" style={{ backgroundColor: COLORS.neutral[100] }}>
+        <div className="max-w-3xl mx-auto text-center">
+          <Quote size={32} style={{ color: COLORS.primary[500] }} className="mx-auto mb-4" />
+          <p className="text-2xl md:text-3xl font-semibold leading-snug" style={{ color: COLORS.text.primary }}>
+            “A room without books is like a body without a soul.”
+          </p>
+          <p className="mt-4 text-sm uppercase tracking-widest" style={{ color: COLORS.secondary[500] }}>
+            Marcus Tullius Cicero
+          </p>
+        </div>
+      </section>
 
-      {/* CTA Section */}
+      {/* ── CTA ── */}
       <section
         id="cta-section"
         className="py-20 px-6 sm:px-8 lg:px-12 relative overflow-hidden"
-        style={{
-          background: COLORS.gradient.primary,
-        }}
+        style={{ background: COLORS.gradient.primary }}
       >
         <div className="max-w-2xl mx-auto text-center relative z-10">
-          <h2
-            className="text-3xl md:text-4xl font-bold mb-6"
-            style={{ color: COLORS.text.inverse }}
-          >
+          <h2 className="text-3xl md:text-4xl font-bold mb-6" style={{ color: COLORS.text.primary }}>
             Ready to Begin Your Journey?
           </h2>
-
-          <p
-            className="text-lg mb-10"
-            style={{ color: 'rgba(10, 10, 10, 0.9)' }}
-          >
+          <p className="text-lg mb-10" style={{ color: COLORS.secondary[800] }}>
             Join our community of readers and authors today.
           </p>
-
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => navigate('/register')}
-              className="px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-lg transform hover:scale-105 active:scale-95"
-              style={{
-                backgroundColor: COLORS.text.inverse,
-                color: COLORS.primary[600],
-              }}
+              className="px-8 py-4 rounded-xl font-semibold transition-all hover:shadow-lg hover:scale-105 active:scale-95"
+              style={{ backgroundColor: COLORS.secondary[500], color: COLORS.primary[400] }}
             >
               Get Started
             </button>
-
             <button
               onClick={() => navigate('/login')}
-              className="px-8 py-4 rounded-lg font-semibold transition-all hover:scale-105 active:scale-95"
-              style={{
-                borderWidth: '2px',
-                borderColor: COLORS.text.inverse,
-                color: COLORS.text.inverse,
-                backgroundColor: 'rgba(10, 10, 10, 0.2)',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = 'rgba(10, 10, 10, 0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'rgba(10, 10, 10, 0.2)';
-              }}
+              className="px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95"
+              style={{ border: `2px solid ${COLORS.secondary[500]}`, color: COLORS.text.primary, backgroundColor: 'transparent' }}
             >
               Sign In
             </button>
@@ -302,18 +208,73 @@ function LandingPage() {
       </section>
 
       <style>{`
-        @keyframes gradient {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
+        @keyframes float1 {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(30px, 20px); }
+        }
+        @keyframes float2 {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(-25px, -25px); }
+        }
+        @keyframes bookFloat {
+          0%, 100% { transform: translateY(0) rotate(var(--rot)); }
+          50% { transform: translateY(-14px) rotate(var(--rot)); }
         }
       `}</style>
+    </div>
+  );
+}
+
+/* ─── Artistic stacked-books visual (pure CSS, themed) ─── */
+function BookArt() {
+  const books = [
+    { w: 300, h: 64, rot: '-4deg', delay: '0s',   from: COLORS.primary[400], to: COLORS.primary[600], label: 'CLASSICS' },
+    { w: 270, h: 60, rot: '3deg',  delay: '0.6s', from: COLORS.accent[400],  to: COLORS.accent[600],  label: 'POETRY' },
+    { w: 320, h: 66, rot: '-2deg', delay: '1.2s', from: COLORS.primary[500], to: COLORS.primary[300], label: 'FICTION' },
+    { w: 250, h: 58, rot: '5deg',  delay: '1.8s', from: COLORS.secondary[400], to: COLORS.secondary[600], label: 'HISTORY', dark: true },
+  ];
+
+  return (
+    <div className="relative flex flex-col items-center gap-4">
+      {/* Glow disc behind the stack */}
+      <div
+        className="absolute inset-0 m-auto w-72 h-72 rounded-full blur-3xl opacity-40"
+        style={{ background: COLORS.gradient.glow }}
+      />
+
+      {/* An open book on top */}
+      <div className="relative mb-2" style={{ animation: 'bookFloat 6s ease-in-out infinite', ['--rot']: '0deg' }}>
+        <BookOpen size={92} style={{ color: COLORS.secondary[500] }} strokeWidth={1.2} />
+      </div>
+
+      {/* Stacked spines */}
+      {books.map((b, i) => (
+        <div
+          key={i}
+          className="relative rounded-md flex items-center justify-end pr-4 shadow-2xl"
+          style={{
+            width: b.w,
+            height: b.h,
+            background: `linear-gradient(135deg, ${b.from} 0%, ${b.to} 100%)`,
+            transform: `rotate(${b.rot})`,
+            ['--rot']: b.rot,
+            animation: `bookFloat ${5 + i}s ease-in-out infinite`,
+            animationDelay: b.delay,
+            border: `1px solid ${COLORS.neutral[300]}`,
+            boxShadow: '0 18px 40px rgba(0,0,0,0.5)',
+          }}
+        >
+          {/* spine ridges */}
+          <div className="absolute left-3 top-0 bottom-0 w-[3px]" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }} />
+          <div className="absolute left-5 top-0 bottom-0 w-[2px]" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }} />
+          <span
+            className="text-xs font-bold tracking-widest"
+            style={{ color: b.dark ? COLORS.primary[400] : COLORS.secondary[800] }}
+          >
+            {b.label}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
