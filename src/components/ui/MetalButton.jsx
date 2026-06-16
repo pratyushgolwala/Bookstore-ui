@@ -119,7 +119,7 @@ function ShineEffect({ isPressed }) {
 }
 
 const MetalButton = React.forwardRef(function MetalButton(
-  { children, className = '', variant = 'default', ...props },
+  { children, className = '', variant = 'default', fullWidth = false, ...props },
   ref
 ) {
   const [isPressed, setIsPressed] = React.useState(false);
@@ -133,11 +133,11 @@ const MetalButton = React.forwardRef(function MetalButton(
   const variants = metalButtonVariants(variant, isPressed, isHovered, isTouchDevice);
 
   return (
-    <div className={variants.wrapper} style={variants.wrapperStyle}>
+    <div className={cn(variants.wrapper, fullWidth && 'flex w-full')} style={variants.wrapperStyle}>
       <div className={variants.inner} style={variants.innerStyle} />
       <button
         ref={ref}
-        className={cn(variants.button, className)}
+        className={cn(variants.button, fullWidth && 'w-full', className)}
         style={variants.buttonStyle}
         onMouseDown={() => setIsPressed(true)}
         onMouseUp={() => setIsPressed(false)}
