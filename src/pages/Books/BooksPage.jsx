@@ -82,11 +82,11 @@ function BooksPage() {
         }}
       >
         <div className="flex items-center gap-3">
-          <BookMarked style={{ color: COLORS.secondary[500] }} size={26} />
+          <BookMarked style={{ color: COLORS.brass }} size={26} />
           <div>
-            <h1 className="text-2xl font-bold leading-none">The Library</h1>
-            <p className="text-xs mt-1" style={{ color: COLORS.text.tertiary }}>
-              {pagination.count.toLocaleString()} books
+            <h1 className="font-display text-3xl font-bold leading-none">The Library</h1>
+            <p className="text-xs mt-1.5 tracking-wide" style={{ color: COLORS.text.tertiary }}>
+              {pagination.count.toLocaleString()} books on the shelf
               {usingMockData && ' (offline sample)'}
             </p>
           </div>

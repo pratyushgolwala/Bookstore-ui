@@ -147,22 +147,11 @@ function Navbar() {
     <>
       <nav className={`navbar ${hidden ? 'navbar-hidden' : ''}`}>
         <div className="navbar-container">
-          {/* ── LEFT: Brand ── */}
+          {/* ── LEFT: Brand — typographic wordmark, not an icon-in-a-box ── */}
           <div className="navbar-brand" onClick={() => navigate('/')}>
-            <div className="brand-icon" style={{ background: COLORS.gradient.primary }}>
-              <BookMarked size={20} color="#fff" strokeWidth={2.5} />
-            </div>
-            <span
-              className="brand-name"
-              style={{
-                background: COLORS.gradient.primary,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              {BRAND}
-            </span>
+            <span className="brand-mark" aria-hidden="true">Fo</span>
+            <span className="brand-name">{BRAND}</span>
+            <span className="brand-sub">est. reading room</span>
           </div>
 
           {/* ── CENTER: Explore / Community ── */}
@@ -257,8 +246,8 @@ function Navbar() {
                 onMouseEnter={() => setAccountMenuOpen(true)}
                 onMouseLeave={() => setAccountMenuOpen(false)}
               >
-                <button className="account-btn" style={{ background: COLORS.gradient.primary }}>
-                  <User size={18} color="#fff" />
+                <button className="account-btn">
+                  <User size={18} color="#f0e6d0" />
                 </button>
                 {accountMenuOpen && (
                   <div className="dropdown-menu dropdown-right">
@@ -289,7 +278,6 @@ function Navbar() {
               <button
                 className="signin-btn"
                 onClick={() => setAuthPopupOpen(true)}
-                style={{ background: COLORS.gradient.primary }}
               >
                 <LogIn size={16} />
                 Sign In
@@ -340,7 +328,6 @@ function Navbar() {
               <button
                 className="mobile-auth-btn"
                 onClick={() => { setAuthPopupOpen(true); setMobileMenuOpen(false); }}
-                style={{ background: COLORS.gradient.primary }}
               >
                 Sign In / Up
               </button>

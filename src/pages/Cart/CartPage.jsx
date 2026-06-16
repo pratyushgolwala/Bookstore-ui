@@ -455,13 +455,7 @@ function CartItem({ item, idx, mounted, removing, onRemove, onIncrement, onDecre
         )}
         <p
           className="mt-2 text-base font-bold"
-          style={{
-            background: COLORS.gradient.accent,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            display: 'inline-block',
-          }}
+          style={{ color: COLORS.brass, display: 'inline-block' }}
         >
           {formatCurrency(item.price)}
         </p>

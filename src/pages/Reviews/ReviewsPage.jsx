@@ -336,7 +336,7 @@ function ReviewsPage() {
 
                 <button className="submit-btn" onClick={handleSubmit} disabled={submitting}
                   style={{ background: COLORS.gradient.accent, opacity: submitting ? 0.7 : 1 }}>
-                  {submitting ? 'Submitting…' : '⭐ Submit Review'}
+                  {submitting ? 'Submitting…' : 'Submit Review'}
                 </button>
               </div>
             </div>
