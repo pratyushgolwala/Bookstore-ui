@@ -87,7 +87,7 @@ function ShelfRow({ category, books, yPosition, interactive, onBookSelect }) {
       <Text
         position={[-shelfWidth / 2 + 0.4, 1.35, 0.85]}
         fontSize={0.22}
-        color="#d4933e"
+        color="#E4D6A9"
         anchorX="left"
         anchorY="middle"
         fontWeight="bold"

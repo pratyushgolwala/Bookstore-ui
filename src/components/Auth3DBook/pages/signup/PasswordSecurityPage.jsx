@@ -15,7 +15,7 @@ function PasswordSecurityPage({ password, confirmPassword, onPasswordChange, onC
   };
   const score = Object.values(checks).filter(Boolean).length;
   const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'][score];
-  const strengthColor = ['', '#d48080', '#e6a657', '#7bc8a4', '#00d084'][score];
+  const strengthColor = ['', '#c2562f', '#e6a657', '#7bc8a4', '#00d084'][score];
   const isValid = Object.values(checks).every(Boolean) && password === confirmPassword && confirmPassword;
 
   return (

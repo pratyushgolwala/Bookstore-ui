@@ -48,8 +48,8 @@ function PageTurnAnimation({ onComplete, pageCount = 8, duration = 900, isSignup
           style={{
             width: '100%',
             height: '100%',
-            backgroundColor: '#1a1a1a',
-            border: '1px solid #3d3d3d',
+            backgroundColor: '#221710',
+            border: '1px solid #3d2c1b',
             borderRadius: '8px',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
             transformStyle: 'preserve-3d',

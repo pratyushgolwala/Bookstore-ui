@@ -1,90 +1,94 @@
 /**
- * Global color palette for the entire application
- * Dark library/bookstore theme with warm, sophisticated accents
+ * Global color palette for the entire application.
+ * Warm vintage library theme:
+ *   #622B14 deep brown · #995F2F caramel · #978F66 olive · #E4D6A9 cream
+ *
+ * Every page references this constant, so changing values here re-themes
+ * the whole app consistently.
  */
 
 export const COLORS = {
-  // Primary colors - Green / Bottle Green
+  // Primary — caramel / warm brown (brand)
   primary: {
-    50: '#0a1f17',
-    100: '#0f2e22',
-    200: '#143d2c',
-    300: '#1a5740',
-    400: '#1f7a54',
-    500: '#2e8b57', // Primary brand color - sea green
-    600: '#3da06a',
-    700: '#5bb583',
-    800: '#88c9a3',
-    900: '#b9e7cf',
+    50:  '#1c0f07',
+    100: '#2a160b',
+    200: '#3d2010',
+    300: '#4f2913',
+    400: '#622B14', // deep brown
+    500: '#995F2F', // caramel — main brand color
+    600: '#b0764a',
+    700: '#c28e63',
+    800: '#d4a884',
+    900: '#e8caa3',
   },
 
-  // Secondary colors - Warm Gold/Amber
+  // Secondary — warm cream / sand (highlights, prices, accents)
   secondary: {
-    50: '#2d1f0a',
-    100: '#5a3d14',
-    200: '#875c1f',
-    300: '#b47a29',
-    400: '#d4933e', // Warm gold accent
-    500: '#e6a657',
-    600: '#f0b870',
-    700: '#f5c989',
-    800: '#fad8a1',
-    900: '#ffe7b9',
+    50:  '#2d2615',
+    100: '#473c22',
+    200: '#62542f',
+    300: '#867344',
+    400: '#c9b984',
+    500: '#E4D6A9', // cream — highlight color
+    600: '#eee0bb',
+    700: '#f2e8cd',
+    800: '#f7f0dd',
+    900: '#fbf8ee',
   },
 
-  // Accent - Copper/Rose
+  // Accent — muted olive
   accent: {
-    50: '#2d1a1a',
-    100: '#5a3434',
-    200: '#874d4d',
-    300: '#b46767',
-    400: '#d48080', // Copper rose accent
-    500: '#e09999',
-    600: '#e8b3b3',
-    700: '#f0cccc',
-    800: '#f5dfe5',
-    900: '#faf2f2',
+    50:  '#1e1c14',
+    100: '#33301f',
+    200: '#4a4630',
+    300: '#6b6444',
+    400: '#978F66', // olive
+    500: '#aaa37e',
+    600: '#bdb795',
+    700: '#d0cbb1',
+    800: '#e2dfcd',
+    900: '#f1efe5',
   },
 
-  // Dark Neutral colors - Warm grays and browns
+  // Neutrals — warm brown-tinted darks
   neutral: {
-    50: '#0f0f0f',
-    100: '#1a1a1a',
-    200: '#2a2a2a',
-    300: '#3d3d3d',
-    400: '#505050',
-    500: '#636363',
-    600: '#767676',
-    700: '#898989',
-    800: '#9c9c9c',
-    900: '#afafaf',
+    50:  '#150d06',
+    100: '#1f140b',
+    200: '#2c1e12',
+    300: '#3d2c1b',
+    400: '#523c27',
+    500: '#6b5337',
+    600: '#8a6f4f',
+    700: '#a98d6b',
+    800: '#c8ad8c',
+    900: '#e4d6a9',
   },
 
-  // Status colors
-  success: '#00d084',
-  warning: '#e6a657',
-  error: '#d48080',
-  info: '#5c8f8f',
+  // Status colors (tuned warm where possible)
+  success: '#7a9e5b',
+  warning: '#d6a44e',
+  error: '#c2562f',
+  info: '#978F66',
 
-  // Semantic - Dark library theme
-  background: '#0f0f0f',
-  surface: '#1a1a1a',
-  surfaceLight: '#2a2a2a',
-  surfaceLighter: '#3d3d3d',
-  border: '#3d3d3d',
+  // Semantic — warm dark library theme
+  background: '#160e07',
+  surface: '#221710',
+  surfaceLight: '#2f2014',
+  surfaceLighter: '#3d2c1b',
+  border: '#3d2c1b',
   text: {
-    primary: '#e8e8e8',
-    secondary: '#a8a8a8',
-    tertiary: '#767676',
-    inverse: '#0f0f0f',
+    primary: '#f0e6d0',
+    secondary: '#bfae8c',
+    tertiary: '#8a7858',
+    inverse: '#160e07',
   },
 
-  // Gradients — green to bottle green with warm accents
+  // Gradients — brown → caramel → cream
   gradient: {
-    primary: 'linear-gradient(135deg, #2e8b57 0%, #0f3d2e 100%)',
-    dark: 'linear-gradient(135deg, #143d2c 0%, #0a2018 100%)',
-    accent: 'linear-gradient(135deg, #2e8b57 0%, #d4933e 100%)',
-    glow: 'linear-gradient(135deg, #3da06a 0%, #2e8b57 50%, #0f3d2e 100%)',
+    primary: 'linear-gradient(135deg, #995F2F 0%, #622B14 100%)',
+    dark:    'linear-gradient(135deg, #2c1e12 0%, #160e07 100%)',
+    accent:  'linear-gradient(135deg, #995F2F 0%, #E4D6A9 100%)',
+    glow:    'linear-gradient(135deg, #b0764a 0%, #995F2F 50%, #622B14 100%)',
   },
 };
 

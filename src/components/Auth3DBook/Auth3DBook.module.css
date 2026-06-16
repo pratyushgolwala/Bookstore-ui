@@ -84,8 +84,8 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(46, 139, 87, 0.6) 35%,
-    rgba(212, 147, 62, 0.6) 65%,
+    rgba(153, 95, 47, 0.6) 35%,
+    rgba(153, 95, 47, 0.6) 65%,
     transparent 100%
   );
 }
@@ -109,10 +109,10 @@
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, #5c5c8f 0%, #d4933e 100%);
+  background: linear-gradient(90deg, #995F2F 0%, #E4D6A9 100%);
   border-radius: 2px;
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 10px rgba(212, 147, 62, 0.4);
+  box-shadow: 0 0 10px rgba(153, 95, 47, 0.4);
 }
 
 .progressMeta {
@@ -136,9 +136,9 @@
 }
 
 .progressDot.active {
-  background: linear-gradient(135deg, #5c5c8f, #d4933e);
+  background: linear-gradient(135deg, #995F2F, #E4D6A9);
   transform: scale(1.4);
-  box-shadow: 0 0 6px rgba(212, 147, 62, 0.5);
+  box-shadow: 0 0 6px rgba(153, 95, 47, 0.5);
 }
 
 .progressText {
@@ -194,7 +194,7 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 9px;
-  color: #f0f0f0;
+  color: #f0e6d0;
   font-size: 14px;
   font-family: 'Inter', -apple-system, sans-serif;
   font-weight: 400;
@@ -210,9 +210,9 @@
 
 .formInput:focus {
   outline: none;
-  border-color: rgba(212, 147, 62, 0.55);
+  border-color: rgba(153, 95, 47, 0.55);
   background: rgba(255, 255, 255, 0.065);
-  box-shadow: 0 0 0 3px rgba(212, 147, 62, 0.09);
+  box-shadow: 0 0 0 3px rgba(153, 95, 47, 0.09);
 }
 
 .formInput:disabled {
@@ -227,7 +227,7 @@
 
 .formError {
   font-size: 12px;
-  color: #d48080;
+  color: #c2562f;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -241,7 +241,7 @@
 .formButton {
   width: 100%;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #5c5c8f 0%, #d4933e 100%);
+  background: linear-gradient(135deg, #995F2F 0%, #622B14 100%);
   border: none;
   border-radius: 9px;
   color: #fff;
@@ -260,7 +260,7 @@
 
 .formButton:hover:not(:disabled) {
   opacity: 0.88;
-  box-shadow: 0 6px 20px rgba(46, 139, 87, 0.28);
+  box-shadow: 0 6px 20px rgba(153, 95, 47, 0.28);
   transform: translateY(-1px);
 }
 
@@ -310,7 +310,7 @@
 .nextButton {
   flex: 1;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #5c5c8f 0%, #d4933e 100%);
+  background: linear-gradient(135deg, #995F2F 0%, #622B14 100%);
   border: none;
   border-radius: 9px;
   color: #fff;
@@ -325,7 +325,7 @@
 
 .nextButton:hover:not(:disabled) {
   opacity: 0.88;
-  box-shadow: 0 6px 20px rgba(46, 139, 87, 0.25);
+  box-shadow: 0 6px 20px rgba(153, 95, 47, 0.25);
   transform: translateY(-1px);
 }
 
@@ -347,7 +347,7 @@
 /* ── LINKS ───────────────────────────────────────────────── */
 
 .linkPrimary {
-  color: #d4933e;
+  color: #995F2F;
   text-decoration: none;
   font-weight: 500;
   font-size: 14px;
@@ -400,7 +400,7 @@
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  accent-color: #d4933e;
+  accent-color: #995F2F;
   cursor: pointer;
   border-radius: 4px;
 }
@@ -441,7 +441,7 @@
 }
 
 .summaryVal {
-  color: #f0f0f0;
+  color: #f0e6d0;
   font-weight: 500;
   text-align: right;
   max-width: 60%;
