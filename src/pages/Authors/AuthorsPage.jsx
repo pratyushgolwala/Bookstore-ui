@@ -193,7 +193,7 @@ function AuthorsPage() {
   if (selectedAuthor) {
     const totalBooks = selectedAuthor.book_count ?? authorBooks.length;
     return (
-      <div className="min-h-screen" style={{ backgroundColor: COLORS.background, color: COLORS.text.primary }}>
+      <div className="min-h-screen" style={{ backgroundColor: COLORS.background, color: COLORS.text.primary, paddingTop: '100px' }}>
         <div className="max-w-7xl mx-auto px-6 py-8">
           <button
             onClick={goBack}
@@ -341,7 +341,7 @@ function AuthorsPage() {
 
   /* ──────────────────────────── Authors list view ─────────────────────────── */
   return (
-    <div className="min-h-screen" style={{ backgroundColor: COLORS.background, color: COLORS.text.primary }}>
+    <div className="min-h-screen" style={{ backgroundColor: COLORS.background, color: COLORS.text.primary, paddingTop: '100px' }}>
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Hero header */}
         <div

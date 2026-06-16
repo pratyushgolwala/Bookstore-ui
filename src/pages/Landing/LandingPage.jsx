@@ -26,9 +26,10 @@ function LandingPage() {
   }, [isAuthenticated, currentUser, navigate]);
 
   return (
-    <div className="w-full" style={{ backgroundColor: COLORS.background }}>
+    <div className="w-full" style={{ backgroundColor: COLORS.background, paddingTop: '100px' }}>
       {/* ── HERO ── */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center overflow-hidden"
+        style={{ minHeight: 'calc(100vh - 100px)' }}>
         {/* Warm radial ambience */}
         <div
           className="absolute inset-0"

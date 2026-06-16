@@ -37,7 +37,7 @@ function AdminPage() {
   return (
     <div
       className="px-6 py-8 max-w-6xl mx-auto"
-      style={{ minHeight: 'calc(100vh - 72px)', color: COLORS.text.primary }}
+      style={{ minHeight: '100vh', color: COLORS.text.primary, paddingTop: '100px' }}
     >
       <h1 className="text-3xl font-bold mb-1">Admin Dashboard</h1>
       <p className="text-sm mb-6" style={{ color: COLORS.text.tertiary }}>

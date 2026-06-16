@@ -70,11 +70,11 @@ function BooksPage() {
   return (
     <div
       className="relative flex flex-col"
-      style={{ backgroundColor: COLORS.background, color: COLORS.text.primary, minHeight: 'calc(100vh - 90px)' }}
+      style={{ backgroundColor: COLORS.parchment.bg, color: COLORS.parchment.text, minHeight: '100vh', paddingTop: '100px' }}
     >
       {/* ── Top Header — visible only at top of page ── */}
       <div
-        className="px-6 py-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between transition-all duration-300"
+        className="px-6 py-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-end transition-all duration-300"
         style={{
           opacity: atTop ? 1 : 0,
           transform: atTop ? 'translateY(0)' : 'translateY(-16px)',
@@ -82,17 +82,6 @@ function BooksPage() {
           maxHeight: atTop ? '200px' : '0',
         }}
       >
-        <div className="flex items-center gap-3">
-          <BookMarked style={{ color: COLORS.secondary[500] }} size={26} />
-          <div>
-            <h1 className="text-2xl font-bold leading-none">The Library</h1>
-            <p className="text-xs mt-1" style={{ color: COLORS.text.tertiary }}>
-              {pagination.count.toLocaleString()} books
-              {usingMockData && ' (offline sample)'}
-            </p>
-          </div>
-        </div>
-
         {/* Search + toggle side by side */}
         <div className="flex items-center gap-3 flex-wrap">
           <SearchBar value={search} onSearch={runSearch} />
