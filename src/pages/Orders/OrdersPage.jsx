@@ -52,7 +52,7 @@ function OrdersPage() {
       className="px-6 py-8 max-w-4xl mx-auto"
       style={{ minHeight: '100vh', backgroundColor: COLORS.parchment.bg, color: COLORS.parchment.text, paddingTop: '100px' }}
     >
-      <h1 className="text-3xl font-bold mb-6" style={{ color: COLORS.parchment.text }}>My Orders</h1>
+      <h1 className="font-display text-4xl font-bold mb-6" style={{ color: COLORS.parchment.text }}>My Orders</h1>
 
       <div className="space-y-3">
         {SAMPLE_ORDERS.map((order) => {

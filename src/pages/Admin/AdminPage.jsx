@@ -93,7 +93,7 @@ function AdminPage() {
     >
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Admin Dashboard</h1>
+          <h1 className="font-display text-3xl font-bold mb-1">Admin Dashboard</h1>
           <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
             Live analytics from the FastAPI service
           </p>
