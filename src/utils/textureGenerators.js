@@ -81,7 +81,7 @@ export function createWoodTexture(width = 512, height = 256, baseColor = '#3D281
  * @param {string} baseColor - Base spine color hex
  * @returns {THREE.CanvasTexture}
  */
-export function createSpineTexture(width = 128, height = 256, baseColor = '#5c5c8f') {
+export function createSpineTexture(width = 128, height = 256, baseColor = '#995F2F') {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -130,7 +130,7 @@ export function createSpineTexture(width = 128, height = 256, baseColor = '#5c5c
 
   // Gold foil accent line in the middle area
   ctx.globalAlpha = 0.15;
-  ctx.strokeStyle = '#d4933e';
+  ctx.strokeStyle = '#E4D6A9';
   ctx.lineWidth = 1.5;
   const accentY = height * 0.15;
   ctx.beginPath();

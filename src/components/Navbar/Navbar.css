@@ -481,7 +481,7 @@
 /* ── Notification Bell ── */
 .notif-btn {
   position: relative;
-  background: rgba(46,139,87,0.12);
+  background: rgba(153,95,47,0.12);
   border: none;
   border-radius: 10px;
   width: 38px;
@@ -489,15 +489,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2e8b57;
+  color: #995F2F;
   cursor: pointer;
   transition: all 0.25s ease;
   margin-right: 6px;
 }
 
 .notif-btn:hover {
-  background: rgba(46,139,87,0.25);
-  box-shadow: 0 0 12px rgba(46,139,87,0.35);
+  background: rgba(153,95,47,0.25);
+  box-shadow: 0 0 12px rgba(153,95,47,0.35);
   transform: translateY(-1px);
 }
 
@@ -559,8 +559,8 @@
 .notif-item:hover { background: rgba(255,255,255,0.04); }
 
 .notif-unread {
-  background: rgba(46,139,87,0.08);
-  border-left: 3px solid #2e8b57;
+  background: rgba(153,95,47,0.08);
+  border-left: 3px solid #995F2F;
 }
 
 .notif-title {

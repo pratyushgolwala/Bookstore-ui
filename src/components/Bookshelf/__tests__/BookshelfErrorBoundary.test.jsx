@@ -3,10 +3,12 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
 import BookshelfErrorBoundary from '../BookshelfErrorBoundary';
 import cartReducer from '../../../store/slices/cartSlice';
 import authReducer from '../../../store/slices/authSlice';
+import wishlistReducer from '../../../store/slices/wishlistSlice';
 
 // A child component that throws an error on render
 function ThrowingChild() {
@@ -30,15 +32,20 @@ const mockBooks = [
   },
 ];
 
-/** Render helper that wraps children in a Redux Provider (BookCard needs it). */
+/** Render helper that wraps children in a Redux Provider + Router (BookCard needs both). */
 function renderWithStore(ui) {
   const store = configureStore({
     reducer: {
       cart: cartReducer,
       auth: authReducer,
+      wishlist: wishlistReducer,
     },
   });
-  return render(<Provider store={store}>{ui}</Provider>);
+  return render(
+    <Provider store={store}>
+      <MemoryRouter>{ui}</MemoryRouter>
+    </Provider>
+  );
 }
 
 describe('BookshelfErrorBoundary', () => {
