@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { ArrowRight, Book, BookOpen, Truck, ShieldCheck, Sparkles, Quote } from 'lucide-react';
 import COLORS from '../../constants/colors';
+import MetalButton from '../../components/ui/MetalButton';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 
 /**
@@ -82,22 +83,12 @@ function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-14">
-              <button
-                onClick={() => navigate('/books')}
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all hover:shadow-xl hover:scale-105 active:scale-95"
-                style={{ background: COLORS.gradient.primary, color: COLORS.text.primary }}
-              >
-                Explore Books <ArrowRight size={20} />
-              </button>
-              <button
-                onClick={() => navigate('/register')}
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95"
-                style={{ color: COLORS.text.primary, border: `2px solid ${COLORS.primary[500]}`, backgroundColor: 'transparent' }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = COLORS.surfaceLight; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-              >
-                Become an Author <Book size={20} />
-              </button>
+              <MetalButton variant="gold" onClick={() => navigate('/books')} className="gap-2">
+                Explore Books <ArrowRight size={18} />
+              </MetalButton>
+              <MetalButton variant="bronze" onClick={() => navigate('/register')} className="gap-2">
+                Become an Author <Book size={18} />
+              </MetalButton>
             </div>
 
             {/* Stats */}
@@ -189,20 +180,12 @@ function LandingPage() {
             Join our community of readers and authors today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => navigate('/register')}
-              className="px-8 py-4 rounded-xl font-semibold transition-all hover:shadow-lg hover:scale-105 active:scale-95"
-              style={{ backgroundColor: COLORS.secondary[500], color: COLORS.primary[400] }}
-            >
+            <MetalButton variant="gold" onClick={() => navigate('/register')}>
               Get Started
-            </button>
-            <button
-              onClick={() => navigate('/login')}
-              className="px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95"
-              style={{ border: `2px solid ${COLORS.secondary[500]}`, color: COLORS.text.primary, backgroundColor: 'transparent' }}
-            >
+            </MetalButton>
+            <MetalButton variant="bronze" onClick={() => navigate('/login')}>
               Sign In
-            </button>
+            </MetalButton>
           </div>
         </div>
       </section>
