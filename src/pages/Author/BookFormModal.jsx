@@ -99,7 +99,7 @@ function BookFormModal({ initial, onClose, onSave }) {
           </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Price (USD)" error={errors.price}>
+            <Field label="Price (INR)" error={errors.price}>
               <input
                 type="number"
                 min="0"

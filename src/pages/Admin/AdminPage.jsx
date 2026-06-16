@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BookOpen, Users, ShoppingCart, DollarSign, TrendingUp, AlertTriangle } from 'lucide-react';
+import { BookOpen, Users, ShoppingCart, IndianRupee, TrendingUp, AlertTriangle } from 'lucide-react';
 import { booksService } from '../../services/booksService';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
@@ -19,7 +19,7 @@ function AdminPage() {
     { label: 'Total Books', value: bookCount != null ? bookCount.toLocaleString() : '—', icon: BookOpen, color: COLORS.primary[500] },
     { label: 'Customers', value: '2,840', icon: Users, color: COLORS.secondary[400] },
     { label: 'Orders', value: '1,293', icon: ShoppingCart, color: COLORS.accent[400] },
-    { label: 'Revenue', value: formatCurrency(284500), icon: DollarSign, color: COLORS.success },
+    { label: 'Revenue', value: formatCurrency(284500), icon: IndianRupee, color: COLORS.success },
   ];
 
   const recentOrders = [

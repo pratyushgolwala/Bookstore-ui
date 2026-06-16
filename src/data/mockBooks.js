@@ -7,7 +7,7 @@
  * @property {string} id           - Unique identifier
  * @property {string} title        - Book title
  * @property {string} author       - Author full name
- * @property {number} price        - Price in USD
+ * @property {number} price        - Price in INR
  * @property {string} coverImageUrl - Placeholder cover image URL
  * @property {string} category     - Category name
  * @property {number} pageCount    - Number of pages (used for spine thickness)
