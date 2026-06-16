@@ -33,14 +33,14 @@ function BooksPage() {
     search,
   } = useBookshelf();
 
-  // Pick up search term from URL query param (e.g. from category navigation)
+  // Pick up search term from URL query param (e.g. from category navigation).
+  // Applies whenever the param changes to a new value.
   const [searchParams] = useSearchParams();
-  const initialSearchRef = useRef(false);
+  const appliedSearchRef = useRef(null);
   useEffect(() => {
-    if (initialSearchRef.current) return;
     const q = searchParams.get('search');
-    if (q) {
-      initialSearchRef.current = true;
+    if (q && q !== appliedSearchRef.current) {
+      appliedSearchRef.current = q;
       runSearch(q);
     }
   }, [searchParams, runSearch]);

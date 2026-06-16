@@ -9,6 +9,12 @@ import COLORS from '../../constants/colors';
 function SearchBar({ value = '', onSearch, placeholder = 'Search books or authors…' }) {
   const [query, setQuery] = useState(value);
 
+  // Keep the input in sync when the value is changed externally
+  // (e.g. navigating in from a category sets a new search term).
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
+
   // Debounce search calls
   useEffect(() => {
     const t = setTimeout(() => {
