@@ -30,17 +30,17 @@ function ProfilePage() {
     >
       {/* Header card */}
       <div
-        className="rounded-2xl p-8 mb-6 flex items-center gap-6"
-        style={{ background: COLORS.gradient.dark, border: `1px solid ${COLORS.border}` }}
+        className="rounded-sm p-8 mb-6 flex items-center gap-6"
+        style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
       >
         <div
-          className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold shrink-0"
-          style={{ background: COLORS.gradient.primary, color: COLORS.text.inverse }}
+          className="w-20 h-20 rounded-md flex items-center justify-center text-2xl font-bold shrink-0 font-display"
+          style={{ backgroundColor: COLORS.brass, color: COLORS.ink }}
         >
           {initials}
         </div>
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold">{displayName}</h1>
+          <h1 className="font-display text-3xl font-bold">{displayName}</h1>
           <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: COLORS.text.secondary }}>
             <Mail size={14} /> {email}
           </p>
@@ -65,7 +65,7 @@ function ProfilePage() {
         className="rounded-xl p-6"
         style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
       >
-        <h2 className="text-lg font-bold mb-4">Account Details</h2>
+        <h2 className="font-display text-xl font-bold mb-4">Account Details</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Full Name" value={displayName} icon={<User size={15} />} />
           <Field label="Email" value={email} icon={<Mail size={15} />} />
