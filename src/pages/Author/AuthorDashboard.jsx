@@ -157,7 +157,7 @@ function AuthorDashboard() {
             <PenTool size={26} color={COLORS.text.inverse} />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {authorName}</h1>
+            <h1 className="font-display text-3xl md:text-4xl font-bold">Welcome back, {authorName}</h1>
             <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
               Your author studio — manage your catalogue and track performance
             </p>

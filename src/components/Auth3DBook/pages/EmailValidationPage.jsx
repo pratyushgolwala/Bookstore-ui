@@ -8,7 +8,7 @@ function EmailValidationPage({ email, onEmailChange, onNext, error, submitError,
     <div className={styles.bookPage}>
       {/* Heading block */}
       <h1 className={styles.pageHeading}>Welcome back</h1>
-      <p className={styles.pageSubheading}>Sign in to your BookStore account</p>
+      <p className={styles.pageSubheading}>Sign in to your Folio account</p>
 
       {/* Error banner */}
       {submitError && (

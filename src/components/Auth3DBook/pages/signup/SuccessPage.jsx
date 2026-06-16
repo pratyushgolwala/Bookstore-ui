@@ -20,7 +20,7 @@ function SuccessPage({ onRedirectToLogin, isLoading }) {
 
       <h1 className={styles.pageHeading}>Account created!</h1>
       <p className={styles.pageSubheading} style={{ marginBottom: '28px' }}>
-        Welcome to BookStore. Check your inbox for a verification link before signing in.
+        Welcome to Folio. Check your inbox for a verification link before signing in.
       </p>
 
       <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.28)', marginBottom: '20px', fontFamily: 'Inter, sans-serif' }}>

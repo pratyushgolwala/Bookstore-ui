@@ -55,7 +55,7 @@ function WishlistPage() {
         >
           <Heart size={46} style={{ color: COLORS.accent[400] }} strokeWidth={1.5} />
         </div>
-        <h1 className="text-3xl font-bold mb-3" style={{ color: COLORS.parchment.text }}>
+        <h1 className="font-display text-3xl font-bold mb-3" style={{ color: COLORS.parchment.text }}>
           Your wishlist is empty
         </h1>
         <p className="mb-8 max-w-sm leading-relaxed" style={{ color: COLORS.parchment.textSoft }}>
@@ -78,7 +78,7 @@ function WishlistPage() {
         <div className="flex items-center gap-3">
           <Heart size={26} style={{ color: COLORS.accent[400] }} fill={COLORS.accent[400]} />
           <div>
-            <h1 className="text-3xl font-bold tracking-tight" style={{ color: COLORS.parchment.text }}>My Wishlist</h1>
+            <h1 className="font-display text-3xl font-bold tracking-tight" style={{ color: COLORS.parchment.text }}>My Wishlist</h1>
             <p className="text-sm mt-1" style={{ color: COLORS.parchment.textSoft }}>
               {items.length} book{items.length !== 1 ? 's' : ''} saved
             </p>

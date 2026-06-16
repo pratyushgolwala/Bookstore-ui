@@ -86,7 +86,7 @@ function SettingsPage() {
     >
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight" style={{ color: COLORS.parchment.text }}>Settings</h1>
+        <h1 className="font-display text-4xl font-bold tracking-tight" style={{ color: COLORS.parchment.text }}>Settings</h1>
         <p className="text-sm mt-1" style={{ color: COLORS.parchment.textSoft }}>
           Manage your account details and preferences.
         </p>
@@ -94,17 +94,17 @@ function SettingsPage() {
 
       {/* Profile summary card */}
       <div
-        className="rounded-2xl p-6 mb-6 flex items-center gap-4"
+        className="rounded-sm p-6 mb-6 flex items-center gap-4"
         style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
       >
         <div
-          className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shrink-0"
-          style={{ background: COLORS.gradient.primary, color: '#fff' }}
+          className="w-16 h-16 rounded-md flex items-center justify-center text-2xl font-bold shrink-0 font-display"
+          style={{ backgroundColor: COLORS.brass, color: COLORS.ink }}
         >
           {(form.first_name || user?.email || 'U').charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0">
-          <h2 className="text-lg font-bold truncate">
+          <h2 className="font-display text-xl font-bold truncate">
             {form.first_name || form.last_name
               ? `${form.first_name} ${form.last_name}`.trim()
               : user?.email?.split('@')[0] || 'Reader'}
