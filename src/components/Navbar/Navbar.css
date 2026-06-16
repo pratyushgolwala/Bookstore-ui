@@ -136,7 +136,7 @@
   justify-content: center;
   background: rgba(153, 95, 47, 0.12);
   border: 1px solid rgba(153, 95, 47, 0.25);
-  color: #5bb583;
+  color: #E4D6A9;
   transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -144,7 +144,7 @@
   transform: translateY(-2px);
   background: rgba(153, 95, 47, 0.22);
   box-shadow: 0 6px 20px rgba(153, 95, 47, 0.3);
-  color: #88c9a3;
+  color: #f0e6d0;
 }
 
 .cart-btn:active {
