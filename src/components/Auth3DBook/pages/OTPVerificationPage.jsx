@@ -72,20 +72,20 @@ function OTPVerificationPage({ email, onSubmit, onResend, submitError }) {
     <div className={styles.bookPage}>
       {/* Icon */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg,rgba(92,92,143,0.15),rgba(212,147,62,0.15))', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <ShieldCheck size={22} color="#d4933e" />
+        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg,rgba(98,43,20,0.15),rgba(153,95,47,0.15))', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ShieldCheck size={22} color="#995F2F" />
         </div>
       </div>
 
       <h1 className={styles.pageHeading} style={{ textAlign: 'center' }}>Check your email</h1>
       <p className={styles.pageSubheading} style={{ textAlign: 'center' }}>
-        We sent a 6-digit code to <span style={{ color: '#d4933e', fontWeight: '500' }}>{masked}</span>
+        We sent a 6-digit code to <span style={{ color: '#995F2F', fontWeight: '500' }}>{masked}</span>
       </p>
 
       {/* Error */}
       {hasError && (
-        <div style={{ padding: '10px 14px', background: 'rgba(212,128,128,0.1)', border: '1px solid rgba(212,128,128,0.3)', borderRadius: '8px', marginBottom: '16px' }}>
-          <p style={{ margin: 0, fontSize: '13px', color: '#d48080' }}>{otpError || submitError}</p>
+        <div style={{ padding: '10px 14px', background: 'rgba(194,86,47,0.1)', border: '1px solid rgba(194,86,47,0.3)', borderRadius: '8px', marginBottom: '16px' }}>
+          <p style={{ margin: 0, fontSize: '13px', color: '#c2562f' }}>{otpError || submitError}</p>
         </div>
       )}
 
@@ -104,15 +104,15 @@ function OTPVerificationPage({ email, onSubmit, onResend, submitError }) {
             onChange={(e) => handleChange(i, e)}
             onKeyDown={(e) => handleKeyDown(i, e)}
             disabled={isVerifying}
-            onFocus={(e) => { e.target.select(); e.target.style.borderColor = '#d4933e'; e.target.style.boxShadow = '0 0 0 3px rgba(212,147,62,0.12)'; }}
-            onBlur={(e) => { e.target.style.borderColor = digit ? 'rgba(92,92,143,0.6)' : (hasError ? 'rgba(212,128,128,0.5)' : 'rgba(255,255,255,0.09)'); e.target.style.boxShadow = digit ? '0 0 8px rgba(92,92,143,0.15)' : 'none'; }}
+            onFocus={(e) => { e.target.select(); e.target.style.borderColor = '#995F2F'; e.target.style.boxShadow = '0 0 0 3px rgba(153,95,47,0.12)'; }}
+            onBlur={(e) => { e.target.style.borderColor = digit ? 'rgba(98,43,20,0.6)' : (hasError ? 'rgba(194,86,47,0.5)' : 'rgba(255,255,255,0.09)'); e.target.style.boxShadow = digit ? '0 0 8px rgba(98,43,20,0.15)' : 'none'; }}
             style={{
               width: '46px', height: '54px', textAlign: 'center',
               fontSize: '20px', fontWeight: '700', fontFamily: 'Inter, sans-serif',
-              background: digit ? 'rgba(92,92,143,0.1)' : 'rgba(255,255,255,0.03)',
-              border: `1.5px solid ${digit ? 'rgba(92,92,143,0.6)' : hasError ? 'rgba(212,128,128,0.5)' : 'rgba(255,255,255,0.09)'}`,
-              borderRadius: '10px', color: '#f0f0f0', outline: 'none',
-              transition: 'all 0.15s ease', caretColor: '#d4933e',
+              background: digit ? 'rgba(98,43,20,0.1)' : 'rgba(255,255,255,0.03)',
+              border: `1.5px solid ${digit ? 'rgba(98,43,20,0.6)' : hasError ? 'rgba(194,86,47,0.5)' : 'rgba(255,255,255,0.09)'}`,
+              borderRadius: '10px', color: '#f0e6d0', outline: 'none',
+              transition: 'all 0.15s ease', caretColor: '#995F2F',
               cursor: isVerifying ? 'not-allowed' : 'text',
               WebkitAppearance: 'none',
             }}

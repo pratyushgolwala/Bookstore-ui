@@ -31,8 +31,8 @@ function ReviewPage({ formData, role, acceptTerms, onAcceptTermsChange, onPrevio
 
       {/* Error */}
       {errors.submit && (
-        <div style={{ padding: '10px 14px', background: 'rgba(212,128,128,0.1)', border: '1px solid rgba(212,128,128,0.3)', borderRadius: '8px', marginBottom: '12px' }}>
-          <p style={{ margin: 0, fontSize: '13px', color: '#d48080' }}>{errors.submit}</p>
+        <div style={{ padding: '10px 14px', background: 'rgba(194,86,47,0.1)', border: '1px solid rgba(194,86,47,0.3)', borderRadius: '8px', marginBottom: '12px' }}>
+          <p style={{ margin: 0, fontSize: '13px', color: '#c2562f' }}>{errors.submit}</p>
         </div>
       )}
 
@@ -41,7 +41,7 @@ function ReviewPage({ formData, role, acceptTerms, onAcceptTermsChange, onPrevio
         <input id="terms" type="checkbox" checked={acceptTerms} onChange={(e) => onAcceptTermsChange(e.target.checked)} className={styles.checkboxInput} />
         <label htmlFor="terms" className={styles.checkboxLabel}>
           I agree to the{' '}
-          <a href="#" style={{ color: '#d4933e', textDecoration: 'none', fontWeight: '500' }}>Terms and Conditions</a>
+          <a href="#" style={{ color: '#995F2F', textDecoration: 'none', fontWeight: '500' }}>Terms and Conditions</a>
         </label>
       </div>
       {errors.terms && <div className={styles.formError} style={{ marginTop: '6px' }}>{errors.terms}</div>}
