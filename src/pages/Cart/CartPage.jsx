@@ -172,7 +172,7 @@ function CartPage() {
         {/* Trust badges */}
         <div className="flex flex-wrap justify-center gap-6 mt-12">
           {[
-            { icon: <Truck size={16} />, text: 'Free shipping over $500' },
+            { icon: <Truck size={16} />, text: `Free shipping over ${formatCurrency(FREE_SHIPPING_THRESHOLD)}` },
             { icon: <Shield size={16} />, text: 'Secure checkout' },
             { icon: <RotateCcw size={16} />, text: '30-day returns' },
           ].map(({ icon, text }) => (
