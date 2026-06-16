@@ -109,22 +109,18 @@ function CategoriesPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Hero header */}
         <div
-          className="relative overflow-hidden rounded-3xl border p-8 mb-8"
-          style={{ borderColor: COLORS.border, background: COLORS.gradient.dark }}
+          className="relative overflow-hidden rounded-sm border p-8 mb-8 paper-grain"
+          style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
         >
-          <div
-            className="absolute -top-20 -right-16 w-64 h-64 rounded-full opacity-20 blur-3xl pointer-events-none"
-            style={{ background: COLORS.gradient.glow }}
-          />
           <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             <div>
-              <div
-                className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4"
-                style={{ background: COLORS.gradient.accent }}
+              <span
+                className="block text-xs tracking-[0.3em] uppercase mb-3"
+                style={{ color: COLORS.brass }}
               >
-                <LayoutGrid size={24} style={{ color: COLORS.text.inverse }} />
-              </div>
-              <h1 className="text-4xl font-bold leading-none mb-2">Browse Categories</h1>
+                The Index
+              </span>
+              <h1 className="font-display text-4xl font-bold leading-none mb-2">Browse Categories</h1>
               <p className="text-sm" style={{ color: COLORS.text.secondary }}>
                 Explore {categories.length} categor{categories.length !== 1 ? 'ies' : 'y'} — pick a topic to discover related books
               </p>
