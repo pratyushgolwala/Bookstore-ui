@@ -104,7 +104,7 @@ function CategoriesPage() {
   return (
     <div
       className="min-h-screen"
-      style={{ backgroundColor: COLORS.parchment.bg, color: COLORS.parchment.text }}
+      style={{ backgroundColor: COLORS.parchment.bg, color: COLORS.parchment.text, paddingTop: '100px' }}
     >
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Hero header */}

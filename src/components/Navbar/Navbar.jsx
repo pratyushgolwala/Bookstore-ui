@@ -95,7 +95,6 @@ function Navbar() {
       submenu: [
         { label: 'All Books', href: '/books' },
         { label: 'Categories', href: '/categories' },
-        { label: 'Featured', href: '/featured' },
       ],
     },
     {

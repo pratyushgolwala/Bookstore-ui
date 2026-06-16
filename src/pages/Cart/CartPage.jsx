@@ -90,7 +90,7 @@ function CartPage() {
     return (
       <div
         className="flex flex-col items-center justify-center text-center px-6 pb-16"
-        style={{ minHeight: 'calc(100vh - 72px)', backgroundColor: COLORS.background }}
+        style={{ minHeight: '100vh', backgroundColor: COLORS.background, paddingTop: '100px' }}
       >
         <div
           className="w-28 h-28 rounded-full flex items-center justify-center mb-8"
@@ -127,7 +127,7 @@ function CartPage() {
     return (
       <div
         className="flex flex-col items-center justify-center text-center px-6 pb-16"
-        style={{ minHeight: 'calc(100vh - 72px)', backgroundColor: COLORS.background }}
+        style={{ minHeight: '100vh', backgroundColor: COLORS.background, paddingTop: '100px' }}
       >
         {/* Icon circle */}
         <div
@@ -190,7 +190,7 @@ function CartPage() {
   return (
     <div
       className="px-4 sm:px-6 py-8 max-w-6xl mx-auto"
-      style={{ minHeight: 'calc(100vh - 72px)', color: COLORS.text.primary }}
+      style={{ minHeight: '100vh', color: COLORS.text.primary, paddingTop: '100px' }}
     >
       {/* Page header */}
       <div className="flex items-center justify-between mb-8">

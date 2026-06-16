@@ -144,7 +144,7 @@ function AuthorDashboard() {
   return (
     <div
       className="px-6 py-8 max-w-6xl mx-auto"
-      style={{ minHeight: 'calc(100vh - 72px)', color: COLORS.text.primary }}
+      style={{ minHeight: '100vh', color: COLORS.text.primary, paddingTop: '100px' }}
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">

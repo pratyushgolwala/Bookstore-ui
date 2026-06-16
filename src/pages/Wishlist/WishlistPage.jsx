@@ -43,7 +43,7 @@ function WishlistPage() {
     return (
       <div
         className="flex flex-col items-center justify-center text-center px-6 pb-16"
-        style={{ minHeight: 'calc(100vh - 90px)', backgroundColor: COLORS.parchment.bg }}
+        style={{ minHeight: '100vh', backgroundColor: COLORS.parchment.bg, paddingTop: '100px' }}
       >
         <div
           className="w-28 h-28 rounded-full flex items-center justify-center mb-8"
@@ -72,7 +72,7 @@ function WishlistPage() {
   return (
     <div
       className="px-4 sm:px-6 py-8 max-w-6xl mx-auto"
-      style={{ minHeight: 'calc(100vh - 90px)', backgroundColor: COLORS.parchment.bg, color: COLORS.parchment.text }}
+      style={{ minHeight: '100vh', backgroundColor: COLORS.parchment.bg, color: COLORS.parchment.text, paddingTop: '100px' }}
     >
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
