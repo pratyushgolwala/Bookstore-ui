@@ -6,6 +6,7 @@ import COLORS from '../../constants/colors';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import useBookshelf from '../../hooks/useBookshelf';
 import BookCard from '../../components/ui/BookCard';
+import MetalButton from '../../components/ui/MetalButton';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 
 const BookshelfScene = React.lazy(() => import('../../components/Bookshelf/BookshelfScene'));
@@ -87,38 +88,15 @@ function LandingPage() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <button
-              onClick={() => navigate('/books')}
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-semibold text-white transition-all hover:shadow-lg hover:scale-105 active:scale-95"
-              style={{
-                background: COLORS.gradient.primary,
-              }}
-            >
+            <MetalButton variant="gold" onClick={() => navigate('/books')} className="gap-2">
               Explore Books
-              <ArrowRight size={20} />
-            </button>
+              <ArrowRight size={18} />
+            </MetalButton>
 
-            <button
-              onClick={() => navigate('/register')}
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-semibold transition-all hover:scale-105 active:scale-95"
-              style={{
-                color: COLORS.text.primary,
-                borderWidth: '2px',
-                borderColor: COLORS.primary[400],
-                backgroundColor: COLORS.surface,
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = COLORS.surfaceLight;
-                e.target.style.borderColor = COLORS.primary[500];
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = COLORS.surface;
-                e.target.style.borderColor = COLORS.primary[400];
-              }}
-            >
+            <MetalButton variant="bronze" onClick={() => navigate('/register')} className="gap-2">
               Become an Author
-              <Book size={20} />
-            </button>
+              <Book size={18} />
+            </MetalButton>
           </div>
 
           {/* Stats */}
@@ -268,35 +246,13 @@ function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => navigate('/register')}
-              className="px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-lg transform hover:scale-105 active:scale-95"
-              style={{
-                backgroundColor: COLORS.text.inverse,
-                color: COLORS.primary[600],
-              }}
-            >
+            <MetalButton variant="gold" onClick={() => navigate('/register')}>
               Get Started
-            </button>
+            </MetalButton>
 
-            <button
-              onClick={() => navigate('/login')}
-              className="px-8 py-4 rounded-lg font-semibold transition-all hover:scale-105 active:scale-95"
-              style={{
-                borderWidth: '2px',
-                borderColor: COLORS.text.inverse,
-                color: COLORS.text.inverse,
-                backgroundColor: 'rgba(10, 10, 10, 0.2)',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = 'rgba(10, 10, 10, 0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'rgba(10, 10, 10, 0.2)';
-              }}
-            >
+            <MetalButton variant="bronze" onClick={() => navigate('/login')}>
               Sign In
-            </button>
+            </MetalButton>
           </div>
         </div>
       </section>
