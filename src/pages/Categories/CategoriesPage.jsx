@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, AlertCircle, BookOpen, Search, Rocket, Sparkles, Heart,
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { categoriesService } from '../../services/categoriesService';
 import FALLBACK_CATEGORIES from '../../data/categories';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
+import SearchBar from '../../components/ui/SearchBar';
 import COLORS from '../../constants/colors';
 
 /** Map icon name strings to lucide-react components. */
@@ -15,6 +15,20 @@ const ICONS = {
   BookOpen, Search, Rocket, Sparkles, Heart, Landmark, UserRound,
   FlaskConical, Cpu, Brain, Feather, Baby, Briefcase, Palette, ChefHat, Plane,
 };
+
+/** Skeleton placeholder card shown while categories load. */
+function CategorySkeleton() {
+  return (
+    <div
+      className="rounded-2xl border p-6 flex flex-col gap-4 animate-pulse"
+      style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
+    >
+      <div className="w-14 h-14 rounded-2xl" style={{ backgroundColor: COLORS.surfaceLight }} />
+      <div className="h-4 w-2/3 rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
+      <div className="h-3 w-full rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
+    </div>
+  );
+}
 
 /**
  * CategoriesPage — browse books by category.
@@ -27,6 +41,7 @@ function CategoriesPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -75,72 +90,118 @@ function CategoriesPage() {
     navigate(`/books?search=${term}`);
   };
 
+  // Client-side filter by name/description.
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return categories;
+    return categories.filter(
+      (c) =>
+        (c.name || '').toLowerCase().includes(q) ||
+        (c.description || '').toLowerCase().includes(q)
+    );
+  }, [categories, search]);
+
   return (
     <div
       className="min-h-screen"
       style={{ backgroundColor: COLORS.background, color: COLORS.text.primary }}
     >
-      {/* Header */}
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        <div className="flex items-center gap-3 mb-2">
-          <LayoutGrid style={{ color: COLORS.secondary[500] }} size={28} />
-          <h1 className="text-3xl font-bold leading-none">Browse Categories</h1>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Hero header */}
+        <div
+          className="relative overflow-hidden rounded-3xl border p-8 mb-8"
+          style={{ borderColor: COLORS.border, background: COLORS.gradient.dark }}
+        >
+          <div
+            className="absolute -top-20 -right-16 w-64 h-64 rounded-full opacity-20 blur-3xl pointer-events-none"
+            style={{ background: COLORS.gradient.glow }}
+          />
+          <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <div>
+              <div
+                className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4"
+                style={{ background: COLORS.gradient.accent }}
+              >
+                <LayoutGrid size={24} style={{ color: COLORS.text.inverse }} />
+              </div>
+              <h1 className="text-4xl font-bold leading-none mb-2">Browse Categories</h1>
+              <p className="text-sm" style={{ color: COLORS.text.secondary }}>
+                Explore {categories.length} categor{categories.length !== 1 ? 'ies' : 'y'} — pick a topic to discover related books
+              </p>
+            </div>
+
+            <div className="sm:w-72">
+              <SearchBar value={search} onSearch={setSearch} placeholder="Search categories..." />
+            </div>
+          </div>
         </div>
-        <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
-          Explore the catalog by topic — pick a category to see related books.
-        </p>
 
         {usingFallback && (
           <div
-            className="mt-4 px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
-            style={{ backgroundColor: `${COLORS.warning}1a`, color: COLORS.warning }}
+            className="mb-6 px-4 py-3 rounded-xl flex items-center gap-2 text-sm"
+            style={{ backgroundColor: `${COLORS.warning}1a`, color: COLORS.warning, border: `1px solid ${COLORS.warning}33` }}
           >
             <AlertCircle size={16} />
             Showing a curated category list — the categories API is unreachable.
           </div>
         )}
-      </div>
 
-      {/* Grid */}
-      <div className="max-w-7xl mx-auto px-6 pb-16">
+        {/* Grid */}
         {loading ? (
-          <LoadingSpinner />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {Array.from({ length: 8 }).map((_, i) => <CategorySkeleton key={i} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div
+            className="flex flex-col items-center justify-center text-center py-20 rounded-2xl border"
+            style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
+          >
+            <LayoutGrid size={44} style={{ color: COLORS.text.tertiary }} className="mb-3" />
+            <p className="font-medium" style={{ color: COLORS.text.primary }}>No categories found</p>
+            <p className="text-sm mt-1" style={{ color: COLORS.text.tertiary }}>Try a different search term.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {categories.map((category) => {
+            {filtered.map((category) => {
               const Icon = ICONS[category.icon] || BookOpen;
               const accent = category.accent || COLORS.primary[500];
               return (
                 <button
                   key={category.id}
                   onClick={() => openCategory(category)}
-                  className="group relative text-left rounded-xl border p-5 flex flex-col gap-3 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+                  className="group relative overflow-hidden text-left rounded-2xl border p-6 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
                   style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
                 >
+                  {/* subtle accent glow on hover */}
                   <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+                    className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-0 group-hover:opacity-20 blur-2xl transition-opacity duration-300 pointer-events-none"
+                    style={{ backgroundColor: accent }}
+                  />
+
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
                     style={{ backgroundColor: `${accent}22`, color: accent }}
                   >
-                    <Icon size={24} />
+                    <Icon size={26} />
                   </div>
 
                   <div className="flex-1">
-                    <h3 className="text-base font-semibold" style={{ color: COLORS.text.primary }}>
+                    <h3 className="text-lg font-semibold" style={{ color: COLORS.text.primary }}>
                       {category.name}
                     </h3>
                     {category.description && (
-                      <p className="text-xs mt-1 line-clamp-2" style={{ color: COLORS.text.tertiary }}>
+                      <p className="text-sm mt-1 line-clamp-2" style={{ color: COLORS.text.tertiary }}>
                         {category.description}
                       </p>
                     )}
                   </div>
 
                   <div
-                    className="flex items-center gap-1.5 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    className="flex items-center gap-1.5 text-sm font-medium transition-all duration-300"
                     style={{ color: COLORS.secondary[500] }}
                   >
                     Browse books
-                    <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+                    <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />
                   </div>
                 </button>
               );
