@@ -9,6 +9,7 @@ import { formatCurrency } from '../../utils/formatters';
 import { selectCurrentUser } from '../../store/slices/authSlice';
 import COLORS from '../../constants/colors';
 import Button from '../../components/ui/Button';
+import MetalButton from '../../components/ui/MetalButton';
 import Badge from '../../components/ui/Badge';
 import BookFormModal from './BookFormModal';
 
@@ -162,9 +163,10 @@ function AuthorDashboard() {
             </p>
           </div>
         </div>
-        <Button leftIcon={<Plus size={18} />} onClick={openCreate}>
+        <MetalButton variant="gold" onClick={openCreate} className="gap-2">
+          <Plus size={18} />
           Publish New Book
-        </Button>
+        </MetalButton>
       </div>
 
       {/* Error banner */}
