@@ -38,7 +38,7 @@ function MainLayout() {
     <div className="flex flex-col min-h-screen relative" style={{ backgroundColor: COLORS.background }}>
       <Navbar />
 
-      <main className="flex-1 pt-[68px]">
+      <main className="flex-1">
         <Outlet />
       </main>
 

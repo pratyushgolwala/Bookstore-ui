@@ -29,7 +29,7 @@ function LandingPage() {
   }, [isAuthenticated, currentUser, navigate]);
 
   return (
-    <div className="w-full" style={{ backgroundColor: COLORS.background }}>
+    <div className="w-full" style={{ backgroundColor: COLORS.background, paddingTop: '68px' }}>
       {/* ── HERO ───────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         {/* thin top hairline rule, like a printed page edge */}
