@@ -93,13 +93,21 @@ export const COLORS = {
     border: '#c9b07a',      // warm tan border on parchment
   },
 
-  // Gradients — brown → caramel → cream
+  // "gradient" tokens kept for backwards-compatibility, but flattened to
+  // solid book-cloth fills — no gradients anywhere in the UI. Existing call
+  // sites that set `background: COLORS.gradient.primary` now render flat.
   gradient: {
-    primary: 'linear-gradient(135deg, #995F2F 0%, #622B14 100%)',
-    dark:    'linear-gradient(135deg, #2c1e12 0%, #160e07 100%)',
-    accent:  'linear-gradient(135deg, #995F2F 0%, #E4D6A9 100%)',
-    glow:    'linear-gradient(135deg, #b0764a 0%, #995F2F 50%, #622B14 100%)',
+    primary: '#7a3b2e',  // book-cloth red-brown
+    dark:    '#1b110a',
+    accent:  '#b98a3e',  // flat brass
+    glow:    '#7a3b2e',
   },
+
+  // New flat brand tokens (preferred for new code)
+  ink:     '#160e07',    // deepest background ink
+  cloth:   '#7a3b2e',    // book-cloth red-brown — primary action color
+  clothDark: '#5e2c22',
+  brass:   '#b98a3e',    // flat brass — accents, prices
 };
 
 export default COLORS;
