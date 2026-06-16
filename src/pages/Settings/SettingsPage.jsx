@@ -82,12 +82,12 @@ function SettingsPage() {
   return (
     <div
       className="px-4 sm:px-6 py-8 max-w-3xl mx-auto"
-      style={{ minHeight: 'calc(100vh - 90px)', color: COLORS.text.primary }}
+      style={{ minHeight: 'calc(100vh - 90px)', backgroundColor: COLORS.parchment.bg, color: COLORS.parchment.text }}
     >
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-sm mt-1" style={{ color: COLORS.text.tertiary }}>
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: COLORS.parchment.text }}>Settings</h1>
+        <p className="text-sm mt-1" style={{ color: COLORS.parchment.textSoft }}>
           Manage your account details and preferences.
         </p>
       </div>

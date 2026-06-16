@@ -43,7 +43,7 @@ function WishlistPage() {
     return (
       <div
         className="flex flex-col items-center justify-center text-center px-6 pb-16"
-        style={{ minHeight: 'calc(100vh - 90px)', backgroundColor: COLORS.background }}
+        style={{ minHeight: 'calc(100vh - 90px)', backgroundColor: COLORS.parchment.bg }}
       >
         <div
           className="w-28 h-28 rounded-full flex items-center justify-center mb-8"
@@ -55,10 +55,10 @@ function WishlistPage() {
         >
           <Heart size={46} style={{ color: COLORS.accent[400] }} strokeWidth={1.5} />
         </div>
-        <h1 className="text-3xl font-bold mb-3" style={{ color: COLORS.text.primary }}>
+        <h1 className="text-3xl font-bold mb-3" style={{ color: COLORS.parchment.text }}>
           Your wishlist is empty
         </h1>
-        <p className="mb-8 max-w-sm leading-relaxed" style={{ color: COLORS.text.secondary }}>
+        <p className="mb-8 max-w-sm leading-relaxed" style={{ color: COLORS.parchment.textSoft }}>
           Tap the heart on any book to save it here for later.
         </p>
         <Button size="lg" onClick={() => navigate('/books')} rightIcon={<ArrowRight size={18} />}>
@@ -72,14 +72,14 @@ function WishlistPage() {
   return (
     <div
       className="px-4 sm:px-6 py-8 max-w-6xl mx-auto"
-      style={{ minHeight: 'calc(100vh - 90px)', color: COLORS.text.primary }}
+      style={{ minHeight: 'calc(100vh - 90px)', backgroundColor: COLORS.parchment.bg, color: COLORS.parchment.text }}
     >
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <Heart size={26} style={{ color: COLORS.accent[400] }} fill={COLORS.accent[400]} />
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Wishlist</h1>
-            <p className="text-sm mt-1" style={{ color: COLORS.text.tertiary }}>
+            <h1 className="text-3xl font-bold tracking-tight" style={{ color: COLORS.parchment.text }}>My Wishlist</h1>
+            <p className="text-sm mt-1" style={{ color: COLORS.parchment.textSoft }}>
               {items.length} book{items.length !== 1 ? 's' : ''} saved
             </p>
           </div>

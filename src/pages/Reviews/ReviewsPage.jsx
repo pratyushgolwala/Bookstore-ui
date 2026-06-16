@@ -171,7 +171,7 @@ function ReviewsPage() {
     });
 
   return (
-    <div className="reviews-page" style={{ backgroundColor: COLORS.background }}>
+    <div className="reviews-page" style={{ backgroundColor: COLORS.parchment.bg }}>
       <div className="reviews-container">
 
         {/* ── Header ── */}
@@ -182,8 +182,8 @@ function ReviewsPage() {
                 <BookOpen size={28} color="#fff" />
               </div>
               <div>
-                <h1 className="page-title" style={{ color: COLORS.text.primary }}>Book Reviews</h1>
-                <p className="page-subtitle" style={{ color: COLORS.text.secondary }}>
+                <h1 className="page-title" style={{ color: COLORS.parchment.text }}>Book Reviews</h1>
+                <p className="page-subtitle" style={{ color: COLORS.parchment.textSoft }}>
                   Read honest reviews from our community
                 </p>
               </div>
