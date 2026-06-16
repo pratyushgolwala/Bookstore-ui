@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
-  BookOpen, DollarSign, Star, TrendingUp, Plus, Pencil,
+  BookOpen, IndianRupee, Star, TrendingUp, Plus, Pencil,
   Trash2, Eye, EyeOff, PenTool, MessageSquare, AlertCircle,
 } from 'lucide-react';
 import { authorService } from '../../services/authorService';
@@ -130,7 +130,7 @@ function AuthorDashboard() {
     {
       label: 'Royalties (70%)',
       value: stats ? formatCurrency(stats.royalties ?? 0) : '—',
-      icon: DollarSign,
+      icon: IndianRupee,
       color: COLORS.success,
     },
     {

@@ -6,12 +6,11 @@
 /**
  * Format a number as a currency string.
  * @param {number} amount
- * @param {string} [currency='USD']
+ * @param {string} [currency='INR']
  * @returns {string}
  */
-export function formatCurrency(amount, currency = 'USD') {
-  // TODO: Support multi-currency from user preference
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+export function formatCurrency(amount, currency = 'INR') {
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(amount);
 }
 
 /**
