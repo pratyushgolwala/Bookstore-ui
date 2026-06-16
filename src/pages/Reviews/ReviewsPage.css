@@ -200,3 +200,21 @@
   .cdrop-wrapper { width: 100%; }
   .search-box { min-width: unset; }
 }
+
+/* Review actions row (delete + helpful) */
+.review-actions {
+  display: flex; align-items: center; gap: 0.5rem;
+}
+
+.review-delete-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px;
+  background: transparent; border: 1px solid transparent;
+  cursor: pointer; transition: all 0.2s; opacity: 0;
+}
+.review-card:hover .review-delete-btn { opacity: 1; }
+.review-delete-btn:hover {
+  background: rgba(212, 128, 128, 0.15);
+  border-color: rgba(212, 128, 128, 0.4);
+  transform: scale(1.1);
+}

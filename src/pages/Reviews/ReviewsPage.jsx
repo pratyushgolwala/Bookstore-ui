@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Star, BookOpen, ThumbsUp, Search, ChevronDown, X } from 'lucide-react';
+import { Star, BookOpen, ThumbsUp, Search, ChevronDown, X, Trash2 } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
-import { selectIsAuthenticated } from '../../store/slices/authSlice';
+import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 import { reviewsService } from '../../services/reviewsService';
 import './ReviewsPage.css';
 
@@ -46,6 +46,7 @@ function CustomDropdown({ options, value, onChange, placeholder }) {
 
 function ReviewsPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const currentUser     = useSelector(selectCurrentUser);
 
   const [reviews, setReviews]           = useState([]);
   const [showForm, setShowForm]         = useState(false);
@@ -123,6 +124,17 @@ function ReviewsPage() {
       emitToast('success', d.is_helpful ? '👍 Marked as helpful!' : 'Removed from helpful');
     } catch (err) {
       emitToast('error', err.message || 'Failed to update');
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm('Delete this review?')) return;
+    try {
+      await reviewsService.deleteReview(reviewId);
+      emitToast('success', 'Review deleted.');
+      setReviews(prev => prev.filter(r => r.id !== reviewId));
+    } catch (err) {
+      emitToast('error', err.message || 'Failed to delete review');
     }
   };
 
@@ -239,16 +251,29 @@ function ReviewsPage() {
                     <p className="reviewer-time" style={{ color: COLORS.text.tertiary }}>{timeAgo(review.created_at)}</p>
                   </div>
                 </div>
-                <button className={`helpful-btn ${review.is_helpful ? 'helpful-active' : ''}`}
-                  onClick={() => handleToggleHelpful(review.id)}
-                  style={{
-                    borderColor: review.is_helpful ? COLORS.secondary[500] : COLORS.border,
-                    color: review.is_helpful ? COLORS.secondary[500] : COLORS.text.tertiary,
-                    backgroundColor: review.is_helpful ? COLORS.secondary[500] + '18' : 'transparent',
-                  }}>
-                  <ThumbsUp size={15} fill={review.is_helpful ? COLORS.secondary[500] : 'none'} />
-                  <span>{review.helpful_count > 0 ? review.helpful_count : ''} Helpful</span>
-                </button>
+                <div className="review-actions">
+                  {/* Delete — only for review author */}
+                  {isAuthenticated && currentUser?.email === review.user_email && (
+                    <button
+                      className="review-delete-btn"
+                      onClick={() => handleDeleteReview(review.id)}
+                      title="Delete review"
+                      style={{ color: COLORS.error }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
+                  <button className={`helpful-btn ${review.is_helpful ? 'helpful-active' : ''}`}
+                    onClick={() => handleToggleHelpful(review.id)}
+                    style={{
+                      borderColor: review.is_helpful ? COLORS.secondary[500] : COLORS.border,
+                      color: review.is_helpful ? COLORS.secondary[500] : COLORS.text.tertiary,
+                      backgroundColor: review.is_helpful ? COLORS.secondary[500] + '18' : 'transparent',
+                    }}>
+                    <ThumbsUp size={15} fill={review.is_helpful ? COLORS.secondary[500] : 'none'} />
+                    <span>{review.helpful_count > 0 ? review.helpful_count : ''} Helpful</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))}

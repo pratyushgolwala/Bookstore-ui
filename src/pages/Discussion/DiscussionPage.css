@@ -250,3 +250,18 @@
   .disc-search { min-width: unset; }
   .thread-row-title { white-space: normal; }
 }
+
+/* Delete button */
+.thread-delete-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  background: transparent; border: 1px solid transparent;
+  cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  opacity: 0;
+}
+.thread-row:hover .thread-delete-btn { opacity: 1; }
+.thread-delete-btn:hover {
+  background: rgba(212, 128, 128, 0.15);
+  border-color: rgba(212, 128, 128, 0.4);
+  transform: scale(1.1);
+}

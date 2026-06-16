@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
   MessageSquare, Plus, Pin, Lock, Clock,
-  MessageCircle, Search, ChevronDown, Send, X, User
+  MessageCircle, Search, ChevronDown, Send, X, User, Trash2
 } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
@@ -144,6 +144,19 @@ function DiscussionPage() {
     }
   };
 
+  const handleDeleteThread = async (e, threadId) => {
+    e.stopPropagation(); // prevent opening the thread
+    if (!window.confirm('Delete this thread and all its replies?')) return;
+    try {
+      await discussionsService.deleteThread(threadId);
+      emitToast('success', 'Thread deleted.');
+      setThreads(prev => prev.filter(t => t.id !== threadId));
+      if (selectedThread?.id === threadId) setSelectedThread(null);
+    } catch (err) {
+      emitToast('error', err.message || 'Failed to delete thread');
+    }
+  };
+
   const timeAgo = (d) => {
     const s = Math.floor((Date.now() - new Date(d)) / 1000);
     if (s < 60) return 'just now';
@@ -261,6 +274,17 @@ function DiscussionPage() {
               </div>
 
               <div className="thread-row-right">
+                {/* Delete button — only for thread author */}
+                {isAuthenticated && currentUser?.email === thread.author_email && (
+                  <button
+                    className="thread-delete-btn"
+                    onClick={(e) => handleDeleteThread(e, thread.id)}
+                    title="Delete thread"
+                    style={{ color: COLORS.error }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
                 <MessageCircle size={16} color={COLORS.text.tertiary} />
                 <span style={{ color: COLORS.text.tertiary, fontSize: '0.9rem', fontWeight: 600 }}>
                   {thread.post_count || 0}
