@@ -19,6 +19,7 @@ import { selectIsAuthenticated } from '../../store/slices/authSlice';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import Button from '../../components/ui/Button';
+import MetalButton from '../../components/ui/MetalButton';
 import Badge from '../../components/ui/Badge';
 import Skeleton from '../../components/ui/Skeleton';
 import AuthorLink from '../../components/ui/AuthorLink';
@@ -111,9 +112,10 @@ function CartPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button size="lg" onClick={() => navigate('/login')} rightIcon={<ArrowRight size={18} />}>
+          <MetalButton variant="gold" onClick={() => navigate('/login')} className="gap-2">
             Sign In
-          </Button>
+            <ArrowRight size={18} />
+          </MetalButton>
           <Button size="lg" variant="outline" onClick={() => navigate('/books')}>
             Browse the Library
           </Button>
@@ -153,13 +155,10 @@ function CartPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            size="lg"
-            onClick={() => navigate('/books')}
-            rightIcon={<ArrowRight size={18} />}
-          >
+          <MetalButton variant="gold" onClick={() => navigate('/books')} className="gap-2">
             Browse the Library
-          </Button>
+            <ArrowRight size={18} />
+          </MetalButton>
           <Button
             size="lg"
             variant="outline"
@@ -353,15 +352,15 @@ function CartPage() {
             </div>
 
             {/* Checkout button */}
-            <Button
+            <MetalButton
+              variant="gold"
               fullWidth
-              size="lg"
-              className="mt-5"
-              rightIcon={<ArrowRight size={18} />}
+              className="mt-5 gap-2"
               onClick={() => {}}
             >
               Proceed to Checkout
-            </Button>
+              <ArrowRight size={18} />
+            </MetalButton>
 
             {/* Trust row */}
             <div
