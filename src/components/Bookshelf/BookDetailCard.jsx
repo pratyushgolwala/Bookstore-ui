@@ -9,6 +9,7 @@ import COLORS from '../../constants/colors';
 import Badge from '../ui/Badge';
 import WishlistButton from '../ui/WishlistButton';
 import AuthorLink from '../ui/AuthorLink';
+import BookReviews from '../ui/BookReviews';
 
 /**
  * BookDetailCard — a polished modal overlay showing full book details.
@@ -64,7 +65,7 @@ export default function BookDetailCard({ book, onClose }) {
         ref={cardRef}
         role="dialog"
         aria-label={`Book details for ${book.title}`}
-        className="relative w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[88vh]"
+        className="relative w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[88vh]"
         style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
       >
         <button
@@ -76,74 +77,84 @@ export default function BookDetailCard({ book, onClose }) {
           <X size={18} />
         </button>
 
-        {/* Cover */}
-        <div
-          className="md:w-2/5 flex items-center justify-center p-6 relative"
-          style={{ background: COLORS.gradient.dark }}
-        >
-          {/* Wishlist heart — top-right of the image section */}
-          <div className="absolute top-3 right-3 z-10">
-            <WishlistButton book={book} size={18} />
-          </div>
-          <img
-            src={book.coverImageUrl}
-            alt={`Cover of ${book.title}`}
-            className="w-44 h-64 object-cover rounded-lg shadow-2xl"
-            onError={(e) => {
-              e.target.src = `https://picsum.photos/seed/${encodeURIComponent(book.id)}/240/360`;
-            }}
-          />
-        </div>
-
-        {/* Details */}
-        <div className="md:w-3/5 p-6 overflow-y-auto flex flex-col gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            {book.category && <Badge variant="secondary">{book.category}</Badge>}
-            <Badge variant={inStock ? 'success' : 'neutral'}>
-              {inStock ? 'In Stock' : 'Out of Stock'}
-            </Badge>
-          </div>
-
-          <h2 className="text-2xl font-bold leading-tight" style={{ color: COLORS.text.primary }}>
-            {book.title}
-          </h2>
-          <p className="text-sm" style={{ color: COLORS.text.secondary }}>
-            by <AuthorLink author={book.author} onNavigate={onClose} />
-          </p>
-
-          {book.description && (
-            <p className="text-sm leading-relaxed line-clamp-4" style={{ color: COLORS.text.secondary }}>
-              {book.description}
-            </p>
-          )}
-
-          {/* Meta grid */}
-          <div className="grid grid-cols-2 gap-3 mt-2">
-            {book.publishedYear && (
-              <Meta icon={<Calendar size={15} />} label="Published" value={book.publishedYear} />
-            )}
-            {book.language && (
-              <Meta icon={<Globe size={15} />} label="Language" value={book.language.toUpperCase()} />
-            )}
-            {book.pageCount && (
-              <Meta icon={<BookOpen size={15} />} label="Pages" value={book.pageCount} />
-            )}
-            <Meta icon={<Package size={15} />} label="Stock" value={book.stock ?? 0} />
-          </div>
-
-          <div className="mt-auto pt-4 flex items-center justify-between gap-4">
-            <span className="text-3xl font-bold" style={{ color: COLORS.secondary[500] }}>
-              {formatCurrency(book.price)}
-            </span>
-            <button
-              onClick={handleAddToCart}
-              disabled={!inStock}
-              className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ background: COLORS.gradient.primary, color: COLORS.text.inverse }}
+        {/* Scrollable body: details row on top, reviews reel below */}
+        <div className="overflow-y-auto flex flex-col">
+          <div className="flex flex-col md:flex-row">
+            {/* Cover */}
+            <div
+              className="md:w-2/5 flex items-center justify-center p-6 relative"
+              style={{ background: COLORS.gradient.dark }}
             >
-              {added ? <Check size={18} /> : <ShoppingCart size={18} />}
-              {added ? 'Added!' : 'Add to Cart'}
-            </button>
+              {/* Wishlist heart — top-right of the image section */}
+              <div className="absolute top-3 right-3 z-10">
+                <WishlistButton book={book} size={18} />
+              </div>
+              <img
+                src={book.coverImageUrl}
+                alt={`Cover of ${book.title}`}
+                className="w-44 h-64 object-cover rounded-lg shadow-2xl"
+                onError={(e) => {
+                  e.target.src = `https://picsum.photos/seed/${encodeURIComponent(book.id)}/240/360`;
+                }}
+              />
+            </div>
+
+            {/* Details */}
+            <div className="md:w-3/5 p-6 flex flex-col gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                {book.category && <Badge variant="secondary">{book.category}</Badge>}
+                <Badge variant={inStock ? 'success' : 'neutral'}>
+                  {inStock ? 'In Stock' : 'Out of Stock'}
+                </Badge>
+              </div>
+
+              <h2 className="text-2xl font-bold leading-tight" style={{ color: COLORS.text.primary }}>
+                {book.title}
+              </h2>
+              <p className="text-sm" style={{ color: COLORS.text.secondary }}>
+                by <AuthorLink author={book.author} onNavigate={onClose} />
+              </p>
+
+              {book.description && (
+                <p className="text-sm leading-relaxed line-clamp-4" style={{ color: COLORS.text.secondary }}>
+                  {book.description}
+                </p>
+              )}
+
+              {/* Meta grid */}
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                {book.publishedYear && (
+                  <Meta icon={<Calendar size={15} />} label="Published" value={book.publishedYear} />
+                )}
+                {book.language && (
+                  <Meta icon={<Globe size={15} />} label="Language" value={book.language.toUpperCase()} />
+                )}
+                {book.pageCount && (
+                  <Meta icon={<BookOpen size={15} />} label="Pages" value={book.pageCount} />
+                )}
+                <Meta icon={<Package size={15} />} label="Stock" value={book.stock ?? 0} />
+              </div>
+
+              <div className="mt-auto pt-4 flex items-center justify-between gap-4">
+                <span className="text-3xl font-bold" style={{ color: COLORS.secondary[500] }}>
+                  {formatCurrency(book.price)}
+                </span>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!inStock}
+                  className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: COLORS.gradient.primary, color: COLORS.text.inverse }}
+                >
+                  {added ? <Check size={18} /> : <ShoppingCart size={18} />}
+                  {added ? 'Added!' : 'Add to Cart'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Reviews — scroll-reel of reader reviews for this book */}
+          <div className="border-t" style={{ borderColor: COLORS.border }}>
+            <BookReviews bookId={book.id} />
           </div>
         </div>
       </div>
