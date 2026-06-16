@@ -49,7 +49,7 @@ function AuthPopup({ isOpen, onClose }) {
         style={{
           background: `linear-gradient(135deg, ${COLORS.surface} 0%, ${COLORS.surfaceLight} 100%)`,
           border: `1px solid ${COLORS.border}`,
-          boxShadow: `0 16px 48px rgba(46, 139, 87, 0.3)`,
+          boxShadow: `0 16px 48px rgba(153, 95, 47, 0.3)`,
         }}
       >
         {/* Close Button */}
