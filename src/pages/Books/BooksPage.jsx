@@ -69,25 +69,27 @@ function BooksPage() {
   return (
     <div
       className="relative flex flex-col"
-      style={{ backgroundColor: COLORS.parchment.bg, color: COLORS.parchment.text, minHeight: '100vh', paddingTop: '100px' }}
+      style={{ backgroundColor: '#1a1108', color: COLORS.text.primary, minHeight: '100vh', paddingTop: '100px' }}
     >
       {/* ── Top Header — visible only at top of page ── */}
       <div
-        className="px-6 py-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-end transition-all duration-300"
+        className="w-full max-w-6xl mx-auto px-6 py-5 flex items-center justify-between transition-all duration-300"
         style={{
           opacity: atTop ? 1 : 0,
           transform: atTop ? 'translateY(0)' : 'translateY(-16px)',
           pointerEvents: atTop ? 'auto' : 'none',
-          maxHeight: atTop ? '200px' : '0',
+          maxHeight: atTop ? '100px' : '0',
         }}
       >
-        {/* Search + toggle side by side */}
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Search on left */}
+        <div style={{ flexBasis: '320px' }}>
           <SearchBar value={search} onSearch={runSearch} />
-          {showToggle && (
-            <ViewToggle viewMode={effectiveView} setViewMode={setViewMode} />
-          )}
         </div>
+
+        {/* View toggle on right */}
+        {showToggle && (
+          <ViewToggle viewMode={effectiveView} setViewMode={setViewMode} />
+        )}
       </div>
 
       {/* ── Floating control tab — visible when scrolled down ── */}
@@ -149,9 +151,9 @@ function BooksPage() {
       )}
 
       {/* ── Content ── */}
-      <div className="flex-1 relative min-h-0">
+      <div className="flex-1 relative min-h-0 w-full max-w-6xl mx-auto px-6">
         {effectiveView === 'shelf' ? (
-          <div className="relative" style={{ height: 'calc(100vh - 200px)' }}>
+          <div className="relative" style={{ height: 'calc(100vh - 300px)', backgroundColor: '#0d0805', borderRadius: '16px', overflow: 'hidden', border: `1px solid ${COLORS.border}` }}>
             <Suspense fallback={<LoadingSpinner />}>
               <BookshelfErrorBoundary books={books} onBookSelect={selectBook}>
                 {loading ? (
@@ -168,7 +170,7 @@ function BooksPage() {
             </Suspense>
             <div
               className="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs px-3 py-1.5 rounded-full pointer-events-none"
-              style={{ backgroundColor: `${COLORS.surface}cc`, color: COLORS.text.tertiary }}
+              style={{ backgroundColor: `${COLORS.surface}ee`, color: COLORS.secondary[500], fontWeight: 500 }}
             >
               Drag to pan · Scroll to zoom · Click a book for details
             </div>
@@ -201,7 +203,7 @@ function BooksPage() {
       {/* Pagination */}
       {!usingMockData && (
         <div
-          className="px-6 py-4 border-t flex items-center justify-center"
+          className="w-full max-w-6xl mx-auto px-6 py-4 border-t flex items-center justify-center"
           style={{ borderColor: COLORS.border }}
         >
           <Pagination
@@ -240,7 +242,7 @@ function ToggleBtn({ active, onClick, icon, label }) {
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all"
       style={
         active
-          ? { background: COLORS.gradient.primary, color: COLORS.text.inverse }
+          ? { background: COLORS.gradient.primary, color: '#fff' }
           : { backgroundColor: 'transparent', color: COLORS.text.secondary }
       }
     >
