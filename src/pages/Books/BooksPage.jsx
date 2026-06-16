@@ -69,7 +69,7 @@ function BooksPage() {
   return (
     <div
       className="relative flex flex-col"
-      style={{ backgroundColor: '#1a1108', color: COLORS.text.primary, minHeight: '100vh', paddingTop: '100px' }}
+      style={{ backgroundColor: COLORS.parchment.bg, color: COLORS.parchment.text, minHeight: '100vh', paddingTop: '100px' }}
     >
       {/* ── Top Header — visible only at top of page ── */}
       <div
@@ -153,7 +153,7 @@ function BooksPage() {
       {/* ── Content ── */}
       <div className="flex-1 relative min-h-0 w-full max-w-6xl mx-auto px-6">
         {effectiveView === 'shelf' ? (
-          <div className="relative" style={{ height: 'calc(100vh - 300px)', backgroundColor: '#0d0805', borderRadius: '16px', overflow: 'hidden', border: `1px solid ${COLORS.border}` }}>
+          <div className="relative" style={{ height: 'calc(100vh - 300px)', background: COLORS.gradient.dark, borderRadius: '16px', overflow: 'hidden', border: `1px solid ${COLORS.border}` }}>
             <Suspense fallback={<LoadingSpinner />}>
               <BookshelfErrorBoundary books={books} onBookSelect={selectBook}>
                 {loading ? (

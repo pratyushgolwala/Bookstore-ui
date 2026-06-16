@@ -72,14 +72,14 @@ export const COLORS = {
 
   // Semantic — warm dark library theme
   background: '#160e07',
-  surface: '#2d2014',
-  surfaceLight: '#3a2818',
-  surfaceLighter: '#4a3525',
-  border: '#3d2c1b',
+  surface: '#4a3826',        // lightened — warm medium brown card
+  surfaceLight: '#574330',   // lightened
+  surfaceLighter: '#65503b', // lightened
+  border: '#5c4632',         // lightened to match
   text: {
-    primary: '#f0e6d0',
-    secondary: '#bfae8c',
-    tertiary: '#8a7858',
+    primary: '#f5ecd8',
+    secondary: '#d4c4a0',
+    tertiary: '#a08b66',
     inverse: '#160e07',
   },
 
@@ -87,7 +87,7 @@ export const COLORS = {
   // Brown cards sit on this for a warm vintage contrast.
   parchment: {
     bg: '#E4D6A9',          // page background
-    surface: '#2d2014',     // cards stay dark brown (pop against cream) - lightened
+    surface: '#4a3826',     // cards — warm medium brown, lighter to match theme
     text: '#2c1e12',        // dark brown text directly on parchment
     textSoft: '#5c3a22',    // muted brown text on parchment
     border: '#c9b07a',      // warm tan border on parchment
