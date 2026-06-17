@@ -42,164 +42,102 @@ function MainLayout() {
         <Outlet />
       </main>
 
-      {/* Footer */}
+      {/* Footer — asymmetric editorial colophon */}
       <footer
-        className="py-12 border-t mt-auto"
+        className="border-t mt-auto"
         style={{
           backgroundColor: COLORS.neutral[100],
           borderColor: COLORS.border,
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-8">
-            {/* Brand */}
-            <div>
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            {/* Brand — takes the wide left column */}
+            <div className="lg:col-span-5">
               <h3
-                className="text-lg font-bold mb-4"
+                className="font-display text-3xl font-bold mb-3"
                 style={{ color: COLORS.text.primary }}
               >
-                BookStore
+                Folio
               </h3>
               <p
-                className="text-sm leading-relaxed"
+                className="text-sm leading-relaxed max-w-sm"
                 style={{ color: COLORS.text.secondary }}
               >
-                Your premier platform for discovering and sharing books with readers worldwide.
+                An independent reading room on the web. We keep the lights low,
+                the shelves full, and the coffee close. Pull up a chair.
+              </p>
+              <p
+                className="text-xs mt-6 tracking-[0.2em] uppercase"
+                style={{ color: COLORS.text.tertiary }}
+              >
+                Open all hours · Everywhere
               </p>
             </div>
 
-            {/* Quick Links */}
-            <div>
-              <h4
-                className="text-sm font-bold mb-4 uppercase tracking-wide"
-                style={{ color: COLORS.text.primary }}
-              >
-                Quick Links
-              </h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a
-                    href="#"
-                    className="transition-colors hover:opacity-80 hover:text-blue-400"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    Browse Books
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="transition-colors hover:opacity-80 hover:text-blue-400"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    For Authors
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="transition-colors hover:opacity-80 hover:text-blue-400"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    About Us
-                  </a>
-                </li>
-              </ul>
+            {/* Link columns — pushed to the right, uneven on purpose */}
+            <div className="lg:col-span-2 lg:col-start-7">
+              <FooterCol
+                title="The Shop"
+                links={['Browse Books', 'For Authors', 'About Us']}
+              />
             </div>
-
-            {/* Support */}
-            <div>
-              <h4
-                className="text-sm font-bold mb-4 uppercase tracking-wide"
-                style={{ color: COLORS.text.primary }}
-              >
-                Support
-              </h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a
-                    href="#"
-                    className="transition-colors hover:opacity-80 hover:text-blue-400"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    Help Center
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="transition-colors hover:opacity-80 hover:text-blue-400"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    Contact Us
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="transition-colors hover:opacity-80 hover:text-blue-400"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    FAQs
-                  </a>
-                </li>
-              </ul>
+            <div className="lg:col-span-2">
+              <FooterCol
+                title="Help"
+                links={['Help Center', 'Contact Us', 'FAQs']}
+              />
             </div>
-
-            {/* Legal */}
-            <div>
-              <h4
-                className="text-sm font-bold mb-4 uppercase tracking-wide"
-                style={{ color: COLORS.text.primary }}
-              >
-                Legal
-              </h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a
-                    href="#"
-                    className="transition-colors hover:opacity-80 hover:text-blue-400"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    Terms & Conditions
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="transition-colors hover:opacity-80 hover:text-blue-400"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="transition-colors hover:opacity-80 hover:text-blue-400"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    Cookie Policy
-                  </a>
-                </li>
-              </ul>
+            <div className="lg:col-span-2">
+              <FooterCol
+                title="Fine Print"
+                links={['Terms', 'Privacy', 'Cookies']}
+              />
             </div>
           </div>
 
           <div
-            className="border-t pt-8 text-center text-sm"
+            className="border-t mt-14 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
             style={{
               borderColor: COLORS.border,
               color: COLORS.text.tertiary,
             }}
           >
-            <p>&copy; {new Date().getFullYear()} BookStore. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Folio. Set in Fraunces &amp; Inter.</p>
+            <p className="italic font-display">“So many books, so little time.”</p>
           </div>
         </div>
       </footer>
 
       {/* Global toast notifications — available on all pages via toastBus */}
       <ToastHost />
+    </div>
+  );
+}
+
+/* Small editorial footer column — links styled as a quiet list. */
+function FooterCol({ title, links }) {
+  return (
+    <div>
+      <h4
+        className="text-xs font-bold mb-4 uppercase tracking-[0.18em]"
+        style={{ color: COLORS.brass }}
+      >
+        {title}
+      </h4>
+      <ul className="space-y-2.5 text-sm">
+        {links.map((label) => (
+          <li key={label}>
+            <a
+              href="#"
+              className="transition-colors hover:text-cream"
+              style={{ color: COLORS.text.secondary }}
+            >
+              {label}
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -104,7 +104,7 @@ function CartPage() {
           <Lock size={44} style={{ color: COLORS.primary[700] }} strokeWidth={1.5} />
         </div>
 
-        <h1 className="text-3xl font-bold mb-3" style={{ color: COLORS.text.primary }}>
+        <h1 className="font-display text-3xl font-bold mb-3" style={{ color: COLORS.text.primary }}>
           Please log in to view your cart
         </h1>
         <p className="mb-8 max-w-sm leading-relaxed" style={{ color: COLORS.text.secondary }}>
@@ -147,7 +147,7 @@ function CartPage() {
           >0</span>
         </div>
 
-        <h1 className="text-3xl font-bold mb-3" style={{ color: COLORS.text.primary }}>
+        <h1 className="font-display text-3xl font-bold mb-3" style={{ color: COLORS.text.primary }}>
           Your cart is empty
         </h1>
         <p className="mb-8 max-w-sm leading-relaxed" style={{ color: COLORS.text.secondary }}>
@@ -194,7 +194,7 @@ function CartPage() {
       {/* Page header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Shopping Cart</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Shopping Cart</h1>
           <p className="text-sm mt-1" style={{ color: COLORS.text.tertiary }}>
             {items.reduce((s, i) => s + i.quantity, 0)} item{items.reduce((s, i) => s + i.quantity, 0) !== 1 ? 's' : ''}
           </p>
@@ -455,13 +455,7 @@ function CartItem({ item, idx, mounted, removing, onRemove, onIncrement, onDecre
         )}
         <p
           className="mt-2 text-base font-bold"
-          style={{
-            background: COLORS.gradient.accent,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            display: 'inline-block',
-          }}
+          style={{ color: COLORS.brass, display: 'inline-block' }}
         >
           {formatCurrency(item.price)}
         </p>

@@ -430,7 +430,7 @@ function DiscussionPage() {
                 </div>
                 <button className="submit-btn" onClick={handleCreateThread} disabled={submitting}
                   style={{ background: COLORS.gradient.primary, opacity: submitting ? 0.7 : 1, boxShadow: '0 4px 14px rgba(153,95,47,0.35)' }}>
-                  {submitting ? 'Creating…' : '🧵 Create Thread'}
+                  {submitting ? 'Creating…' : 'Create Thread'}
                 </button>
               </div>
             </div>
