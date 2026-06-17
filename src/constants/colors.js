@@ -1,18 +1,22 @@
 /**
  * Global color palette for the entire application.
- * Warm vintage library theme:
- *   #622B14 deep brown · #995F2F caramel · #978F66 olive · #E4D6A9 cream
+ * Warm vintage library theme with 3-layer depth:
+ *   Background: #F8F3E7 (warm parchment)
+ *   Section:    #EFE4CC (cream sections)
+ *   Cards:      #3B2416 (deep brown surfaces)
+ *   Navbar:     #24160D (darkest)
+ *   Accent:     #CDA35E (gold)
  *
  * Every page references this constant, so changing values here re-themes
  * the whole app consistently.
  */
 
 export const COLORS = {
-  // Primary — caramel / warm brown (brand)
+  // Primary — deep brown to caramel (brand)
   primary: {
     50:  '#1c0f07',
-    100: '#2a160b',
-    200: '#3d2010',
+    100: '#24160D', // navbar dark
+    200: '#3B2416', // card brown
     300: '#4f2913',
     400: '#622B14', // deep brown
     500: '#995F2F', // caramel — main brand color
@@ -22,21 +26,21 @@ export const COLORS = {
     900: '#e8caa3',
   },
 
-  // Secondary — warm cream / sand (highlights, prices, accents)
+  // Secondary — gold accent (highlights, prices, CTAs)
   secondary: {
     50:  '#2d2615',
     100: '#473c22',
     200: '#62542f',
-    300: '#867344',
-    400: '#c9b984',
-    500: '#E4D6A9', // cream — highlight color
-    600: '#eee0bb',
-    700: '#f2e8cd',
-    800: '#f7f0dd',
-    900: '#fbf8ee',
+    300: '#8a7340',
+    400: '#CDA35E', // gold accent
+    500: '#CDA35E', // gold — main highlight
+    600: '#d9b87a',
+    700: '#e2c895',
+    800: '#ebdab3',
+    900: '#f5ecd1',
   },
 
-  // Accent — muted olive
+  // Accent — muted olive (badges, info)
   accent: {
     50:  '#1e1c14',
     100: '#33301f',
@@ -50,7 +54,7 @@ export const COLORS = {
     900: '#f1efe5',
   },
 
-  // Neutrals — warm brown-tinted darks
+  // Neutrals — warm brown-tinted
   neutral: {
     50:  '#150d06',
     100: '#1f140b',
@@ -70,35 +74,40 @@ export const COLORS = {
   error: '#c2562f',
   info: '#978F66',
 
-  // Semantic — warm dark library theme
+  // Semantic — dark theme surfaces (for shelf view / modals)
   background: '#160e07',
-  surface: '#4a3826',        // lightened — warm medium brown card
-  surfaceLight: '#574330',   // lightened
-  surfaceLighter: '#65503b', // lightened
-  border: '#5c4632',         // lightened to match
+  surface: '#3B2416',        // card brown — primary surface
+  surfaceLight: '#4a3826',   // slightly lighter
+  surfaceLighter: '#5c4632', // lighter still
+  border: '#5c4632',
   text: {
-    primary: '#f5ecd8',
+    primary: '#FFFDF8',      // warm white
     secondary: '#d4c4a0',
     tertiary: '#a08b66',
     inverse: '#160e07',
   },
 
-  // Parchment — light cream page surface for content pages (post-login).
-  // Brown cards sit on this for a warm vintage contrast.
+  // Parchment — light theme for content pages (Books, Categories, etc.)
+  // 3-layer hierarchy: page bg → section bg → card surfaces
   parchment: {
-    bg: '#E4D6A9',          // page background
-    surface: '#4a3826',     // cards — warm medium brown, lighter to match theme
-    text: '#2c1e12',        // dark brown text directly on parchment
-    textSoft: '#5c3a22',    // muted brown text on parchment
-    border: '#c9b07a',      // warm tan border on parchment
+    bg: '#F8F3E7',           // page background (lightest)
+    section: '#EFE4CC',      // section/container background (mid)
+    surface: '#3B2416',      // cards (deepest — creates depth)
+    text: '#2c1e12',         // dark brown text on parchment
+    textSoft: '#5c3a22',     // muted brown text
+    border: '#D4C4A0',       // warm tan border
   },
 
-  // Gradients — brown → caramel → cream
+  // Navbar — darkest brown for maximum contrast
+  navbar: '#24160D',
+
+  // Gradients — brown → gold
   gradient: {
     primary: 'linear-gradient(135deg, #995F2F 0%, #622B14 100%)',
     dark:    'linear-gradient(135deg, #2c1e12 0%, #160e07 100%)',
-    accent:  'linear-gradient(135deg, #995F2F 0%, #E4D6A9 100%)',
-    glow:    'linear-gradient(135deg, #b0764a 0%, #995F2F 50%, #622B14 100%)',
+    accent:  'linear-gradient(135deg, #CDA35E 0%, #995F2F 100%)',
+    glow:    'linear-gradient(135deg, #CDA35E 0%, #995F2F 50%, #622B14 100%)',
+    gold:    'linear-gradient(135deg, #CDA35E 0%, #b08a3e 100%)',
   },
 };
 

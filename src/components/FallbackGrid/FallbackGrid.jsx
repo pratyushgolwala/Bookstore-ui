@@ -21,9 +21,10 @@ function FallbackGrid({ books, onBookSelect }) {
 
   return (
     <div
-      className="grid gap-8 sm:gap-10 px-4 sm:px-8 lg:px-12 py-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 max-w-7xl mx-auto"
+      className="grid gap-8 sm:gap-10 px-4 sm:px-8 lg:px-12 py-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 max-w-7xl mx-auto rounded-2xl"
       role="region"
       aria-label="Book catalog"
+      style={{ backgroundColor: COLORS.parchment.section }}
     >
       {books.map((book) => (
         <BookCard key={book.id} book={book} onSelect={onBookSelect} />
