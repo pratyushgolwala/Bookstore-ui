@@ -10,6 +10,7 @@ const CategoriesPage   = lazyWithReload(() => import('../pages/Categories/Catego
 const AuthorsPage      = lazyWithReload(() => import('../pages/Authors/AuthorsPage'));
 const CartPage         = lazyWithReload(() => import('../pages/Cart/CartPage'));
 const OrdersPage       = lazyWithReload(() => import('../pages/Orders/OrdersPage'));
+const CheckoutPage     = lazyWithReload(() => import('../pages/Checkout/CheckoutPage'));
 const ProfilePage      = lazyWithReload(() => import('../pages/Profile/ProfilePage'));
 const AdminPage        = lazyWithReload(() => import('../pages/Admin/AdminPage'));
 const AuthorDashboard  = lazyWithReload(() => import('../pages/Author/AuthorDashboard'));
@@ -41,6 +42,7 @@ export function AppRoutes() {
         <Route path="books"    element={<ProtectedRoute><BooksPage /></ProtectedRoute>}    />
         <Route path="cart"     element={<ProtectedRoute><CartPage /></ProtectedRoute>}     />
         <Route path="orders"   element={<ProtectedRoute><OrdersPage /></ProtectedRoute>}   />
+        <Route path="checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
         <Route path="profile"  element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}  />
         <Route path="admin"    element={<ProtectedRoute><AdminPage /></ProtectedRoute>}    />
         <Route path="author"   element={<ProtectedRoute><AuthorDashboard /></ProtectedRoute>} />

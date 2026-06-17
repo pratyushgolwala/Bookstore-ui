@@ -356,7 +356,7 @@ function CartPage() {
               variant="gold"
               fullWidth
               className="mt-5 gap-2"
-              onClick={() => {}}
+              onClick={() => navigate('/checkout')}
             >
               Proceed to Checkout
               <ArrowRight size={18} />
