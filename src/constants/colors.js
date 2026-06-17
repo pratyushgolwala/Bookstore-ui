@@ -1,22 +1,18 @@
 /**
  * Global color palette for the entire application.
- * Warm vintage library theme with 3-layer depth:
- *   Background: #F8F3E7 (warm parchment)
- *   Section:    #EFE4CC (cream sections)
- *   Cards:      #3B2416 (deep brown surfaces)
- *   Navbar:     #24160D (darkest)
- *   Accent:     #CDA35E (gold)
+ * Warm vintage library theme:
+ *   #622B14 deep brown · #995F2F caramel · #978F66 olive · #E4D6A9 cream
  *
  * Every page references this constant, so changing values here re-themes
  * the whole app consistently.
  */
 
 export const COLORS = {
-  // Primary — deep brown to caramel (brand)
+  // Primary — caramel / warm brown (brand)
   primary: {
     50:  '#1c0f07',
-    100: '#24160D', // navbar dark
-    200: '#3B2416', // card brown
+    100: '#2a160b',
+    200: '#3d2010',
     300: '#4f2913',
     400: '#622B14', // deep brown
     500: '#995F2F', // caramel — main brand color
@@ -26,21 +22,21 @@ export const COLORS = {
     900: '#e8caa3',
   },
 
-  // Secondary — gold accent (highlights, prices, CTAs)
+  // Secondary — warm cream / sand (highlights, prices, accents)
   secondary: {
     50:  '#2d2615',
     100: '#473c22',
     200: '#62542f',
-    300: '#8a7340',
-    400: '#CDA35E', // gold accent
-    500: '#CDA35E', // gold — main highlight
-    600: '#d9b87a',
-    700: '#e2c895',
-    800: '#ebdab3',
-    900: '#f5ecd1',
+    300: '#867344',
+    400: '#c9b984',
+    500: '#E4D6A9', // cream — highlight color
+    600: '#eee0bb',
+    700: '#f2e8cd',
+    800: '#f7f0dd',
+    900: '#fbf8ee',
   },
 
-  // Accent — muted olive (badges, info)
+  // Accent — muted olive
   accent: {
     50:  '#1e1c14',
     100: '#33301f',
@@ -54,7 +50,7 @@ export const COLORS = {
     900: '#f1efe5',
   },
 
-  // Neutrals — warm brown-tinted
+  // Neutrals — warm brown-tinted darks
   neutral: {
     50:  '#150d06',
     100: '#1f140b',
@@ -74,41 +70,44 @@ export const COLORS = {
   error: '#c2562f',
   info: '#978F66',
 
-  // Semantic — dark theme surfaces (for shelf view / modals)
+  // Semantic — warm dark library theme
   background: '#160e07',
-  surface: '#3B2416',        // card brown — primary surface
-  surfaceLight: '#4a3826',   // slightly lighter
-  surfaceLighter: '#5c4632', // lighter still
-  border: '#5c4632',
+  surface: '#4a3826',        // lightened — warm medium brown card
+  surfaceLight: '#574330',   // lightened
+  surfaceLighter: '#65503b', // lightened
+  border: '#5c4632',         // lightened to match
   text: {
-    primary: '#FFFDF8',      // warm white
+    primary: '#f5ecd8',
     secondary: '#d4c4a0',
     tertiary: '#a08b66',
     inverse: '#160e07',
   },
 
-  // Parchment — light theme for content pages (Books, Categories, etc.)
-  // 3-layer hierarchy: page bg → section bg → card surfaces
+  // Parchment — light cream page surface for content pages (post-login).
+  // Brown cards sit on this for a warm vintage contrast.
   parchment: {
-    bg: '#F8F3E7',           // page background (lightest)
-    section: '#EFE4CC',      // section/container background (mid)
-    surface: '#3B2416',      // cards (deepest — creates depth)
-    text: '#2c1e12',         // dark brown text on parchment
-    textSoft: '#5c3a22',     // muted brown text
-    border: '#D4C4A0',       // warm tan border
+    bg: '#E4D6A9',          // page background
+    surface: '#4a3826',     // cards — warm medium brown, lighter to match theme
+    text: '#2c1e12',        // dark brown text directly on parchment
+    textSoft: '#5c3a22',    // muted brown text on parchment
+    border: '#c9b07a',      // warm tan border on parchment
   },
 
-  // Navbar — darkest brown for maximum contrast
-  navbar: '#24160D',
-
-  // Gradients — brown → gold
+  // "gradient" tokens kept for backwards-compatibility, but flattened to
+  // solid book-cloth fills — no gradients anywhere in the UI. Existing call
+  // sites that set `background: COLORS.gradient.primary` now render flat.
   gradient: {
-    primary: 'linear-gradient(135deg, #995F2F 0%, #622B14 100%)',
-    dark:    'linear-gradient(135deg, #2c1e12 0%, #160e07 100%)',
-    accent:  'linear-gradient(135deg, #CDA35E 0%, #995F2F 100%)',
-    glow:    'linear-gradient(135deg, #CDA35E 0%, #995F2F 50%, #622B14 100%)',
-    gold:    'linear-gradient(135deg, #CDA35E 0%, #b08a3e 100%)',
+    primary: '#7a3b2e',  // book-cloth red-brown
+    dark:    '#1b110a',
+    accent:  '#b98a3e',  // flat brass
+    glow:    '#7a3b2e',
   },
+
+  // New flat brand tokens (preferred for new code)
+  ink:     '#160e07',    // deepest background ink
+  cloth:   '#7a3b2e',    // book-cloth red-brown — primary action color
+  clothDark: '#5e2c22',
+  brass:   '#b98a3e',    // flat brass — accents, prices
 };
 
 export default COLORS;

@@ -50,10 +50,6 @@ function BookCard({ book, onSelect }) {
           alt={`Cover of ${book.title}`}
           loading="lazy"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          style={{
-            borderRadius: '10px 10px 0 0',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-          }}
           onError={(e) => {
             e.target.src = `https://picsum.photos/seed/${encodeURIComponent(book.id)}/240/360`;
           }}
