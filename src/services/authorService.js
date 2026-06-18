@@ -22,6 +22,28 @@ export const authorService = {
   /** Recent reviews across the author's books. */
   getReviews: () => apiClient.get('/api/author/reviews/'),
 
+  /**
+   * Sales analytics for the author's whole catalogue, sourced from the
+   * analytics microservice (proxied through Django). Returns
+   * { summary, daily }. Optional { startDate, endDate } narrow the window.
+   */
+  getAnalytics: ({ startDate, endDate } = {}) => {
+    const qs = new URLSearchParams();
+    if (startDate) qs.set('start_date', startDate);
+    if (endDate) qs.set('end_date', endDate);
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return apiClient.get(`/api/author/analytics/${suffix}`);
+  },
+
+  /** Sales analytics for a single owned book (totals + daily series). */
+  getBookAnalytics: (id, { startDate, endDate } = {}) => {
+    const qs = new URLSearchParams();
+    if (startDate) qs.set('start_date', startDate);
+    if (endDate) qs.set('end_date', endDate);
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return apiClient.get(`/api/author/analytics/book/${id}/${suffix}`);
+  },
+
   /** Publish a new book. */
   createBook: (payload) => apiClient.post('/api/author/books/', payload),
 
