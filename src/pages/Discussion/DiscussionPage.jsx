@@ -150,7 +150,8 @@ function DiscussionPage() {
       await discussionsService.addPostToThread(selectedThread.id, { content: newPostContent });
       emitToast('success', 'Reply posted!');
       setNewPostContent('');
-      openThread(selectedThread.id);
+      await openThread(selectedThread.id);
+      fetchThreads(); // refresh list so reply count updates
     } catch (err) {
       emitToast('error', err.message || 'Failed to post reply');
     }
@@ -177,7 +178,8 @@ function DiscussionPage() {
       } else {
         await discussionsService.deletePost(id);
         emitToast('success', 'Reply deleted.');
-        if (selectedThread?.id) openThread(selectedThread.id);
+        if (selectedThread?.id) await openThread(selectedThread.id);
+        fetchThreads(); // refresh list so reply count updates
       }
     } catch (err) {
       emitToast('error', err.message || `Failed to delete ${type}`);
@@ -364,22 +366,22 @@ function DiscussionPage() {
                         <p style={{ color: COLORS.text.secondary }}>No replies yet. Be the first!</p>
                       </div>
                     ) : (selectedThread.posts || []).map((post, idx) => (
-                      <div key={post.id} className={`post-bubble ${idx === 0 ? 'post-op' : ''}`}
+                      <div key={post.id} className={`post-bubble ${post.author_email === selectedThread.author_email ? 'post-op' : ''}`}
                         style={{
-                          backgroundColor: idx === 0 ? COLORS.primary[500] + '12' : COLORS.surfaceLight,
-                          borderColor: idx === 0 ? COLORS.primary[500] + '40' : COLORS.border,
+                          backgroundColor: post.author_email === selectedThread.author_email ? COLORS.primary[500] + '12' : COLORS.surfaceLight,
+                          borderColor: post.author_email === selectedThread.author_email ? COLORS.primary[500] + '40' : COLORS.border,
                         }}>
                         <div className="post-meta">
                           <div className="post-avatar" style={{ background: COLORS.gradient.primary }}>
                             {(post.author_name || '?').charAt(0).toUpperCase()}
                           </div>
                           <strong style={{ color: COLORS.primary[600] }}>{post.author_name}</strong>
-                          {idx === 0 && <span className="op-tag" style={{ backgroundColor: COLORS.primary[500] + '30', color: COLORS.primary[600] }}>OP</span>}
+                          {post.author_email === selectedThread.author_email && <span className="op-tag" style={{ backgroundColor: COLORS.primary[500] + '30', color: COLORS.primary[600] }}>OP</span>}
                           {currentUser?.email === post.author_email && <span className="you-tag" style={{ backgroundColor: COLORS.secondary[500] + '25', color: COLORS.secondary[500] }}>You</span>}
                           <span style={{ color: COLORS.text.tertiary, fontSize: '0.8rem' }}>{timeAgo(post.created_at)}</span>
                           {post.is_edited && <span style={{ color: COLORS.text.tertiary, fontSize: '0.75rem' }}>(edited)</span>}
-                          {/* Delete reply — reply author or thread author, but not the OP post */}
-                          {idx !== 0 && isAuthenticated &&
+                          {/* Delete reply — reply author OR thread owner can delete (like Instagram) */}
+                          {isAuthenticated &&
                             (currentUser?.email === post.author_email || currentUser?.email === selectedThread.author_email) && (
                             <button
                               className="post-delete-btn"
