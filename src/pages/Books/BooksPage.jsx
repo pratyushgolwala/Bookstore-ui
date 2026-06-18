@@ -193,8 +193,9 @@ function BooksPage() {
           </div>
         ) : (
           <div className="pb-4">
-            {/* Fast, catalog-driven Best Picks rail (New / Popular / Trending) */}
-            <BestPicksRail onSelect={selectBook} />
+            {/* Fast, catalog-driven Best Picks rail (New / Popular / Trending).
+                Hidden while a search is active so results take focus. */}
+            {!search && <BestPicksRail onSelect={selectBook} />}
 
             {loading ? (
               <LoadingSpinner />
