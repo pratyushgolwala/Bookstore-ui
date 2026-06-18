@@ -607,9 +607,10 @@
 }
 
 .notif-item {
-  padding: 0.85rem 1.25rem;
+  position: relative;
+  padding: 0.85rem 1.25rem 0.85rem 1.5rem;
   border-bottom: 1px solid;
-  transition: background 0.2s;
+  transition: background 0.2s, opacity 0.3s;
   cursor: default;
   display: flex;
   align-items: flex-start;
@@ -651,9 +652,39 @@
   transform: scale(1.1);
 }
 
+/* Unread — bright, full opacity, green accent bar */
 .notif-unread {
-  background: rgba(153, 95, 47, 0.08);
-  border-left: 3px solid #995f2f;
+  background: rgba(46, 139, 87, 0.08);
+  border-left: 3px solid #2e8b57;
+  padding-left: calc(1.5rem - 3px);
+}
+.notif-unread .notif-title { font-weight: 700; }
+
+/* Read — dimmed and faded, no accent */
+.notif-read {
+  opacity: 0.5;
+  border-left: 3px solid transparent;
+  padding-left: calc(1.5rem - 3px);
+}
+.notif-read:hover { opacity: 0.8; }
+.notif-read .notif-title { font-weight: 500; }
+
+/* Unread pulsing green dot */
+.notif-dot {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2e8b57;
+  box-shadow: 0 0 0 0 rgba(46, 139, 87, 0.5);
+  animation: notifPulse 2s infinite;
+}
+@keyframes notifPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(46, 139, 87, 0.5); }
+  70%  { box-shadow: 0 0 0 6px rgba(46, 139, 87, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 139, 87, 0); }
 }
 
 .notif-title {

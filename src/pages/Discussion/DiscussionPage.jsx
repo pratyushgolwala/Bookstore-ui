@@ -8,6 +8,7 @@ import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 import { discussionsService } from '../../services/discussionsService';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import './DiscussionPage.css';
 
 function CustomDropdown({ options, value, onChange }) {
@@ -63,6 +64,8 @@ function DiscussionPage() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [loading, setLoading]               = useState(true);
   const [submitting, setSubmitting]         = useState(false);
+  // confirm dialog: { type: 'thread'|'post', id } or null
+  const [confirmDelete, setConfirmDelete]   = useState(null);
 
   const categories = [
     { value: 'all',             label: 'All Categories' },
@@ -153,28 +156,33 @@ function DiscussionPage() {
     }
   };
 
-  const handleDeleteThread = async (e, threadId) => {
+  const handleDeleteThread = (e, threadId) => {
     e.stopPropagation(); // prevent opening the thread
-    if (!window.confirm('Delete this thread and all its replies?')) return;
-    try {
-      await discussionsService.deleteThread(threadId);
-      emitToast('success', 'Thread deleted.');
-      setThreads(prev => prev.filter(t => t.id !== threadId));
-      if (selectedThread?.id === threadId) setSelectedThread(null);
-    } catch (err) {
-      emitToast('error', err.message || 'Failed to delete thread');
-    }
+    setConfirmDelete({ type: 'thread', id: threadId });
   };
 
-  const handleDeletePost = async (postId) => {
-    if (!window.confirm('Delete this reply?')) return;
+  const handleDeletePost = (postId) => {
+    setConfirmDelete({ type: 'post', id: postId });
+  };
+
+  const performDelete = async () => {
+    if (!confirmDelete) return;
+    const { type, id } = confirmDelete;
     try {
-      await discussionsService.deletePost(postId);
-      emitToast('success', 'Reply deleted.');
-      // Refresh thread to update posts + count
-      openThread(selectedThread.id);
+      if (type === 'thread') {
+        await discussionsService.deleteThread(id);
+        emitToast('success', 'Thread deleted.');
+        setThreads(prev => prev.filter(t => t.id !== id));
+        if (selectedThread?.id === id) setSelectedThread(null);
+      } else {
+        await discussionsService.deletePost(id);
+        emitToast('success', 'Reply deleted.');
+        if (selectedThread?.id) openThread(selectedThread.id);
+      }
     } catch (err) {
-      emitToast('error', err.message || 'Failed to delete reply');
+      emitToast('error', err.message || `Failed to delete ${type}`);
+    } finally {
+      setConfirmDelete(null);
     }
   };
 
@@ -472,6 +480,21 @@ function DiscussionPage() {
             </div>
           </div>
         )}
+
+        {/* ── Delete Confirmation ── */}
+        <ConfirmDialog
+          open={!!confirmDelete}
+          title={confirmDelete?.type === 'thread' ? 'Delete this thread?' : 'Delete this reply?'}
+          message={
+            confirmDelete?.type === 'thread'
+              ? 'This will permanently remove the thread and all of its replies. This action cannot be undone.'
+              : 'This reply will be permanently removed. This action cannot be undone.'
+          }
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={performDelete}
+          onCancel={() => setConfirmDelete(null)}
+        />
       </div>
     </div>
   );
