@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authService } from '../../services/authService';
+import { getPreviewAuthState } from '../../utils/previewAuth';
 
 // ─── Async Thunks ────────────────────────────────────────────────────────────
 
@@ -93,7 +94,9 @@ const loadFromStorage = () => {
 
 // ─── Slice ───────────────────────────────────────────────────────────────────
 
-const stored = loadFromStorage();
+// Local-dev preview auth (off unless VITE_PREVIEW_AUTH=true) takes precedence
+// over localStorage so gated pages can be viewed without a backend.
+const stored = getPreviewAuthState() || loadFromStorage();
 
 const initialState = {
   // Persisted
