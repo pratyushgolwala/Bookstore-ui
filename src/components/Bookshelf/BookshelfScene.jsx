@@ -118,33 +118,46 @@ function CameraRig({ baseZ, centerY }) {
 
 /**
  * WarmSpot — a slow-roaming warm spotlight that sweeps across the shelf like
- * sun moving through a window, picking out different books over time. This is
- * the main "wow" element that makes the shelf feel cinematic.
+ * sun moving through a window, picking out different books over time.
+ *
+ * A SpotLight only aims correctly if its `target` is part of the scene graph,
+ * so we create an explicit target Object3D, add it via <primitive>, and move
+ * both the light and its target every frame. Base lighting is kept low so the
+ * moving pool of light is clearly visible.
  */
 function WarmSpot({ centerY, width }) {
-  const ref = useRef();
+  const lightRef = useRef();
+  const target = useMemo(() => new THREE.Object3D(), []);
+
   useFrame((state) => {
-    const l = ref.current;
-    if (!l) return;
     const t = state.clock.elapsedTime;
-    l.position.x = Math.sin(t * 0.18) * (width * 0.32);
-    l.position.y = centerY + 3 + Math.cos(t * 0.13) * 1.5;
-    if (l.target) {
-      l.target.position.set(Math.sin(t * 0.18) * (width * 0.18), centerY, 0);
-      l.target.updateMatrixWorld();
+    const sweep = Math.sin(t * 0.45) * (width * 0.42);
+    const l = lightRef.current;
+    if (l) {
+      l.position.x = sweep;
+      l.position.y = centerY + 7;
+      l.position.z = 9;
+      l.target = target;
     }
+    // target trails slightly behind the light's x so the cone rakes across
+    target.position.set(sweep * 0.78, centerY, 0);
+    target.updateMatrixWorld();
   });
+
   return (
-    <spotLight
-      ref={ref}
-      position={[0, centerY + 4, 9]}
-      angle={0.5}
-      penumbra={0.85}
-      intensity={1.6}
-      color="#FFD9A0"
-      distance={40}
-      decay={1.6}
-    />
+    <>
+      <primitive object={target} />
+      <spotLight
+        ref={lightRef}
+        position={[0, centerY + 7, 9]}
+        angle={0.34}
+        penumbra={0.7}
+        intensity={45}
+        color="#FFCE82"
+        distance={90}
+        decay={1.1}
+      />
+    </>
   );
 }
 
@@ -205,11 +218,11 @@ export default function BookshelfScene({
         {/* Idle parallax + a roaming warm spotlight bring the shelf to life */}
         <CameraRig baseZ={fitDist} centerY={centerY} />
 
-        {/* Warm library lighting — moodier, higher contrast */}
-        <ambientLight intensity={0.5} color="#fff4e6" />
-        <directionalLight position={[5, centerY + 6, 14]} intensity={0.9} color="#FFE8C8" />
-        <directionalLight position={[-5, centerY + 2, 9]} intensity={0.28} color="#cdd4ff" />
-        <pointLight position={[0, centerY + 1, 7]} intensity={0.7} color="#FFC96B" distance={45} decay={2} />
+        {/* Warm library lighting — kept low so the roaming spotlight reads */}
+        <ambientLight intensity={0.28} color="#fff4e6" />
+        <directionalLight position={[5, centerY + 6, 14]} intensity={0.35} color="#FFE8C8" />
+        <directionalLight position={[-5, centerY + 2, 9]} intensity={0.18} color="#cdd4ff" />
+        <pointLight position={[0, centerY + 1, 7]} intensity={0.35} color="#FFC96B" distance={45} decay={2} />
         <WarmSpot centerY={centerY} width={SHELF_WIDTH} />
 
         {/* Floating dust motes catching the light — the cozy "wow" detail */}
