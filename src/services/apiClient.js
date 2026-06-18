@@ -23,6 +23,34 @@ function getAccessToken() {
   return _store?.getState().auth.access || localStorage.getItem('access');
 }
 
+// ── Single-flight token refresh ────────────────────────────────────────────
+// When the access token expires, a burst of concurrent requests all receive a
+// 401 at once (e.g. the notifications poll + a page's data fetches). Without
+// coordination each one fires its own refresh — a "thundering herd" that wastes
+// refreshes and races, occasionally surfacing a spurious 401/logout to the user.
+//
+// Instead we deduplicate: the first 401 starts ONE refresh and every other
+// concurrent caller awaits that same in-flight promise, then retries.
+let _refreshPromise = null;
+
+async function refreshAccessToken() {
+  if (_refreshPromise) return _refreshPromise;
+  if (!_store) return false;
+
+  _refreshPromise = (async () => {
+    const { refreshTokenThunk } = await import('../store/slices/authSlice');
+    const result = await _store.dispatch(refreshTokenThunk());
+    return refreshTokenThunk.fulfilled.match(result);
+  })();
+
+  try {
+    return await _refreshPromise;
+  } finally {
+    // Clear so the NEXT expiry can refresh again.
+    _refreshPromise = null;
+  }
+}
+
 async function request(method, endpoint, body = null, retry = true) {
   // ── LOCAL PREVIEW MODE ──────────────────────────────────────────────────
   // When preview auth is on (npm run dev:preview), serve canned data instead
@@ -51,18 +79,16 @@ async function request(method, endpoint, body = null, retry = true) {
 
   const res = await fetch(`${BASE_URL}${endpoint}`, options);
 
-  // Auto-refresh on 401
+  // Auto-refresh on 401 — coordinated so concurrent requests share one refresh.
   if (res.status === 401 && retry && _store) {
-    const { refreshTokenThunk, logout } = await import('../store/slices/authSlice');
-    const result = await _store.dispatch(refreshTokenThunk());
-
-    if (refreshTokenThunk.fulfilled.match(result)) {
-      // Retry once with new access token
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      // Retry once with the new access token.
       return request(method, endpoint, body, false);
-    } else {
-      _store.dispatch(logout());
-      throw new Error('Session expired. Please log in again.');
     }
+    const { logout } = await import('../store/slices/authSlice');
+    _store.dispatch(logout());
+    throw new Error('Session expired. Please log in again.');
   }
 
   if (!res.ok) {

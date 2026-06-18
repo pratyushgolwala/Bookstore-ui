@@ -68,7 +68,7 @@ function CheckoutPage() {
     setError('');
     try {
       const payload = {
-        items: items.map((i) => ({ book_id: i.id, quantity: i.quantity })),
+        items: items.map((i) => ({ book_id: i.book_id, quantity: i.quantity })),
         payment_method: 'card',
       };
       const res = await apiClient.post('/api/orders/checkout/', payload);
