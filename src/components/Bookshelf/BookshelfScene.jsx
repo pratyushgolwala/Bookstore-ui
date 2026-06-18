@@ -1,6 +1,6 @@
-import { useMemo, useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { PerspectiveCamera } from '@react-three/drei';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { PerspectiveCamera, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import BookSpine from './BookSpine';
 import BookshelfFrame from './BookshelfFrame';
@@ -87,6 +87,68 @@ function Backdrop({ centerY, height }) {
 }
 
 /**
+ * CameraRig — a gentle idle parallax: the camera drifts subtly toward the
+ * pointer and breathes in/out, so the shelf feels alive and three-dimensional
+ * instead of a flat static render. Motion is tiny and eased; it never fights
+ * the user. Respects prefers-reduced-motion.
+ */
+function CameraRig({ baseZ, centerY }) {
+  const { camera, pointer } = useThree();
+  const reduced = useRef(
+    typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+
+  useFrame((state) => {
+    if (reduced.current) return;
+    const t = state.clock.elapsedTime;
+    // breathe the dolly distance a touch
+    const breathe = Math.sin(t * 0.35) * 0.35;
+    const targetX = pointer.x * 1.1;
+    const targetY = centerY + pointer.y * 0.7;
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetX, 0.04);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, 0.04);
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, baseZ + breathe, 0.04);
+    camera.lookAt(0, centerY, 0);
+  });
+
+  return null;
+}
+
+/**
+ * WarmSpot — a slow-roaming warm spotlight that sweeps across the shelf like
+ * sun moving through a window, picking out different books over time. This is
+ * the main "wow" element that makes the shelf feel cinematic.
+ */
+function WarmSpot({ centerY, width }) {
+  const ref = useRef();
+  useFrame((state) => {
+    const l = ref.current;
+    if (!l) return;
+    const t = state.clock.elapsedTime;
+    l.position.x = Math.sin(t * 0.18) * (width * 0.32);
+    l.position.y = centerY + 3 + Math.cos(t * 0.13) * 1.5;
+    if (l.target) {
+      l.target.position.set(Math.sin(t * 0.18) * (width * 0.18), centerY, 0);
+      l.target.updateMatrixWorld();
+    }
+  });
+  return (
+    <spotLight
+      ref={ref}
+      position={[0, centerY + 4, 9]}
+      angle={0.5}
+      penumbra={0.85}
+      intensity={1.6}
+      color="#FFD9A0"
+      distance={40}
+      decay={1.6}
+    />
+  );
+}
+
+/**
  * BookshelfScene — a STATIC, framed wooden bookcase against a subtle
  * library backdrop. No zoom / no pan (pagination handles navigation).
  * Clicking a book pulls it smoothly out of the shelf, then opens the detail card.
@@ -140,11 +202,26 @@ export default function BookshelfScene({
       >
         <PerspectiveCamera makeDefault position={[0, centerY, fitDist]} fov={fov} near={0.1} far={200} />
 
-        {/* Warm library lighting */}
-        <ambientLight intensity={0.85} color="#fff4e6" />
-        <directionalLight position={[5, centerY + 6, 14]} intensity={1.1} color="#FFE8C8" />
-        <directionalLight position={[-5, centerY + 2, 9]} intensity={0.4} color="#cdd4ff" />
-        <pointLight position={[0, centerY + 1, 7]} intensity={0.8} color="#FFC96B" distance={45} decay={2} />
+        {/* Idle parallax + a roaming warm spotlight bring the shelf to life */}
+        <CameraRig baseZ={fitDist} centerY={centerY} />
+
+        {/* Warm library lighting — moodier, higher contrast */}
+        <ambientLight intensity={0.5} color="#fff4e6" />
+        <directionalLight position={[5, centerY + 6, 14]} intensity={0.9} color="#FFE8C8" />
+        <directionalLight position={[-5, centerY + 2, 9]} intensity={0.28} color="#cdd4ff" />
+        <pointLight position={[0, centerY + 1, 7]} intensity={0.7} color="#FFC96B" distance={45} decay={2} />
+        <WarmSpot centerY={centerY} width={SHELF_WIDTH} />
+
+        {/* Floating dust motes catching the light — the cozy "wow" detail */}
+        <Sparkles
+          count={70}
+          scale={[SHELF_WIDTH + 4, totalHeight + 2, 4]}
+          position={[0, centerY, 3]}
+          size={2.4}
+          speed={0.3}
+          opacity={0.5}
+          color="#FFE3B0"
+        />
 
         {/* Subtle backdrop */}
         <Backdrop centerY={centerY} height={totalHeight} />
