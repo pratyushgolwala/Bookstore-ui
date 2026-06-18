@@ -1,47 +1,125 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { cartService } from '../../services/cartService';
 
 /**
- * cartSlice — per-user shopping cart with quantity controls and persistence.
+ * cartSlice — the authenticated user's cart, backed by the Django cart API.
  *
- * Each user's cart is stored under its own localStorage key: `cart:<userId>`.
- * A guest (logged-out) cart lives under `cart:guest`. On login we hydrate the
- * user's cart; on logout we clear the in-memory cart (the persisted copy stays
- * so it's there next time they log in).
+ * This is the single source of truth shared with the AI assistant, which
+ * writes to the same /api/cart/ endpoints. (Previously the cart lived only in
+ * localStorage, so the assistant's changes never showed up in the UI.)
+ *
+ * Item shape (normalized from the backend serializer):
+ *   { id, book_id, title, author, coverImageUrl, price, quantity, subtotal }
+ *   - `id`      is the CART-ITEM id (used for increment/decrement/remove)
+ *   - `book_id` is the Book's id (used for add)
  */
 
-const keyFor = (userId) => `cart:${userId || 'guest'}`;
+// ── Helpers ──────────────────────────────────────────────────────────────
 
-const loadCart = (userId) => {
-  try {
-    return JSON.parse(localStorage.getItem(keyFor(userId)) || '[]');
-  } catch {
-    return [];
-  }
+/** Unwrap the backend envelope ({ status, data }) to the cart payload. */
+const unwrapCart = (res) => res?.data ?? res ?? {};
+
+/** Normalize a backend cart item to the shape the UI components expect. */
+const normalizeItem = (it) => ({
+  id: it.id,                 // cart-item id
+  book_id: it.book_id,
+  title: it.title,
+  author: it.author || '',
+  coverImageUrl: it.cover_url || '',
+  price: typeof it.price === 'string' ? parseFloat(it.price) : (it.price ?? 0),
+  quantity: it.quantity ?? 1,
+  subtotal:
+    typeof it.subtotal === 'string' ? parseFloat(it.subtotal) : (it.subtotal ?? 0),
+});
+
+const itemsFromResponse = (res) => {
+  const cart = unwrapCart(res);
+  return Array.isArray(cart.items) ? cart.items.map(normalizeItem) : [];
 };
 
-const persist = (userId, items) => {
-  try {
-    localStorage.setItem(keyFor(userId), JSON.stringify(items));
-  } catch {
-    /* ignore */
-  }
-};
+// ── Thunks ───────────────────────────────────────────────────────────────
 
-// Determine the current user id from persisted auth (set by authSlice)
-const currentUserId = () => {
-  try {
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
-    return user?.id || null;
-  } catch {
-    return null;
-  }
-};
+export const fetchCart = createAsyncThunk(
+  'cart/fetch',
+  async (_, { rejectWithValue }) => {
+    try {
+      return itemsFromResponse(await cartService.getCart());
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
 
-const initialUserId = currentUserId();
+export const addToCart = createAsyncThunk(
+  'cart/add',
+  async ({ bookId, quantity = 1 }, { rejectWithValue }) => {
+    try {
+      return itemsFromResponse(await cartService.addItem(bookId, quantity));
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+export const incrementCartItem = createAsyncThunk(
+  'cart/increment',
+  async (itemId, { rejectWithValue }) => {
+    try {
+      return itemsFromResponse(await cartService.incrementItem(itemId));
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+export const decrementCartItem = createAsyncThunk(
+  'cart/decrement',
+  async (itemId, { rejectWithValue }) => {
+    try {
+      return itemsFromResponse(await cartService.decrementItem(itemId));
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+export const setCartItemQuantity = createAsyncThunk(
+  'cart/setQuantity',
+  async ({ itemId, quantity }, { rejectWithValue }) => {
+    try {
+      return itemsFromResponse(await cartService.setQuantity(itemId, quantity));
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+export const removeCartItem = createAsyncThunk(
+  'cart/remove',
+  async (itemId, { rejectWithValue }) => {
+    try {
+      return itemsFromResponse(await cartService.removeItem(itemId));
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+export const clearCartThunk = createAsyncThunk(
+  'cart/clear',
+  async (_, { rejectWithValue }) => {
+    try {
+      return itemsFromResponse(await cartService.clearCart());
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+// ── Slice ────────────────────────────────────────────────────────────────
 
 const initialState = {
-  userId: initialUserId,
-  items: loadCart(initialUserId),
+  items: [],
   loading: false,
   error: null,
 };
@@ -50,74 +128,49 @@ const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    /** Load a specific user's cart into memory (call on login). */
-    hydrateCart(state, action) {
-      const userId = action.payload || null;
-      state.userId = userId;
-      state.items = loadCart(userId);
-    },
-    /** Clear the in-memory cart (call on logout). Persisted copy is untouched. */
+    /** Clear the in-memory cart (call on logout). */
     resetCart(state) {
-      state.userId = null;
       state.items = [];
+      state.error = null;
     },
-    addItem(state, action) {
-      const { id, title, price, quantity = 1, coverImageUrl = '', author = '' } = action.payload;
-      const existing = state.items.find((i) => i.id === id);
-      if (existing) {
-        existing.quantity += quantity;
-      } else {
-        state.items.push({ id, title, price, quantity, coverImageUrl, author });
-      }
-      persist(state.userId, state.items);
-    },
-    removeItem(state, action) {
-      state.items = state.items.filter((i) => i.id !== action.payload);
-      persist(state.userId, state.items);
-    },
-    incrementItem(state, action) {
-      const item = state.items.find((i) => i.id === action.payload);
-      if (item) item.quantity += 1;
-      persist(state.userId, state.items);
-    },
-    decrementItem(state, action) {
-      const item = state.items.find((i) => i.id === action.payload);
-      if (item) {
-        item.quantity -= 1;
-        if (item.quantity <= 0) {
-          state.items = state.items.filter((i) => i.id !== action.payload);
-        }
-      }
-      persist(state.userId, state.items);
-    },
-    setQuantity(state, action) {
-      const { id, quantity } = action.payload;
-      const item = state.items.find((i) => i.id === id);
-      if (item) item.quantity = Math.max(1, quantity);
-      persist(state.userId, state.items);
-    },
-    clearCart(state) {
-      state.items = [];
-      persist(state.userId, state.items);
-    },
+  },
+  extraReducers: (builder) => {
+    const fulfilled = (state, action) => {
+      state.loading = false;
+      state.items = action.payload;
+    };
+    const pending = (state) => {
+      state.loading = true;
+      state.error = null;
+    };
+    const rejected = (state, action) => {
+      state.loading = false;
+      state.error = action.payload || 'Cart request failed.';
+    };
+
+    [
+      fetchCart,
+      addToCart,
+      incrementCartItem,
+      decrementCartItem,
+      setCartItemQuantity,
+      removeCartItem,
+      clearCartThunk,
+    ].forEach((thunk) => {
+      builder
+        .addCase(thunk.pending, pending)
+        .addCase(thunk.fulfilled, fulfilled)
+        .addCase(thunk.rejected, rejected);
+    });
   },
 });
 
-export const {
-  hydrateCart,
-  resetCart,
-  addItem,
-  removeItem,
-  incrementItem,
-  decrementItem,
-  setQuantity,
-  clearCart,
-} = cartSlice.actions;
-
+export const { resetCart } = cartSlice.actions;
 export default cartSlice.reducer;
 
-// Selectors
+// ── Selectors ──────────────────────────────────────────────────────────────
 export const selectCartItems = (state) => state.cart.items;
+export const selectCartLoading = (state) => state.cart.loading;
 export const selectCartCount = (state) =>
   state.cart.items.reduce((sum, i) => sum + i.quantity, 0);
 export const selectCartTotal = (state) =>

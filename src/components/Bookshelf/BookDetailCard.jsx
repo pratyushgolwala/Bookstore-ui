@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { X, ShoppingCart, Check, BookOpen, Globe, Calendar, Package } from 'lucide-react';
-import { addItem } from '../../store/slices/cartSlice';
+import { addToCart } from '../../store/slices/cartSlice';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
 import { emitToast } from '../../utils/toastBus';
 import { formatCurrency } from '../../utils/formatters';
@@ -22,22 +22,19 @@ export default function BookDetailCard({ book, onClose }) {
   const cardRef = useRef(null);
   const [added, setAdded] = useState(false);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!isAuthenticated) {
       emitToast('warning', 'Please log in to add books to your cart.');
       return;
     }
-    dispatch(addItem({
-      id: book.id,
-      title: book.title,
-      price: book.price,
-      quantity: 1,
-      author: book.author,
-      coverImageUrl: book.coverImageUrl,
-    }));
-    emitToast('success', `"${book.title}" added to cart.`);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
+    try {
+      await dispatch(addToCart({ bookId: book.id, quantity: 1 })).unwrap();
+      emitToast('success', `"${book.title}" added to cart.`);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1800);
+    } catch (err) {
+      emitToast('error', err || 'Could not add to cart.');
+    }
   };
 
   useEffect(() => {
