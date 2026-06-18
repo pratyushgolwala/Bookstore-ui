@@ -8,6 +8,8 @@
  * Import `initApiClient(store)` once in main.jsx to wire up the store.
  */
 
+import { previewRequest, PREVIEW_AUTH_ENABLED } from './previewApi';
+
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 let _store = null;
@@ -22,6 +24,24 @@ function getAccessToken() {
 }
 
 async function request(method, endpoint, body = null, retry = true) {
+  // ── LOCAL PREVIEW MODE ──────────────────────────────────────────────────
+  // When preview auth is on (npm run dev:preview), serve canned data instead
+  // of hitting the network so gated pages render without a backend.
+  if (PREVIEW_AUTH_ENABLED) {
+    try {
+      // tiny delay so loading states are still exercised
+      await new Promise((r) => setTimeout(r, 120));
+      return previewRequest(method, endpoint, body);
+    } catch (err) {
+      if (err.isPreviewMiss) {
+        // eslint-disable-next-line no-console
+        console.warn(err.message);
+        return null; // soft-fail unknown routes in preview
+      }
+      throw err;
+    }
+  }
+
   const headers = { 'Content-Type': 'application/json' };
   const token = getAccessToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
