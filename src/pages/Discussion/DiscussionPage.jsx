@@ -2,12 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
   MessageSquare, Plus, Pin, Lock, Clock,
-  MessageCircle, Search, ChevronDown, Send, X, User, Trash2
+  MessageCircle, Search, ChevronDown, Send, X, User, Trash2, Users, Wifi, WifiOff
 } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 import { discussionsService } from '../../services/discussionsService';
+import { useDiscussionWebSocket } from '../../hooks/useDiscussionWebSocket';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import './DiscussionPage.css';
 
@@ -51,6 +52,7 @@ function CustomDropdown({ options, value, onChange }) {
 function DiscussionPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const currentUser     = useSelector(selectCurrentUser);
+  const accessToken     = useSelector((state) => state.auth.access);
 
   const [threads, setThreads]               = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
@@ -66,6 +68,28 @@ function DiscussionPage() {
   const [submitting, setSubmitting]         = useState(false);
   // confirm dialog: { type: 'thread'|'post', id } or null
   const [confirmDelete, setConfirmDelete]   = useState(null);
+
+  // WebSocket for real-time updates in the selected thread
+  const threadId = selectedThread && !selectedThread.loading ? selectedThread.id : null;
+  const {
+    isConnected: wsConnected,
+    messages: wsMessages,
+    setMessages: setWsMessages,
+    typingUsers,
+    activeUsers,
+    sendPost: wsSendPost,
+    sendTyping,
+  } = useDiscussionWebSocket(threadId, accessToken);
+
+  // Typing debounce — send typing event at most once every 2 seconds
+  const lastTypingSent = useRef(0);
+  const handleTyping = () => {
+    const now = Date.now();
+    if (now - lastTypingSent.current > 2000) {
+      sendTyping();
+      lastTypingSent.current = now;
+    }
+  };
 
   const categories = [
     { value: 'all',             label: 'All Categories' },
@@ -346,6 +370,32 @@ function DiscussionPage() {
                         &nbsp;·&nbsp;{timeAgo(selectedThread.created_at)}
                         &nbsp;·&nbsp;<span style={{ color: COLORS.text.tertiary }}>{selectedThread.post_count || 0} replies</span>
                       </p>
+                      {/* Active users & connection status */}
+                      <div className="thread-presence" style={{ marginTop: '0.5rem' }}>
+                        <div className="presence-status" style={{ color: wsConnected ? '#22c55e' : COLORS.text.tertiary }}>
+                          {wsConnected ? <Wifi size={13} /> : <WifiOff size={13} />}
+                          <span>{wsConnected ? 'Live' : 'Connecting…'}</span>
+                        </div>
+                        {activeUsers.length > 0 && (
+                          <div className="presence-users" style={{ color: COLORS.text.secondary }}>
+                            <Users size={13} />
+                            <span>{activeUsers.length} active</span>
+                            <div className="presence-avatars">
+                              {activeUsers.slice(0, 5).map((u) => (
+                                <div key={u.email} className="presence-avatar" title={u.name}
+                                  style={{ background: COLORS.gradient.primary }}>
+                                  {(u.name || '?').charAt(0).toUpperCase()}
+                                </div>
+                              ))}
+                              {activeUsers.length > 5 && (
+                                <span className="presence-more" style={{ color: COLORS.text.tertiary }}>
+                                  +{activeUsers.length - 5}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
@@ -407,6 +457,24 @@ function DiscussionPage() {
 
                     {/* Reply box */}
                     <div className="reply-box" style={{ borderColor: COLORS.border }}>
+                      {/* Typing indicator */}
+                      {typingUsers.length > 0 && (
+                        <div className="typing-indicator" style={{ color: COLORS.text.tertiary }}>
+                          <div className="typing-dots">
+                            <span style={{ backgroundColor: COLORS.primary[500] }} />
+                            <span style={{ backgroundColor: COLORS.primary[500] }} />
+                            <span style={{ backgroundColor: COLORS.primary[500] }} />
+                          </div>
+                          <span>
+                            {typingUsers.length === 1
+                              ? `${typingUsers[0].name} is typing…`
+                              : typingUsers.length === 2
+                                ? `${typingUsers[0].name} and ${typingUsers[1].name} are typing…`
+                                : `${typingUsers[0].name} and ${typingUsers.length - 1} others are typing…`
+                            }
+                          </span>
+                        </div>
+                      )}
                       {isAuthenticated ? (
                         <>
                           <div className="reply-row">
@@ -417,7 +485,7 @@ function DiscussionPage() {
                               className="reply-textarea"
                               placeholder={selectedThread.is_locked ? 'This thread is locked.' : 'Write a reply…'}
                               value={newPostContent}
-                              onChange={e => setNewPostContent(e.target.value)}
+                              onChange={e => { setNewPostContent(e.target.value); handleTyping(); }}
                               disabled={selectedThread.is_locked}
                               rows={3}
                               style={{ backgroundColor: COLORS.surfaceLight, color: COLORS.text.primary, borderColor: COLORS.border }}
