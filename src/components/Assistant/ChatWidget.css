@@ -204,6 +204,65 @@
   color: #b98a3e; /* brass */
 }
 
+/* GFM tables — assistant book lists, etc. Horizontal scroll on overflow so a
+   wide table never breaks the chat bubble layout. */
+.cw-md-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 6px 0 10px 0;
+}
+
+.cw-md-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12.5px;
+}
+
+.cw-md-th,
+.cw-md-td {
+  border: 1px solid rgba(160, 139, 102, 0.35);
+  padding: 6px 9px;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.cw-md-th {
+  background: rgba(185, 138, 62, 0.14);
+  font-weight: 700;
+  color: #d8b06a; /* brass-ish header */
+}
+
+.cw-md-table tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Fenced code blocks */
+.cw-md-pre {
+  margin: 6px 0 10px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.cw-md-pre code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: none;
+  padding: 0;
+}
+
+/* Blockquotes */
+.cw-md-quote {
+  margin: 6px 0 10px 0;
+  padding: 4px 0 4px 12px;
+  border-left: 3px solid #b98a3e;
+  color: rgba(255, 255, 255, 0.82);
+  font-style: italic;
+}
+
 @keyframes cw-rise {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
