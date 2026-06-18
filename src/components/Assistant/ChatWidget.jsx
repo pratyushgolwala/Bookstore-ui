@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { MessageSquareText, X, Send, Sparkles, RotateCcw } from 'lucide-react';
+import { MessageSquareText, X, Send, Sparkles, RotateCcw, Square } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import { assistantService } from '../../services/assistantService';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
@@ -153,6 +153,14 @@ function ChatWidget() {
     }
   };
 
+  // Stop the in-flight response. Aborting the fetch ends the stream; the
+  // onDone/safety-net path resets the sending state.
+  const stop = useCallback(() => {
+    abortRef.current?.abort();
+    setSending(false);
+    setStatus('');
+  }, []);
+
   const resetThread = () => {
     abortRef.current?.abort();
     setMessages([GREETING]);
@@ -249,23 +257,23 @@ function ChatWidget() {
             </div>
           ))}
 
-          {sending && messages[messages.length - 1]?.role !== 'assistant' && (
+          {/* Thinking indicator — shown the whole time the assistant is
+              working, even after partial text has streamed, so it's clear the
+              response isn't finished yet. */}
+          {sending && (
             <div className="cw-row cw-row-assistant">
               <div
                 className="cw-bubble cw-typing"
                 style={{ backgroundColor: COLORS.surfaceLight, border: `1px solid ${COLORS.border}` }}
               >
-                {status ? (
-                  <span className="cw-status-text" style={{ color: COLORS.text.tertiary }}>
-                    {status}
-                  </span>
-                ) : (
-                  <>
-                    <span style={{ backgroundColor: COLORS.text.tertiary }} />
-                    <span style={{ backgroundColor: COLORS.text.tertiary }} />
-                    <span style={{ backgroundColor: COLORS.text.tertiary }} />
-                  </>
-                )}
+                <span className="cw-typing-dots">
+                  <span style={{ backgroundColor: COLORS.brass }} />
+                  <span style={{ backgroundColor: COLORS.brass }} />
+                  <span style={{ backgroundColor: COLORS.brass }} />
+                </span>
+                <span className="cw-status-text" style={{ color: COLORS.text.tertiary }}>
+                  {status || 'Thinking…'}
+                </span>
               </div>
             </div>
           )}
@@ -300,15 +308,27 @@ function ChatWidget() {
             disabled={sending}
             style={{ color: COLORS.text.primary }}
           />
-          <button
-            className="cw-send"
-            onClick={() => send()}
-            disabled={sending || !input.trim()}
-            aria-label="Send message"
-            style={{ backgroundColor: COLORS.cloth }}
-          >
-            <Send size={16} color="#fdf6e6" />
-          </button>
+          {sending ? (
+            <button
+              className="cw-send cw-stop"
+              onClick={stop}
+              aria-label="Stop generating"
+              title="Stop"
+              style={{ backgroundColor: COLORS.surfaceLighter }}
+            >
+              <Square size={14} color={COLORS.brass} fill={COLORS.brass} />
+            </button>
+          ) : (
+            <button
+              className="cw-send"
+              onClick={() => send()}
+              disabled={!input.trim()}
+              aria-label="Send message"
+              style={{ backgroundColor: COLORS.cloth }}
+            >
+              <Send size={16} color="#fdf6e6" />
+            </button>
+          )}
         </div>
       </div>
     </>
