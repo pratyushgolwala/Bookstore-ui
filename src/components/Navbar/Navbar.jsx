@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   BookMarked, Menu, X, User, LogOut, ShoppingCart,
-  Heart, Settings, Library, LogIn, Bell,
+  Heart, Settings, Library, LogIn, Bell, Check,
 } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import AuthPopup from '../auth-popup/AuthPopup';
@@ -71,6 +71,29 @@ function Navbar() {
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
     } catch {
       // silent fail
+    }
+  };
+
+  const handleMarkRead = async (e, id) => {
+    e.stopPropagation();
+    try {
+      await notificationsService.markRead(id);
+      // Remove the read notification from the list
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch {
+      // silent fail
+    }
+  };
+
+  const handleNotifClick = (notif) => {
+    // Mark read then navigate to its link (e.g. the thread)
+    if (!notif.is_read) {
+      notificationsService.markRead(notif.id).catch(() => {});
+    }
+    setNotifications(prev => prev.filter(n => n.id !== notif.id));
+    setNotifOpen(false);
+    if (notif.link) {
+      navigate(notif.link);
     }
   };
 
@@ -220,10 +243,21 @@ function Navbar() {
                       notifications.slice(0, 8).map(n => (
                         <div key={n.id}
                           className={`notif-item ${!n.is_read ? 'notif-unread' : ''}`}
-                          style={{ borderColor: COLORS.border }}
+                          style={{ borderColor: COLORS.border, cursor: n.link ? 'pointer' : 'default' }}
+                          onClick={() => handleNotifClick(n)}
                         >
-                          <p className="notif-title" style={{ color: COLORS.text.primary }}>{n.title}</p>
-                          <p className="notif-msg" style={{ color: COLORS.text.secondary }}>{n.message}</p>
+                          <div className="notif-item-body">
+                            <p className="notif-title" style={{ color: COLORS.text.primary }}>{n.title}</p>
+                            <p className="notif-msg" style={{ color: COLORS.text.secondary }}>{n.message}</p>
+                          </div>
+                          <button
+                            className="notif-read-btn"
+                            onClick={(e) => handleMarkRead(e, n.id)}
+                            title="Mark as read"
+                            style={{ color: COLORS.primary[600] }}
+                          >
+                            <Check size={15} />
+                          </button>
                         </div>
                       ))
                     )}

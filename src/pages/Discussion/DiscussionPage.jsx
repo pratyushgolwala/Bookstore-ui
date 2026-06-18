@@ -77,6 +77,15 @@ function DiscussionPage() {
 
   useEffect(() => { fetchThreads(); }, []);
 
+  // Auto-open a thread if ?thread=<id> is in the URL (from a notification click)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const threadId = params.get('thread');
+    if (threadId) {
+      openThread(threadId);
+    }
+  }, []);
+
   const fetchThreads = async () => {
     try {
       setLoading(true);
@@ -154,6 +163,18 @@ function DiscussionPage() {
       if (selectedThread?.id === threadId) setSelectedThread(null);
     } catch (err) {
       emitToast('error', err.message || 'Failed to delete thread');
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm('Delete this reply?')) return;
+    try {
+      await discussionsService.deletePost(postId);
+      emitToast('success', 'Reply deleted.');
+      // Refresh thread to update posts + count
+      openThread(selectedThread.id);
+    } catch (err) {
+      emitToast('error', err.message || 'Failed to delete reply');
     }
   };
 
@@ -349,6 +370,18 @@ function DiscussionPage() {
                           {currentUser?.email === post.author_email && <span className="you-tag" style={{ backgroundColor: COLORS.secondary[500] + '25', color: COLORS.secondary[500] }}>You</span>}
                           <span style={{ color: COLORS.text.tertiary, fontSize: '0.8rem' }}>{timeAgo(post.created_at)}</span>
                           {post.is_edited && <span style={{ color: COLORS.text.tertiary, fontSize: '0.75rem' }}>(edited)</span>}
+                          {/* Delete reply — reply author or thread author, but not the OP post */}
+                          {idx !== 0 && isAuthenticated &&
+                            (currentUser?.email === post.author_email || currentUser?.email === selectedThread.author_email) && (
+                            <button
+                              className="post-delete-btn"
+                              onClick={() => handleDeletePost(post.id)}
+                              title="Delete reply"
+                              style={{ color: COLORS.error }}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                         <p className="post-text" style={{ color: COLORS.text.primary }}>{post.content}</p>
                       </div>
