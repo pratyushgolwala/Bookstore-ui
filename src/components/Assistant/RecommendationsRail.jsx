@@ -95,7 +95,11 @@ function RecommendationsRail({ query = null, onSelect }) {
               Picked for you
             </h2>
             <p className="text-xs mt-1" style={{ color: COLORS.parchment.textSoft }}>
-              {query ? `Because you searched “${query}”` : 'Curated by the Folio assistant'}
+              {loading
+                ? 'Thinking through the shelves…'
+                : query
+                  ? `Because you searched “${query}”`
+                  : 'Curated by the Folio assistant'}
             </p>
           </div>
         </div>
