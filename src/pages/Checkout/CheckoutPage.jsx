@@ -5,7 +5,7 @@ import {
   CreditCard, Lock, CheckCircle2, ArrowLeft, Loader2, ShoppingBag,
   Shield, Truck, RotateCcw, Sparkles, Gift,
 } from 'lucide-react';
-import { selectCartItems, selectCartTotal, clearCart } from '../../store/slices/cartSlice';
+import { selectCartItems, selectCartTotal, clearCartThunk } from '../../store/slices/cartSlice';
 import { apiClient } from '../../services/apiClient';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
@@ -75,7 +75,7 @@ function CheckoutPage() {
       const data = res?.data || res;
       setOrderId(data.order_id);
       setSuccess(true);
-      dispatch(clearCart());
+      dispatch(clearCartThunk());
     } catch (err) {
       setError(err.message || 'Payment failed. Please try again.');
     } finally {
