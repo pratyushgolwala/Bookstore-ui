@@ -13,9 +13,30 @@ import { useEffect, useRef, useState, useCallback } from 'react';
  *     = useDiscussionWebSocket(threadId, token);
  */
 
-const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
 const RECONNECT_DELAY_MS = 3000;
 const MAX_RECONNECT_ATTEMPTS = 5;
+
+/**
+ * Derive the WebSocket base URL from the configured API URL.
+ * http://host  -> ws://host
+ * https://host -> wss://host
+ * Falls back to the current page origin if VITE_API_URL is not set.
+ */
+function getWsBaseUrl() {
+  // Allow an explicit override first
+  if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
+
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  try {
+    const u = new URL(apiUrl);
+    const wsProtocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${wsProtocol}//${u.host}`;
+  } catch {
+    return 'ws://localhost:8000';
+  }
+}
+
+const WS_BASE_URL = getWsBaseUrl();
 
 export function useDiscussionWebSocket(threadId, token) {
   const wsRef = useRef(null);
@@ -127,6 +148,14 @@ export function useDiscussionWebSocket(threadId, token) {
 
   // Connect on mount / threadId change
   useEffect(() => {
+    // Reset per-thread state so data from a previously opened thread doesn't
+    // leak into the newly opened one.
+    setMessages([]);
+    setTypingUsers([]);
+    setActiveUsers([]);
+    Object.values(typingTimers.current).forEach(clearTimeout);
+    typingTimers.current = {};
+
     connect();
 
     return () => {

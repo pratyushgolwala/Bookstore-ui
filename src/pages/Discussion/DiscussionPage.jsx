@@ -91,6 +91,21 @@ function DiscussionPage() {
     }
   };
 
+  // Seed the live message list with posts fetched over REST so that WebSocket
+  // events (new_post / post_edited / post_deleted) mutate a single source of
+  // truth. The hook clears messages on thread change; this effect runs after
+  // that reset and refills with the freshly fetched posts.
+  useEffect(() => {
+    if (selectedThread && !selectedThread.loading && Array.isArray(selectedThread.posts)) {
+      setWsMessages(selectedThread.posts);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedThread?.id, selectedThread?.loading]);
+
+  // Posts to render: live list when available, falling back to fetched posts.
+  const displayedPosts = (wsMessages.length ? wsMessages : (selectedThread?.posts || []))
+    .filter((p) => p && p.author_email);
+
   const categories = [
     { value: 'all',             label: 'All Categories' },
     { value: 'general',         label: '💬 General Discussion' },
@@ -134,6 +149,7 @@ function DiscussionPage() {
 
   const openThread = async (threadId) => {
     setThreadLoading(true);
+    setNewPostContent(''); // clear any draft from a previously opened thread
     setSelectedThread({ id: threadId, loading: true });
     try {
       const res = await discussionsService.getThreadById(threadId);
@@ -146,6 +162,11 @@ function DiscussionPage() {
     } finally {
       setThreadLoading(false);
     }
+  };
+
+  const closeThread = () => {
+    setSelectedThread(null);
+    setNewPostContent(''); // discard any unsent draft
   };
 
   const handleCreateThread = async () => {
@@ -170,6 +191,19 @@ function DiscussionPage() {
   const handleAddPost = async () => {
     if (!isAuthenticated) { emitToast('error', 'You need to login to reply.'); return; }
     if (!newPostContent.trim()) { emitToast('warning', 'Please write something.'); return; }
+
+    // Prefer the live WebSocket path so the reply is broadcast to everyone in
+    // the thread instantly. The consumer persists the post and broadcasts a
+    // `new_post` event, which appends to our message list for all viewers.
+    if (wsConnected) {
+      wsSendPost(newPostContent);
+      setNewPostContent('');
+      // Refresh the thread list count shortly after (DB write is async).
+      setTimeout(fetchThreads, 500);
+      return;
+    }
+
+    // Fallback: WebSocket unavailable — post over REST and re-fetch.
     try {
       await discussionsService.addPostToThread(selectedThread.id, { content: newPostContent });
       emitToast('success', 'Reply posted!');
@@ -354,7 +388,7 @@ function DiscussionPage() {
 
         {/* ── Thread Detail Modal ── */}
         {selectedThread && (
-          <div className="modal-overlay" onClick={() => setSelectedThread(null)}>
+          <div className="modal-overlay" onClick={() => closeThread()}>
             <div className="thread-modal" onClick={e => e.stopPropagation()}
               style={{ backgroundColor: COLORS.surface }}>
 
@@ -399,7 +433,7 @@ function DiscussionPage() {
                     </>
                   )}
                 </div>
-                <button className="modal-close-btn" onClick={() => setSelectedThread(null)}
+                <button className="modal-close-btn" onClick={() => closeThread()}
                   style={{ color: COLORS.text.secondary }}>
                   <X size={20} />
                 </button>
@@ -410,12 +444,12 @@ function DiscussionPage() {
                   <div className="state-box"><div className="spinner" /></div>
                 ) : (
                   <>
-                    {(selectedThread.posts || []).length === 0 ? (
+                    {displayedPosts.length === 0 ? (
                       <div className="state-box" style={{ padding: '2rem' }}>
                         <MessageSquare size={36} color={COLORS.text.tertiary} />
                         <p style={{ color: COLORS.text.secondary }}>No replies yet. Be the first!</p>
                       </div>
-                    ) : (selectedThread.posts || []).map((post) => {
+                    ) : displayedPosts.map((post) => {
                         const myEmail     = (currentUser?.email || '').trim().toLowerCase();
                         const threadOwner = (selectedThread.author_email || '').trim().toLowerCase();
                         const postAuthor  = (post.author_email || '').trim().toLowerCase();
