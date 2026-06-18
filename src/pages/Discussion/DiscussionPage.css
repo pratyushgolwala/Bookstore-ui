@@ -265,3 +265,19 @@
   border-color: rgba(194, 86, 47, 0.4);
   transform: scale(1.1);
 }
+
+/* Reply delete button */
+.post-delete-btn {
+  margin-left: auto;
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 6px;
+  background: transparent; border: 1px solid transparent;
+  cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  opacity: 0;
+}
+.post-bubble:hover .post-delete-btn { opacity: 1; }
+.post-delete-btn:hover {
+  background: rgba(212, 128, 128, 0.15);
+  border-color: rgba(212, 128, 128, 0.4);
+  transform: scale(1.1);
+}

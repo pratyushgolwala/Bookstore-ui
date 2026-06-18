@@ -6,7 +6,7 @@
   html { @apply scroll-smooth; }
   body {
     @apply text-gray-900;
-    background-color: #160e07;
+    background-color: #1a120b;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
@@ -57,6 +57,21 @@
 /* While the old block exits, freeze any in-flight character rises. */
 .scroll-reel-exit { animation: scroll-reel-exit 240ms ease forwards; }
 .scroll-reel-exit .scroll-reel-char { animation: none; }
+
+/* ── Assistant recommendations rail ── */
+.cw-rail {
+  scrollbar-width: thin;
+  scrollbar-color: #5c4632 transparent;
+}
+.cw-rail::-webkit-scrollbar { height: 6px; }
+.cw-rail::-webkit-scrollbar-track { background: transparent; }
+.cw-rail::-webkit-scrollbar-thumb {
+  background: #5c4632;
+  border-radius: 3px;
+}
+
+.cw-spin { animation: cw-spin 0.8s linear infinite; }
+@keyframes cw-spin { to { transform: rotate(360deg); } }
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-reel-char {

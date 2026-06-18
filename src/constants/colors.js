@@ -70,27 +70,30 @@ export const COLORS = {
   error: '#c2562f',
   info: '#978F66',
 
-  // Semantic — warm dark library theme
-  background: '#160e07',
-  surface: '#4a3826',        // lightened — warm medium brown card
-  surfaceLight: '#574330',   // lightened
-  surfaceLighter: '#65503b', // lightened
-  border: '#5c4632',         // lightened to match
+  // Semantic — warm dark library theme (3-layer depth, softened)
+  background: '#1a120b',     // deep espresso ink — page base
+  surface: '#241a12',        // card on dark pages — one step up
+  surfaceLight: '#2f2318',   // raised elements
+  surfaceLighter: '#3a2c1f', // hover / highest layer
+  border: '#3a2c1f',         // hairline on dark
   text: {
-    primary: '#f5ecd8',
-    secondary: '#d4c4a0',
-    tertiary: '#a08b66',
-    inverse: '#160e07',
+    primary: '#f3e9d6',
+    secondary: '#c9b896',
+    tertiary: '#9c8866',
+    inverse: '#1a120b',
   },
 
-  // Parchment — light cream page surface for content pages (post-login).
-  // Brown cards sit on this for a warm vintage contrast.
+  // Parchment — retained key name for compatibility, but RE-THEMED to the
+  // warm dark library palette so content pages match the landing/navbar
+  // instead of glowing bright cream. Cards sit one layer above the page.
   parchment: {
-    bg: '#E4D6A9',          // page background
-    surface: '#4a3826',     // cards — warm medium brown, lighter to match theme
-    text: '#2c1e12',        // dark brown text directly on parchment
-    textSoft: '#5c3a22',    // muted brown text on parchment
-    border: '#c9b07a',      // warm tan border on parchment
+    bg: '#1f160e',          // warm dark page base (was bright cream)
+    surface: '#2a1f15',     // card — one step up from the page
+    surfaceAlt: '#33271a',  // secondary / raised card tone
+    text: '#f3e9d6',        // light text on dark page
+    textSoft: '#c9b896',    // muted light text
+    border: '#3a2c1f',      // hairline on dark
+    ink: '#b98a3e',         // brass accent that pops on the dark page
   },
 
   // "gradient" tokens kept for backwards-compatibility, but flattened to

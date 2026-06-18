@@ -14,7 +14,9 @@
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid #3d2c1b;
   box-shadow: 0 1px 0 rgba(185, 138, 62, 0.25);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+  transition:
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.35s ease;
 }
 
 /* Hidden state — slides up out of view */
@@ -55,7 +57,7 @@
 
 /* Square "Fo" colophon — a typographic mark, not an icon in a box */
 .brand-mark {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: "Fraunces", Georgia, serif;
   font-weight: 900;
   font-size: 18px;
   line-height: 1;
@@ -68,7 +70,7 @@
 }
 
 .brand-name {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: "Fraunces", Georgia, serif;
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.3px;
@@ -76,7 +78,7 @@
 }
 
 .brand-sub {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 1.5px;
@@ -86,7 +88,9 @@
 }
 
 @media (max-width: 600px) {
-  .brand-sub { display: none; }
+  .brand-sub {
+    display: none;
+  }
 }
 
 /* ============================================
@@ -120,7 +124,10 @@
   font-weight: 600;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    sans-serif;
   color: #bfae8c;
   padding: 8px 14px;
   border-radius: 4px;
@@ -148,8 +155,11 @@
   justify-content: center;
   background: rgba(153, 95, 47, 0.12);
   border: 1px solid rgba(153, 95, 47, 0.25);
-  color: #E4D6A9;
-  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  color: #e4d6a9;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .cart-btn:hover {
@@ -175,7 +185,10 @@
   color: #160e07;
   font-size: 10px;
   font-weight: 800;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -186,8 +199,14 @@
 }
 
 @keyframes badgePop {
-  from { transform: scale(0.5); opacity: 0; }
-  to   { transform: scale(1);   opacity: 1; }
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* ============================================
@@ -234,7 +253,10 @@
   font-size: 14px;
   color: #fdf6e6;
   background: #7a3b2e;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    sans-serif;
   transition: background 0.2s ease;
 }
 
@@ -275,7 +297,7 @@
 
 /* Invisible hover bridge so cursor can travel from button to menu */
 .dropdown-menu::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -10px;
   left: 0;
@@ -290,8 +312,14 @@
 }
 
 @keyframes dropFade {
-  from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .dropdown-right {
@@ -299,8 +327,14 @@
 }
 
 @keyframes dropFadeRight {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dropdown-item {
@@ -313,9 +347,14 @@
   font-weight: 500;
   color: #b3b3b3;
   border-radius: 7px;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
   white-space: nowrap;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    sans-serif;
 }
 
 .dropdown-item:hover {
@@ -350,7 +389,7 @@
   font-size: 14px;
   font-weight: 600;
   color: #f0e6d0;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .account-email {
@@ -408,8 +447,14 @@
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .mobile-nav-group {
@@ -424,11 +469,11 @@
 .mobile-nav-label {
   font-size: 13px;
   font-weight: 700;
-  color: #995F2F;
+  color: #995f2f;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   padding: 4px 0 8px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .mobile-submenu {
@@ -445,8 +490,10 @@
   font-size: 14px;
   color: #b3b3b3;
   border-radius: 6px;
-  transition: background 0.2s ease, transform 0.2s ease;
-  font-family: 'Inter', sans-serif;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+  font-family: "Inter", sans-serif;
 }
 
 .mobile-nav-item:hover {
@@ -465,7 +512,7 @@
   color: #fdf6e6;
   background: #7a3b2e;
   margin-top: 12px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   transition: background 0.2s ease;
 }
 
@@ -489,7 +536,7 @@
 /* ── Notification Bell ── */
 .notif-btn {
   position: relative;
-  background: rgba(153,95,47,0.12);
+  background: rgba(153, 95, 47, 0.12);
   border: none;
   border-radius: 10px;
   width: 38px;
@@ -497,15 +544,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #995F2F;
+  color: #995f2f;
   cursor: pointer;
   transition: all 0.25s ease;
   margin-right: 6px;
 }
 
 .notif-btn:hover {
-  background: rgba(153,95,47,0.25);
-  box-shadow: 0 0 12px rgba(153,95,47,0.35);
+  background: rgba(153, 95, 47, 0.25);
+  box-shadow: 0 0 12px rgba(153, 95, 47, 0.35);
   transform: translateY(-1px);
 }
 
@@ -524,7 +571,7 @@
   align-items: center;
   justify-content: center;
   padding: 0 4px;
-  animation: badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .notif-dropdown {
@@ -549,7 +596,9 @@
   cursor: pointer;
   transition: opacity 0.2s;
 }
-.notif-mark-all:hover { opacity: 0.7; }
+.notif-mark-all:hover {
+  opacity: 0.7;
+}
 
 .notif-empty {
   padding: 2rem;
@@ -558,17 +607,84 @@
 }
 
 .notif-item {
-  padding: 0.85rem 1.25rem;
+  position: relative;
+  padding: 0.85rem 1.25rem 0.85rem 1.5rem;
   border-bottom: 1px solid;
-  transition: background 0.2s;
+  transition: background 0.2s, opacity 0.3s;
   cursor: default;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
-.notif-item:last-child { border-bottom: none; }
-.notif-item:hover { background: rgba(255,255,255,0.04); }
+.notif-item:last-child {
+  border-bottom: none;
+}
+.notif-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
 
+.notif-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-read-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  opacity: 0;
+}
+.notif-item:hover .notif-read-btn {
+  opacity: 1;
+}
+.notif-read-btn:hover {
+  background: rgba(46, 139, 87, 0.18);
+  border-color: rgba(46, 139, 87, 0.4);
+  transform: scale(1.1);
+}
+
+/* Unread — bright, full opacity, green accent bar */
 .notif-unread {
-  background: rgba(153,95,47,0.08);
-  border-left: 3px solid #995F2F;
+  background: rgba(46, 139, 87, 0.08);
+  border-left: 3px solid #2e8b57;
+  padding-left: calc(1.5rem - 3px);
+}
+.notif-unread .notif-title { font-weight: 700; }
+
+/* Read — dimmed and faded, no accent */
+.notif-read {
+  opacity: 0.5;
+  border-left: 3px solid transparent;
+  padding-left: calc(1.5rem - 3px);
+}
+.notif-read:hover { opacity: 0.8; }
+.notif-read .notif-title { font-weight: 500; }
+
+/* Unread pulsing green dot */
+.notif-dot {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2e8b57;
+  box-shadow: 0 0 0 0 rgba(46, 139, 87, 0.5);
+  animation: notifPulse 2s infinite;
+}
+@keyframes notifPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(46, 139, 87, 0.5); }
+  70%  { box-shadow: 0 0 0 6px rgba(46, 139, 87, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 139, 87, 0); }
 }
 
 .notif-title {

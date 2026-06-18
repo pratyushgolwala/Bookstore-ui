@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   BookMarked, Menu, X, User, LogOut, ShoppingCart,
-  Heart, Settings, Library, LogIn, Bell,
+  Heart, Settings, Library, LogIn, Bell, Check,
 } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import AuthPopup from '../auth-popup/AuthPopup';
@@ -52,8 +52,14 @@ function Navbar() {
   const fetchNotifications = async () => {
     try {
       const res = await notificationsService.getNotifications();
-      const data = res.data?.results || res.data || [];
-      setNotifications(Array.isArray(data) ? data : []);
+      // Handle both envelope { status, data: { results } } and raw DRF { count, results }
+      const payload = res?.data || res;
+      const list = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.results)
+          ? payload.results
+          : [];
+      setNotifications(list);
     } catch {
       // silent fail
     }
@@ -65,6 +71,29 @@ function Navbar() {
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
     } catch {
       // silent fail
+    }
+  };
+
+  const handleMarkRead = async (e, id) => {
+    e.stopPropagation();
+    try {
+      await notificationsService.markRead(id);
+      // Keep it in the list but mark as read (visual fade)
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch {
+      // silent fail
+    }
+  };
+
+  const handleNotifClick = (notif) => {
+    // Mark read then navigate to its link (e.g. the thread)
+    if (!notif.is_read) {
+      notificationsService.markRead(notif.id).catch(() => {});
+      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
+    }
+    setNotifOpen(false);
+    if (notif.link) {
+      navigate(notif.link);
     }
   };
 
@@ -213,11 +242,26 @@ function Navbar() {
                     ) : (
                       notifications.slice(0, 8).map(n => (
                         <div key={n.id}
-                          className={`notif-item ${!n.is_read ? 'notif-unread' : ''}`}
-                          style={{ borderColor: COLORS.border }}
+                          className={`notif-item ${!n.is_read ? 'notif-unread' : 'notif-read'}`}
+                          style={{ borderColor: COLORS.border, cursor: n.link ? 'pointer' : 'default' }}
+                          onClick={() => handleNotifClick(n)}
                         >
-                          <p className="notif-title" style={{ color: COLORS.text.primary }}>{n.title}</p>
-                          <p className="notif-msg" style={{ color: COLORS.text.secondary }}>{n.message}</p>
+                          {/* Unread dot indicator */}
+                          {!n.is_read && <span className="notif-dot" />}
+                          <div className="notif-item-body">
+                            <p className="notif-title" style={{ color: n.is_read ? COLORS.text.tertiary : COLORS.text.primary }}>{n.title}</p>
+                            <p className="notif-msg" style={{ color: n.is_read ? COLORS.text.tertiary : COLORS.text.secondary }}>{n.message}</p>
+                          </div>
+                          {!n.is_read && (
+                            <button
+                              className="notif-read-btn"
+                              onClick={(e) => handleMarkRead(e, n.id)}
+                              title="Mark as read"
+                              style={{ color: COLORS.primary[600] }}
+                            >
+                              <Check size={15} />
+                            </button>
+                          )}
                         </div>
                       ))
                     )}

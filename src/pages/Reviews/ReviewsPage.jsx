@@ -5,6 +5,7 @@ import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 import { reviewsService } from '../../services/reviewsService';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import './ReviewsPage.css';
 
 function CustomDropdown({ options, value, onChange, placeholder }) {
@@ -56,6 +57,7 @@ function ReviewsPage() {
   const [filterRating, setFilterRating] = useState('all');
   const [sortBy, setSortBy]             = useState('recent');
   const [loading, setLoading]           = useState(true);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const ratingOptions = [
     { value: 'all', label: 'All Ratings' },
@@ -127,14 +129,20 @@ function ReviewsPage() {
     }
   };
 
-  const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm('Delete this review?')) return;
+  const handleDeleteReview = (reviewId) => {
+    setConfirmDeleteId(reviewId);
+  };
+
+  const performDeleteReview = async () => {
+    if (!confirmDeleteId) return;
     try {
-      await reviewsService.deleteReview(reviewId);
+      await reviewsService.deleteReview(confirmDeleteId);
       emitToast('success', 'Review deleted.');
-      setReviews(prev => prev.filter(r => r.id !== reviewId));
+      setReviews(prev => prev.filter(r => r.id !== confirmDeleteId));
     } catch (err) {
       emitToast('error', err.message || 'Failed to delete review');
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -178,10 +186,13 @@ function ReviewsPage() {
         <div className="reviews-header">
           <div className="header-top">
             <div className="header-title-section">
-              <div className="header-icon" style={{ background: COLORS.gradient.accent }}>
-                <BookOpen size={28} color="#fff" />
+              <div className="header-icon" style={{ backgroundColor: COLORS.surfaceLight, border: `1px solid ${COLORS.border}` }}>
+                <BookOpen size={26} color={COLORS.brass} />
               </div>
               <div>
+                <span className="block text-xs tracking-[0.3em] uppercase mb-1.5" style={{ color: COLORS.brass }}>
+                  Reader Notes
+                </span>
                 <h1 className="page-title" style={{ color: COLORS.parchment.text }}>Book Reviews</h1>
                 <p className="page-subtitle" style={{ color: COLORS.parchment.textSoft }}>
                   Read honest reviews from our community
@@ -190,7 +201,7 @@ function ReviewsPage() {
             </div>
             <button className="write-review-btn"
               onClick={() => isAuthenticated ? setShowForm(true) : emitToast('error', 'You need to login to write a review.')}
-              style={{ background: COLORS.gradient.accent }}>
+              style={{ backgroundColor: COLORS.cloth, color: '#fdf6e6' }}>
               <Star size={18} />
               Write a Review
             </button>
@@ -335,13 +346,24 @@ function ReviewsPage() {
                 </div>
 
                 <button className="submit-btn" onClick={handleSubmit} disabled={submitting}
-                  style={{ background: COLORS.gradient.accent, opacity: submitting ? 0.7 : 1 }}>
+                  style={{ backgroundColor: COLORS.cloth, color: '#fdf6e6', opacity: submitting ? 0.7 : 1 }}>
                   {submitting ? 'Submitting…' : 'Submit Review'}
                 </button>
               </div>
             </div>
           </div>
         )}
+
+        {/* ── Delete Confirmation ── */}
+        <ConfirmDialog
+          open={!!confirmDeleteId}
+          title="Delete this review?"
+          message="Your review will be permanently removed. This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={performDeleteReview}
+          onCancel={() => setConfirmDeleteId(null)}
+        />
       </div>
     </div>
   );

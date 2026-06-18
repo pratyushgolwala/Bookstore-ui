@@ -8,6 +8,7 @@ import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 import { discussionsService } from '../../services/discussionsService';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import './DiscussionPage.css';
 
 function CustomDropdown({ options, value, onChange }) {
@@ -63,6 +64,8 @@ function DiscussionPage() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [loading, setLoading]               = useState(true);
   const [submitting, setSubmitting]         = useState(false);
+  // confirm dialog: { type: 'thread'|'post', id } or null
+  const [confirmDelete, setConfirmDelete]   = useState(null);
 
   const categories = [
     { value: 'all',             label: 'All Categories' },
@@ -76,6 +79,15 @@ function DiscussionPage() {
   const catLabel = (val) => categories.find(c => c.value === val)?.label?.replace(/^\S+\s/, '') || val;
 
   useEffect(() => { fetchThreads(); }, []);
+
+  // Auto-open a thread if ?thread=<id> is in the URL (from a notification click)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const threadId = params.get('thread');
+    if (threadId) {
+      openThread(threadId);
+    }
+  }, []);
 
   const fetchThreads = async () => {
     try {
@@ -144,16 +156,33 @@ function DiscussionPage() {
     }
   };
 
-  const handleDeleteThread = async (e, threadId) => {
+  const handleDeleteThread = (e, threadId) => {
     e.stopPropagation(); // prevent opening the thread
-    if (!window.confirm('Delete this thread and all its replies?')) return;
+    setConfirmDelete({ type: 'thread', id: threadId });
+  };
+
+  const handleDeletePost = (postId) => {
+    setConfirmDelete({ type: 'post', id: postId });
+  };
+
+  const performDelete = async () => {
+    if (!confirmDelete) return;
+    const { type, id } = confirmDelete;
     try {
-      await discussionsService.deleteThread(threadId);
-      emitToast('success', 'Thread deleted.');
-      setThreads(prev => prev.filter(t => t.id !== threadId));
-      if (selectedThread?.id === threadId) setSelectedThread(null);
+      if (type === 'thread') {
+        await discussionsService.deleteThread(id);
+        emitToast('success', 'Thread deleted.');
+        setThreads(prev => prev.filter(t => t.id !== id));
+        if (selectedThread?.id === id) setSelectedThread(null);
+      } else {
+        await discussionsService.deletePost(id);
+        emitToast('success', 'Reply deleted.');
+        if (selectedThread?.id) openThread(selectedThread.id);
+      }
     } catch (err) {
-      emitToast('error', err.message || 'Failed to delete thread');
+      emitToast('error', err.message || `Failed to delete ${type}`);
+    } finally {
+      setConfirmDelete(null);
     }
   };
 
@@ -184,17 +213,20 @@ function DiscussionPage() {
         <div className="disc-header">
           <div className="disc-header-top">
             <div className="disc-title-row">
-              <div className="disc-icon" style={{ background: COLORS.gradient.primary }}>
-                <MessageSquare size={26} color="#fff" />
+              <div className="disc-icon" style={{ backgroundColor: COLORS.surfaceLight, border: `1px solid ${COLORS.border}` }}>
+                <MessageSquare size={24} color={COLORS.brass} />
               </div>
               <div>
+                <span className="block text-xs tracking-[0.3em] uppercase mb-1.5" style={{ color: COLORS.brass }}>
+                  The Margins
+                </span>
                 <h1 className="disc-title" style={{ color: COLORS.parchment.text }}>Community Discussions</h1>
                 <p className="disc-subtitle" style={{ color: COLORS.parchment.textSoft }}>Share thoughts, ask questions, connect with readers</p>
               </div>
             </div>
             <button className="new-thread-btn"
               onClick={() => isAuthenticated ? setShowNewThreadModal(true) : emitToast('error', 'You need to login to create a thread.')}
-              style={{ background: COLORS.gradient.primary }}>
+              style={{ backgroundColor: COLORS.cloth, color: '#fdf6e6' }}>
               <Plus size={18} /> New Thread
             </button>
           </div>
@@ -346,6 +378,18 @@ function DiscussionPage() {
                           {currentUser?.email === post.author_email && <span className="you-tag" style={{ backgroundColor: COLORS.secondary[500] + '25', color: COLORS.secondary[500] }}>You</span>}
                           <span style={{ color: COLORS.text.tertiary, fontSize: '0.8rem' }}>{timeAgo(post.created_at)}</span>
                           {post.is_edited && <span style={{ color: COLORS.text.tertiary, fontSize: '0.75rem' }}>(edited)</span>}
+                          {/* Delete reply — reply author or thread author, but not the OP post */}
+                          {idx !== 0 && isAuthenticated &&
+                            (currentUser?.email === post.author_email || currentUser?.email === selectedThread.author_email) && (
+                            <button
+                              className="post-delete-btn"
+                              onClick={() => handleDeletePost(post.id)}
+                              title="Delete reply"
+                              style={{ color: COLORS.error }}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                         <p className="post-text" style={{ color: COLORS.text.primary }}>{post.content}</p>
                       </div>
@@ -436,6 +480,21 @@ function DiscussionPage() {
             </div>
           </div>
         )}
+
+        {/* ── Delete Confirmation ── */}
+        <ConfirmDialog
+          open={!!confirmDelete}
+          title={confirmDelete?.type === 'thread' ? 'Delete this thread?' : 'Delete this reply?'}
+          message={
+            confirmDelete?.type === 'thread'
+              ? 'This will permanently remove the thread and all of its replies. This action cannot be undone.'
+              : 'This reply will be permanently removed. This action cannot be undone.'
+          }
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={performDelete}
+          onCancel={() => setConfirmDelete(null)}
+        />
       </div>
     </div>
   );

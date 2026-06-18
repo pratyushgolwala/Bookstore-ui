@@ -20,10 +20,10 @@ const ICONS = {
 function CategorySkeleton() {
   return (
     <div
-      className="rounded-2xl border p-6 flex flex-col gap-4 animate-pulse"
+      className="col-span-2 lg:col-span-3 rounded-sm border p-6 flex flex-col gap-4 animate-pulse"
       style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
     >
-      <div className="w-14 h-14 rounded-2xl" style={{ backgroundColor: COLORS.surfaceLight }} />
+      <div className="w-12 h-12 rounded-sm" style={{ backgroundColor: COLORS.surfaceLight }} />
       <div className="h-4 w-2/3 rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
       <div className="h-3 w-full rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
     </div>
@@ -142,14 +142,14 @@ function CategoriesPage() {
           </div>
         )}
 
-        {/* Grid */}
+        {/* Grid — asymmetric: cards take varied spans on a 6-col bed */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-5 auto-rows-[180px]">
             {Array.from({ length: 8 }).map((_, i) => <CategorySkeleton key={i} />)}
           </div>
         ) : filtered.length === 0 ? (
           <div
-            className="flex flex-col items-center justify-center text-center py-20 rounded-2xl border"
+            className="flex flex-col items-center justify-center text-center py-20 rounded-sm border"
             style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
           >
             <LayoutGrid size={44} style={{ color: COLORS.text.tertiary }} className="mb-3" />
@@ -157,44 +157,55 @@ function CategoriesPage() {
             <p className="text-sm mt-1" style={{ color: COLORS.text.tertiary }}>Try a different search term.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filtered.map((category) => {
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-5 auto-rows-[176px]">
+            {filtered.map((category, idx) => {
               const Icon = ICONS[category.icon] || BookOpen;
-              const accent = category.accent || COLORS.primary[500];
+              const accent = category.accent || COLORS.brass;
+              // Irregular sizing rhythm: a wide hero every 7th, taller every 5th.
+              const wide = idx % 7 === 0;
+              const tall = idx % 5 === 2;
+              const span = [
+                'col-span-2',
+                wide ? 'lg:col-span-4' : 'lg:col-span-3',
+                tall ? 'row-span-2' : 'row-span-1',
+              ].join(' ');
               return (
                 <button
                   key={category.id}
                   onClick={() => openCategory(category)}
-                  className="group relative overflow-hidden text-left rounded-2xl border p-6 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
-                  style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
+                  className={`group relative overflow-hidden text-left rounded-sm border p-6 flex flex-col transition-all duration-300 hover:-translate-y-1 ${span}`}
+                  style={{
+                    backgroundColor: idx % 3 === 0 ? COLORS.surfaceLight : COLORS.surface,
+                    borderColor: COLORS.border,
+                  }}
                 >
-                  {/* subtle accent glow on hover */}
-                  <div
-                    className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-0 group-hover:opacity-20 blur-2xl transition-opacity duration-300 pointer-events-none"
+                  {/* a thick brass edge on the left — like a tabbed file divider */}
+                  <span
+                    className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 group-hover:w-1.5"
                     style={{ backgroundColor: accent }}
                   />
 
                   <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+                    className="w-12 h-12 rounded-sm flex items-center justify-center mb-4 transition-transform duration-300 group-hover:-rotate-6"
                     style={{ backgroundColor: `${accent}22`, color: accent }}
                   >
-                    <Icon size={26} />
+                    <Icon size={24} />
                   </div>
 
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold" style={{ color: COLORS.text.primary }}>
+                    <h3 className="font-display text-xl font-bold leading-tight" style={{ color: COLORS.text.primary }}>
                       {category.name}
                     </h3>
                     {category.description && (
-                      <p className="text-sm mt-1 line-clamp-2" style={{ color: COLORS.text.tertiary }}>
+                      <p className={`text-sm mt-1.5 ${tall ? 'line-clamp-4' : 'line-clamp-2'}`} style={{ color: COLORS.text.tertiary }}>
                         {category.description}
                       </p>
                     )}
                   </div>
 
                   <div
-                    className="flex items-center gap-1.5 text-sm font-medium transition-all duration-300"
-                    style={{ color: COLORS.secondary[500] }}
+                    className="flex items-center gap-1.5 text-sm font-medium mt-4"
+                    style={{ color: COLORS.brass }}
                   >
                     Browse books
                     <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />
