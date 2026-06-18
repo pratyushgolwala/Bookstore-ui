@@ -151,16 +151,16 @@ function AuthorDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
           <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: COLORS.gradient.primary }}
+            className="w-14 h-14 rounded-sm flex items-center justify-center shrink-0"
+            style={{ backgroundColor: COLORS.brass }}
           >
-            <PenTool size={26} color={COLORS.text.inverse} />
+            <PenTool size={24} color={COLORS.ink} />
           </div>
           <div>
+            <span className="block text-xs tracking-[0.3em] uppercase mb-1" style={{ color: COLORS.brass }}>
+              The Author Studio
+            </span>
             <h1 className="font-display text-3xl md:text-4xl font-bold">Welcome back, {authorName}</h1>
-            <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
-              Your author studio — manage your catalogue and track performance
-            </p>
           </div>
         </div>
         <MetalButton variant="gold" onClick={openCreate} className="gap-2">
@@ -180,24 +180,22 @@ function AuthorDashboard() {
         </div>
       )}
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* Stat cards — editorial: brass top-rule, serif numerals, line icon */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
         {statCards.map((s) => {
           const Icon = s.icon;
           return (
             <div
               key={s.label}
-              className="rounded-xl p-5"
+              className="relative rounded-sm p-5 pt-6 overflow-hidden"
               style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
             >
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
-                style={{ backgroundColor: `${s.color}22` }}
-              >
-                <Icon size={20} style={{ color: s.color }} />
+              <span className="absolute left-0 top-0 h-0.5 w-12" style={{ backgroundColor: COLORS.brass }} />
+              <div className="flex items-start justify-between">
+                <p className="font-display text-3xl font-bold">{s.value}</p>
+                <Icon size={18} style={{ color: COLORS.text.tertiary }} strokeWidth={1.6} />
               </div>
-              <p className="text-2xl font-bold">{s.value}</p>
-              <p className="text-xs mt-1" style={{ color: COLORS.text.tertiary }}>
+              <p className="text-xs mt-2 tracking-wide uppercase" style={{ color: COLORS.text.tertiary }}>
                 {s.label}
               </p>
             </div>
@@ -209,8 +207,8 @@ function AuthorDashboard() {
         {/* My published works */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold flex items-center gap-2">
-              <BookOpen size={18} style={{ color: COLORS.primary[500] }} />
+            <h2 className="font-display text-2xl font-bold flex items-center gap-2">
+              <BookOpen size={18} style={{ color: COLORS.brass }} />
               My Books
             </h2>
             <span className="text-xs" style={{ color: COLORS.text.tertiary }}>
@@ -294,8 +292,8 @@ function AuthorDashboard() {
 
         {/* Recent reviews */}
         <div>
-          <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-            <MessageSquare size={18} style={{ color: COLORS.secondary[400] }} />
+          <h2 className="font-display text-2xl font-bold flex items-center gap-2 mb-4">
+            <MessageSquare size={18} style={{ color: COLORS.brass }} />
             Recent Reviews
           </h2>
           <div className="space-y-3">
