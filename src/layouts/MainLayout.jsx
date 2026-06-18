@@ -17,24 +17,26 @@ import COLORS from '../constants/colors';
 function MainLayout() {
   const dispatch = useDispatch();
   const currentUser = useSelector(selectCurrentUser);
-  const prevUserId = useRef(currentUser?.id ?? null);
+  const prevUserId = useRef(null);
+
+  const userId = currentUser?.id ?? null;
 
   useEffect(() => {
-    const userId = currentUser?.id ?? null;
-    if (userId === prevUserId.current) return;
-
+    // Run on mount and whenever the user changes. On a page refresh the user is
+    // already logged in, so we must fetch here too (not only on a login
+    // transition) — otherwise the cart stays empty until something mutates it.
     if (userId) {
-      // Logged in (or switched user) — load that user's cart from the backend
-      // (shared with the AI assistant) + their wishlist.
+      // Logged in — load this user's cart from the backend (shared with the AI
+      // assistant) + their wishlist.
       dispatch(fetchCart());
       dispatch(hydrateWishlist(userId));
-    } else {
-      // Logged out — clear the in-memory cart + wishlist
+    } else if (prevUserId.current) {
+      // Transitioned to logged-out — clear the in-memory cart + wishlist.
       dispatch(resetCart());
       dispatch(resetWishlist());
     }
     prevUserId.current = userId;
-  }, [currentUser, dispatch]);
+  }, [userId, dispatch]);
 
   return (
     <div className="flex flex-col min-h-screen relative" style={{ backgroundColor: COLORS.background }}>

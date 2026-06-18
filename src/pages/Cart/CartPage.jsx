@@ -9,6 +9,8 @@ import {
 import {
   selectCartItems,
   selectCartTotal,
+  selectCartLoading,
+  fetchCart,
   incrementCartItem,
   decrementCartItem,
   removeCartItem,
@@ -42,12 +44,19 @@ function CartPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const items    = useSelector(selectCartItems);
   const subtotal = useSelector(selectCartTotal);
+  const cartLoading = useSelector(selectCartLoading);
 
   const [couponCode, setCouponCode]   = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponError, setCouponError] = useState('');
   const [removingId, setRemovingId]   = useState(null);
   const [mounted, setMounted]         = useState(false);
+
+  // Always pull the latest cart from the backend when landing on this page
+  // (covers direct navigation / refresh, and reflects assistant changes).
+  useEffect(() => {
+    if (isAuthenticated) dispatch(fetchCart());
+  }, [isAuthenticated, dispatch]);
 
   useEffect(() => {
     // Slight delay so items animate in on mount
@@ -120,6 +129,22 @@ function CartPage() {
             Browse the Library
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  /* ── Loading (initial fetch, nothing cached yet) ───────── */
+  if (cartLoading && items.length === 0) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center text-center px-6"
+        style={{ minHeight: '100vh', backgroundColor: COLORS.background, paddingTop: '100px' }}
+      >
+        <div
+          className="w-12 h-12 rounded-full animate-spin mb-4"
+          style={{ border: `3px solid ${COLORS.border}`, borderTopColor: COLORS.brass }}
+        />
+        <p style={{ color: COLORS.text.secondary }}>Loading your cart…</p>
       </div>
     );
   }
