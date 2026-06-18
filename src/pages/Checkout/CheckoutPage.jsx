@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Lock, CheckCircle2, ArrowLeft, Loader2, ShoppingBag,
-  Shield, Truck, RotateCcw, Sparkles, Gift,
+  Shield, Truck, RotateCcw, Sparkles, Gift, MapPin,
 } from 'lucide-react';
 import { selectCartItems, selectCartTotal, clearCartThunk } from '../../store/slices/cartSlice';
-import { apiClient } from '../../services/apiClient';
+import { selectCurrentUser } from '../../store/slices/authSlice';
+import { ordersService } from '../../services/ordersService';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import MetalButton from '../../components/ui/MetalButton';
@@ -15,11 +16,18 @@ const TAX_RATE = 0.08;
 const FREE_SHIPPING_THRESHOLD = 500;
 const SHIPPING_FEE = 49;
 
+const EMPTY_DELIVERY = {
+  full_name: '', email: '', phone: '',
+  line1: '', line2: '', city: '', state: '', postal_code: '', country: 'IN',
+  notes: '',
+};
+
 function CheckoutPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const items = useSelector(selectCartItems);
   const subtotal = useSelector(selectCartTotal);
+  const currentUser = useSelector(selectCurrentUser);
 
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
   const tax = +((subtotal) * TAX_RATE).toFixed(2);
@@ -31,11 +39,39 @@ function CheckoutPage() {
     expiry: '',
     cvv: '',
   });
+  const [delivery, setDelivery] = useState(EMPTY_DELIVERY);
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [error, setError] = useState('');
-  const [step, setStep] = useState(1); // 1=review, 2=payment
+  const [step, setStep] = useState(1); // 1=review, 2=delivery, 3=payment
+
+  // Pre-fill the delivery form from the backend (user contact + last address),
+  // falling back to the logged-in user's name/email from the store.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await ordersService.getDeliveryDefaults();
+        const d = res?.data || res || {};
+        if (active) {
+          setDelivery((prev) => ({ ...EMPTY_DELIVERY, ...prev, ...d }));
+        }
+      } catch {
+        // Fall back to store values if the endpoint isn't reachable yet.
+        if (active && currentUser) {
+          setDelivery((prev) => ({
+            ...prev,
+            full_name: prev.full_name
+              || `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim(),
+            email: prev.email || currentUser.email || '',
+            phone: prev.phone || currentUser.phone || '',
+          }));
+        }
+      }
+    })();
+    return () => { active = false; };
+  }, [currentUser]);
 
   if (items.length === 0 && !success) {
     navigate('/cart');
@@ -56,6 +92,19 @@ function CheckoutPage() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
+  const handleDeliveryChange = (e) => {
+    const { name, value } = e.target;
+    setDelivery((d) => ({ ...d, [name]: value }));
+  };
+
+  const isDeliveryValid =
+    delivery.full_name.trim().length > 1 &&
+    /\S+@\S+\.\S+/.test(delivery.email) &&
+    delivery.line1.trim().length > 2 &&
+    delivery.city.trim().length > 1 &&
+    delivery.state.trim().length > 1 &&
+    delivery.postal_code.trim().length >= 4;
+
   const isFormValid =
     form.cardName.trim().length > 2 &&
     form.cardNumber.replace(/\s/g, '').length === 16 &&
@@ -70,8 +119,20 @@ function CheckoutPage() {
       const payload = {
         items: items.map((i) => ({ book_id: i.book_id, quantity: i.quantity })),
         payment_method: 'card',
+        delivery: {
+          full_name: delivery.full_name.trim(),
+          email: delivery.email.trim(),
+          phone: delivery.phone.trim(),
+          line1: delivery.line1.trim(),
+          line2: delivery.line2.trim(),
+          city: delivery.city.trim(),
+          state: delivery.state.trim(),
+          postal_code: delivery.postal_code.trim(),
+          country: (delivery.country || 'IN').trim(),
+          notes: delivery.notes.trim(),
+        },
       };
-      const res = await apiClient.post('/api/orders/checkout/', payload);
+      const res = await ordersService.checkout(payload);
       const data = res?.data || res;
       setOrderId(data.order_id);
       setSuccess(true);
@@ -177,28 +238,38 @@ function CheckoutPage() {
     >
       {/* Back button */}
       <button
-        onClick={() => step === 2 ? setStep(1) : navigate('/cart')}
+        onClick={() => step > 1 ? setStep(step - 1) : navigate('/cart')}
         className="flex items-center gap-2 text-sm mb-6 transition-opacity hover:opacity-70"
         style={{ color: COLORS.text.tertiary }}
       >
-        <ArrowLeft size={16} /> {step === 2 ? 'Back to Review' : 'Back to Cart'}
+        <ArrowLeft size={16} />
+        {step === 3 ? 'Back to Delivery' : step === 2 ? 'Back to Review' : 'Back to Cart'}
       </button>
 
       {/* Progress indicator */}
       <div className="flex items-center gap-3 mb-8">
         <StepIndicator num={1} label="Review" active={step >= 1} current={step === 1} />
         <div className="flex-1 h-0.5 rounded" style={{ backgroundColor: step >= 2 ? COLORS.secondary[500] : COLORS.surfaceLight }} />
-        <StepIndicator num={2} label="Payment" active={step >= 2} current={step === 2} />
-        <div className="flex-1 h-0.5 rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
-        <StepIndicator num={3} label="Confirmation" active={false} current={false} />
+        <StepIndicator num={2} label="Delivery" active={step >= 2} current={step === 2} />
+        <div className="flex-1 h-0.5 rounded" style={{ backgroundColor: step >= 3 ? COLORS.secondary[500] : COLORS.surfaceLight }} />
+        <StepIndicator num={3} label="Payment" active={step >= 3} current={step === 3} />
       </div>
 
       <div className="grid lg:grid-cols-5 gap-8">
-        {/* ─── Left: Content (Review or Payment) ─── */}
+        {/* ─── Left: Content (Review / Delivery / Payment) ─── */}
         <div className="lg:col-span-3">
-          {step === 1 ? (
+          {step === 1 && (
             <ReviewStep items={items} onContinue={() => setStep(2)} />
-          ) : (
+          )}
+          {step === 2 && (
+            <DeliveryStep
+              delivery={delivery}
+              onChange={handleDeliveryChange}
+              isValid={isDeliveryValid}
+              onContinue={() => setStep(3)}
+            />
+          )}
+          {step === 3 && (
             <PaymentStep
               form={form}
               onChange={handleChange}
@@ -327,8 +398,71 @@ function ReviewStep({ items, onContinue }) {
       </div>
 
       <MetalButton variant="gold" fullWidth className="mt-6 gap-2" onClick={onContinue}>
+        Continue to Delivery <MapPin size={16} />
+      </MetalButton>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 2: DELIVERY
+// ═══════════════════════════════════════════════════════════════
+function DeliveryStep({ delivery, onChange, isValid, onContinue }) {
+  return (
+    <div
+      className="rounded-2xl p-6"
+      style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
+    >
+      <div className="flex items-center gap-3 mb-2">
+        <div
+          className="w-10 h-10 rounded-lg flex items-center justify-center"
+          style={{ background: COLORS.gradient.primary }}
+        >
+          <MapPin size={20} color="#fff" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold">Delivery Details</h2>
+          <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
+            Where should we send your books?
+          </p>
+        </div>
+      </div>
+
+      <p className="text-xs mb-5 mt-2" style={{ color: COLORS.text.tertiary }}>
+        We've pre-filled what we know — review and complete the address.
+      </p>
+
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <InputField label="Full Name" name="full_name" value={delivery.full_name} onChange={onChange} placeholder="John Doe" />
+          <InputField label="Email" name="email" value={delivery.email} onChange={onChange} placeholder="you@example.com" type="email" />
+        </div>
+        <InputField label="Phone" name="phone" value={delivery.phone} onChange={onChange} placeholder="+91 98765 43210" />
+        <InputField label="Address Line 1" name="line1" value={delivery.line1} onChange={onChange} placeholder="House / flat, street" />
+        <InputField label="Address Line 2 (optional)" name="line2" value={delivery.line2} onChange={onChange} placeholder="Area, landmark" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <InputField label="City" name="city" value={delivery.city} onChange={onChange} placeholder="Mumbai" />
+          <InputField label="State" name="state" value={delivery.state} onChange={onChange} placeholder="Maharashtra" />
+          <InputField label="Postal Code" name="postal_code" value={delivery.postal_code} onChange={onChange} placeholder="400001" />
+        </div>
+        <InputField label="Delivery Notes (optional)" name="notes" value={delivery.notes} onChange={onChange} placeholder="Leave at the door, call on arrival…" />
+      </div>
+
+      <MetalButton
+        variant="gold"
+        fullWidth
+        className="mt-6 gap-2"
+        onClick={onContinue}
+        disabled={!isValid}
+        style={{ opacity: isValid ? 1 : 0.6 }}
+      >
         Continue to Payment <CreditCard size={16} />
       </MetalButton>
+      {!isValid && (
+        <p className="text-xs text-center mt-3" style={{ color: COLORS.text.tertiary }}>
+          Please fill name, email, address, city, state and postal code.
+        </p>
+      )}
     </div>
   );
 }
