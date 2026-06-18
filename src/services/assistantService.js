@@ -31,17 +31,31 @@ function getAccessToken() {
  *           session_id?: string|null }} payload
  * @returns {Promise<{ reply: string, session_id: string|null, created_at: string }>}
  */
-async function chat({ message, history = [], session_id = null }) {
+async function chat({ message, history = [], session_id = null, timeoutMs = 45000 }) {
   const token = getAccessToken();
 
-  const res = await fetch(`${ASSISTANT_URL}/chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ message, history, session_id }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  let res;
+  try {
+    res = await fetch(`${ASSISTANT_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ message, history, session_id }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('That took too long to answer. Please try again.');
+    }
+    throw new Error('Could not reach the assistant. Check your connection and try again.');
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (res.status === 401) {
     throw new Error('Your session has expired. Please log in again to use the assistant.');
@@ -65,21 +79,39 @@ async function chat({ message, history = [], session_id = null }) {
 /**
  * Fetch AI book recommendations.
  *
- * @param {{ query?: string, limit?: number }} payload
+ * The assistant runs a full tool-calling loop server-side, so this can take
+ * a while. We bound it with an AbortController timeout so the UI never hangs
+ * indefinitely (e.g. when the browser suspends a long in-flight request).
+ *
+ * @param {{ query?: string, limit?: number, timeoutMs?: number }} payload
  * @returns {Promise<{ results: Array<{ book_id: string, title: string,
  *           reason: string|null, score: number }> }>}
  */
-async function recommend({ query = null, limit = 6 } = {}) {
+async function recommend({ query = null, limit = 6, timeoutMs = 45000 } = {}) {
   const token = getAccessToken();
 
-  const res = await fetch(`${ASSISTANT_URL}/recommendations`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ query, limit }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  let res;
+  try {
+    res = await fetch(`${ASSISTANT_URL}/recommendations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ query, limit }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('Recommendations took too long to load. Try refreshing.');
+    }
+    throw new Error('Could not reach the assistant. Check your connection and try again.');
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (res.status === 401) {
     throw new Error('Your session has expired. Please log in again.');
