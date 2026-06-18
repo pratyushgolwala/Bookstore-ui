@@ -34,8 +34,23 @@ function Navbar() {
   const [hidden, setHidden] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
+  // Briefly pulse the cart button whenever the item count changes (e.g. the
+  // assistant adds something), so the update is visible without a refresh.
+  const [cartPulse, setCartPulse] = useState(false);
 
   const lastScrollY = useRef(0);
+  const prevCartCount = useRef(cartCount);
+
+  useEffect(() => {
+    if (cartCount !== prevCartCount.current) {
+      prevCartCount.current = cartCount;
+      if (cartCount > 0) {
+        setCartPulse(true);
+        const t = setTimeout(() => setCartPulse(false), 700);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [cartCount]);
 
   // Fetch notifications when user logs in
   useEffect(() => {
@@ -272,7 +287,7 @@ function Navbar() {
 
             {/* Cart button — always visible */}
             <button
-              className="cart-btn"
+              className={`cart-btn ${cartPulse ? 'cart-btn-pulse' : ''}`}
               onClick={handleCartClick}
               aria-label={`Cart — ${cartCount} item${cartCount !== 1 ? 's' : ''}`}
             >
