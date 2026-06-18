@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { MessageSquareText, X, Send, Sparkles, RotateCcw } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import { assistantService } from '../../services/assistantService';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
+import { fetchCart } from '../../store/slices/cartSlice';
 import { emitToast } from '../../utils/toastBus';
 import MarkdownMessage from './MarkdownMessage';
 import './ChatWidget.css';
@@ -34,6 +35,7 @@ const SUGGESTIONS = [
 
 function ChatWidget() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const dispatch = useDispatch();
 
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([GREETING]);
@@ -45,6 +47,9 @@ function ChatWidget() {
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const abortRef = useRef(null);
+  // Tracks whether the current turn touched the cart/order, so we only refetch
+  // (and celebrate) when something actually changed.
+  const cartTouchedRef = useRef(false);
 
   // Auto-scroll to the newest message whenever the thread grows.
   useEffect(() => {
@@ -75,6 +80,7 @@ function ChatWidget() {
       setInput('');
       setSending(true);
       setStatus('Thinking…');
+      cartTouchedRef.current = false;
 
       // Index of the assistant message we'll stream into (appended lazily on
       // the first token so the typing indicator shows until then).
@@ -102,7 +108,12 @@ function ChatWidget() {
         { message, history, session_id: sessionId },
         {
           signal: controller.signal,
-          onStatus: (s) => setStatus(s),
+          onStatus: (s) => {
+            setStatus(s);
+            // The backend announces cart/order actions via status events.
+            // Flag the turn so we refresh the cart when it finishes.
+            if (/cart|order/i.test(s)) cartTouchedRef.current = true;
+          },
           onToken: (chunk) => {
             setStatus('');
             appendToAssistant(chunk);
@@ -110,6 +121,12 @@ function ChatWidget() {
           onDone: () => {
             setStatus('');
             setSending(false);
+            // Live-sync the storefront cart with what the assistant just did.
+            if (cartTouchedRef.current) {
+              dispatch(fetchCart());
+              emitToast('success', '🛒 Your cart was updated by the assistant.');
+              cartTouchedRef.current = false;
+            }
           },
           onError: (msg) => {
             setStatus('');
@@ -126,7 +143,7 @@ function ChatWidget() {
       setSending(false);
       setStatus('');
     },
-    [input, sending, messages, sessionId],
+    [input, sending, messages, sessionId, dispatch],
   );
 
   const handleKeyDown = (e) => {
