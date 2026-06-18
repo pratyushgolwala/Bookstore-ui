@@ -78,8 +78,8 @@ function Navbar() {
     e.stopPropagation();
     try {
       await notificationsService.markRead(id);
-      // Remove the read notification from the list
-      setNotifications(prev => prev.filter(n => n.id !== id));
+      // Keep it in the list but mark as read (visual fade)
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
     } catch {
       // silent fail
     }
@@ -89,8 +89,8 @@ function Navbar() {
     // Mark read then navigate to its link (e.g. the thread)
     if (!notif.is_read) {
       notificationsService.markRead(notif.id).catch(() => {});
+      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
     }
-    setNotifications(prev => prev.filter(n => n.id !== notif.id));
     setNotifOpen(false);
     if (notif.link) {
       navigate(notif.link);
@@ -242,22 +242,26 @@ function Navbar() {
                     ) : (
                       notifications.slice(0, 8).map(n => (
                         <div key={n.id}
-                          className={`notif-item ${!n.is_read ? 'notif-unread' : ''}`}
+                          className={`notif-item ${!n.is_read ? 'notif-unread' : 'notif-read'}`}
                           style={{ borderColor: COLORS.border, cursor: n.link ? 'pointer' : 'default' }}
                           onClick={() => handleNotifClick(n)}
                         >
+                          {/* Unread dot indicator */}
+                          {!n.is_read && <span className="notif-dot" />}
                           <div className="notif-item-body">
-                            <p className="notif-title" style={{ color: COLORS.text.primary }}>{n.title}</p>
-                            <p className="notif-msg" style={{ color: COLORS.text.secondary }}>{n.message}</p>
+                            <p className="notif-title" style={{ color: n.is_read ? COLORS.text.tertiary : COLORS.text.primary }}>{n.title}</p>
+                            <p className="notif-msg" style={{ color: n.is_read ? COLORS.text.tertiary : COLORS.text.secondary }}>{n.message}</p>
                           </div>
-                          <button
-                            className="notif-read-btn"
-                            onClick={(e) => handleMarkRead(e, n.id)}
-                            title="Mark as read"
-                            style={{ color: COLORS.primary[600] }}
-                          >
-                            <Check size={15} />
-                          </button>
+                          {!n.is_read && (
+                            <button
+                              className="notif-read-btn"
+                              onClick={(e) => handleMarkRead(e, n.id)}
+                              title="Mark as read"
+                              style={{ color: COLORS.primary[600] }}
+                            >
+                              <Check size={15} />
+                            </button>
+                          )}
                         </div>
                       ))
                     )}
