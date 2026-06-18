@@ -5,6 +5,7 @@ import COLORS from '../../constants/colors';
 import { assistantService } from '../../services/assistantService';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
 import { emitToast } from '../../utils/toastBus';
+import MarkdownMessage from './MarkdownMessage';
 import './ChatWidget.css';
 
 /**
@@ -183,7 +184,11 @@ function ChatWidget() {
                       }
                 }
               >
-                {m.content}
+                {m.role === 'assistant' && !m.isError ? (
+                  <MarkdownMessage text={m.content} />
+                ) : (
+                  m.content
+                )}
               </div>
             </div>
           ))}
