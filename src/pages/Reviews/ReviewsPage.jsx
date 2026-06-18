@@ -5,6 +5,7 @@ import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 import { reviewsService } from '../../services/reviewsService';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import './ReviewsPage.css';
 
 function CustomDropdown({ options, value, onChange, placeholder }) {
@@ -56,6 +57,7 @@ function ReviewsPage() {
   const [filterRating, setFilterRating] = useState('all');
   const [sortBy, setSortBy]             = useState('recent');
   const [loading, setLoading]           = useState(true);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const ratingOptions = [
     { value: 'all', label: 'All Ratings' },
@@ -127,14 +129,20 @@ function ReviewsPage() {
     }
   };
 
-  const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm('Delete this review?')) return;
+  const handleDeleteReview = (reviewId) => {
+    setConfirmDeleteId(reviewId);
+  };
+
+  const performDeleteReview = async () => {
+    if (!confirmDeleteId) return;
     try {
-      await reviewsService.deleteReview(reviewId);
+      await reviewsService.deleteReview(confirmDeleteId);
       emitToast('success', 'Review deleted.');
-      setReviews(prev => prev.filter(r => r.id !== reviewId));
+      setReviews(prev => prev.filter(r => r.id !== confirmDeleteId));
     } catch (err) {
       emitToast('error', err.message || 'Failed to delete review');
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -345,6 +353,17 @@ function ReviewsPage() {
             </div>
           </div>
         )}
+
+        {/* ── Delete Confirmation ── */}
+        <ConfirmDialog
+          open={!!confirmDeleteId}
+          title="Delete this review?"
+          message="Your review will be permanently removed. This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={performDeleteReview}
+          onCancel={() => setConfirmDeleteId(null)}
+        />
       </div>
     </div>
   );
