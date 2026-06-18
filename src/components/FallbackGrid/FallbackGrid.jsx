@@ -2,14 +2,26 @@ import BookCard from '../ui/BookCard';
 import COLORS from '../../constants/colors';
 
 /**
- * FallbackGrid — a clean, aligned catalog grid.
+ * FallbackGrid — an asymmetric, densely-packed book wall.
  *
- * Uniform columns and equal-height cards so the wall reads as a deliberate,
- * well-kept shelf rather than a ragged auto-layout. Generous gaps give each
- * cover room to breathe.
+ * Cards flow into a CSS multi-column (masonry) layout. Their heights vary by
+ * design — some promote a cover-forward "tall" treatment, some add a quote or
+ * blurb, some are compact — so the columns interlock and pack flush with no
+ * dead whitespace. A deterministic variant per book keeps it stable between
+ * renders while still reading as a hand-arranged display rather than a grid.
  *
  * @param {{ books: Array, onBookSelect: (book: object) => void }} props
  */
+
+// Cheap stable hash so a given book always gets the same variant.
+function hashId(id = '') {
+  let h = 0;
+  for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) % 997;
+  return h;
+}
+
+const VARIANTS = ['tall', 'standard', 'blurb', 'standard', 'compact', 'tall'];
+
 function FallbackGrid({ books, onBookSelect }) {
   if (!books || books.length === 0) {
     return (
@@ -22,13 +34,18 @@ function FallbackGrid({ books, onBookSelect }) {
   return (
     <div className="w-full py-8">
       <div
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-7"
+        className="columns-2 md:columns-3 xl:columns-4 gap-5 sm:gap-6 [column-fill:_balance]"
         role="region"
         aria-label="Book catalog"
       >
-        {books.map((book) => (
-          <BookCard key={book.id} book={book} onSelect={onBookSelect} />
-        ))}
+        {books.map((book, i) => {
+          const variant = VARIANTS[(hashId(book.id) + i) % VARIANTS.length];
+          return (
+            <div key={book.id} className="mb-5 sm:mb-6 break-inside-avoid">
+              <BookCard book={book} onSelect={onBookSelect} variant={variant} />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
