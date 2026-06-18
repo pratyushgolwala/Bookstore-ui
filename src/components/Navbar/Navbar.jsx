@@ -52,8 +52,14 @@ function Navbar() {
   const fetchNotifications = async () => {
     try {
       const res = await notificationsService.getNotifications();
-      const data = res.data?.results || res.data || [];
-      setNotifications(Array.isArray(data) ? data : []);
+      // Handle both envelope { status, data: { results } } and raw DRF { count, results }
+      const payload = res?.data || res;
+      const list = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.results)
+          ? payload.results
+          : [];
+      setNotifications(list);
     } catch {
       // silent fail
     }
