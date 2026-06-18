@@ -118,9 +118,10 @@ const mockAuthors = AUTHOR_NAMES.map((name, i) => ({
 /* Author-dashboard datasets */
 const mockAuthorBooks = MOCK_BOOKS.slice(0, 6).map((b, i) => ({
   ...b,
-  status: i % 3 === 0 ? 'draft' : 'published',
+  is_active: i % 3 !== 0, // most published, a couple drafts
   sales: (i * 37 + 11) % 240,
-  revenue: ((i * 37 + 11) % 240) * b.price,
+  units_sold: (i * 37 + 11) % 240,
+  revenue: Math.round(((i * 37 + 11) % 240) * b.price),
   rating: 3.5 + ((i * 7) % 15) / 10,
   stock: (i * 13 + 4) % 60,
 }));
@@ -235,10 +236,13 @@ export function previewRequest(method, endpoint) {
 
   // ── author dashboard ──
   if (p === '/api/author/stats') {
+    const published = mockAuthorBooks.filter((b) => b.is_active);
+    const unitsSold = mockAuthorBooks.reduce((s, b) => s + b.units_sold, 0);
+    const revenue = mockAuthorBooks.reduce((s, b) => s + b.revenue, 0);
     return ok({
-      total_books: mockAuthorBooks.length,
-      total_sales: mockAuthorBooks.reduce((s, b) => s + b.sales, 0),
-      total_revenue: Math.round(mockAuthorBooks.reduce((s, b) => s + b.revenue, 0)),
+      published_titles: published.length,
+      units_sold: unitsSold,
+      royalties: Math.round(revenue * 0.7),
       avg_rating: 4.3,
     });
   }
