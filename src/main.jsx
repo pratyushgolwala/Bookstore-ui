@@ -7,6 +7,7 @@ import App from './App';
 import { store } from './store';
 import { initApiClient } from './services/apiClient';
 import { initAnalyticsClient } from './services/analyticsService';
+import { initAssistantClient } from './services/assistantService';
 import './index.css';
 
 // Wire the Redux store into the API client so it can attach tokens
@@ -14,6 +15,8 @@ import './index.css';
 initApiClient(store);
 // Wire the store into the analytics client so it can attach the access token.
 initAnalyticsClient(store);
+// The assistant client shares the same store for JWT access tokens.
+initAssistantClient(store);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

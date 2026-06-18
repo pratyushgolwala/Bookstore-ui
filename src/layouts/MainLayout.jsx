@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import Navbar from '../components/Navbar/Navbar';
 import ToastHost from '../components/Toast/ToastHost';
+import ChatWidget from '../components/Assistant/ChatWidget';
 import { selectCurrentUser } from '../store/slices/authSlice';
 import { hydrateCart, resetCart } from '../store/slices/cartSlice';
 import { hydrateWishlist, resetWishlist } from '../store/slices/wishlistSlice';
@@ -111,6 +112,9 @@ function MainLayout() {
 
       {/* Global toast notifications — available on all pages via toastBus */}
       <ToastHost />
+
+      {/* Floating AI assistant — shown to logged-in users on all pages */}
+      <ChatWidget />
     </div>
   );
 }
