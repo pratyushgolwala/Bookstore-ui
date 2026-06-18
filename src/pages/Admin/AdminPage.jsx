@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  BookOpen, Users, ShoppingCart, IndianRupee, TrendingUp,
+  BookOpen, Users, ShoppingCart, IndianRupee,
   AlertTriangle, Download, RefreshCw, FileText,
 } from 'lucide-react';
 import { analyticsService } from '../../services/analyticsService';
@@ -149,20 +149,15 @@ function AdminPage() {
           return (
             <div
               key={s.label}
-              className="rounded-xl p-5"
+              className="relative rounded-sm p-5 pt-6 overflow-hidden"
               style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: `${s.color}22` }}
-                >
-                  <Icon size={20} style={{ color: s.color }} />
-                </div>
-                <TrendingUp size={16} style={{ color: COLORS.success }} />
+              <span className="absolute left-0 top-0 h-0.5 w-12" style={{ backgroundColor: COLORS.brass }} />
+              <div className="flex items-start justify-between">
+                <p className="font-display text-3xl font-bold">{s.value}</p>
+                <Icon size={18} style={{ color: COLORS.text.tertiary }} strokeWidth={1.6} />
               </div>
-              <p className="text-2xl font-bold">{s.value}</p>
-              <p className="text-xs mt-1" style={{ color: COLORS.text.tertiary }}>
+              <p className="text-xs mt-2 tracking-wide uppercase" style={{ color: COLORS.text.tertiary }}>
                 {s.label}
               </p>
             </div>
@@ -173,10 +168,10 @@ function AdminPage() {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Top selling books */}
         <div
-          className="rounded-xl p-5"
+          className="rounded-sm p-5"
           style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
         >
-          <h2 className="font-bold mb-4">Top Selling Books</h2>
+          <h2 className="font-display text-2xl font-bold mb-4">Top Selling Books</h2>
           <div className="space-y-2">
             {topBooks.length === 0 && (
               <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
@@ -208,10 +203,10 @@ function AdminPage() {
 
         {/* Low stock alerts */}
         <div
-          className="rounded-xl p-5"
+          className="rounded-sm p-5"
           style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
         >
-          <h2 className="font-bold mb-4 flex items-center gap-2">
+          <h2 className="font-display text-2xl font-bold mb-4 flex items-center gap-2">
             <AlertTriangle size={18} style={{ color: COLORS.warning }} />
             Low Stock Alerts
             {inventory && (
