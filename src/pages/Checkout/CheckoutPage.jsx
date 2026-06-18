@@ -3,10 +3,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Lock, CheckCircle2, ArrowLeft, Loader2, ShoppingBag,
-  Shield, Truck, RotateCcw, Sparkles, Gift,
+  Shield, Truck, RotateCcw, Sparkles, Gift, Smartphone, XCircle,
 } from 'lucide-react';
 import { selectCartItems, selectCartTotal, clearCartThunk } from '../../store/slices/cartSlice';
-import { apiClient } from '../../services/apiClient';
+import { selectCurrentUser } from '../../store/slices/authSlice';
+import { paymentsService, loadRazorpayScript } from '../../services/paymentsService';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import MetalButton from '../../components/ui/MetalButton';
@@ -20,17 +21,12 @@ function CheckoutPage() {
   const navigate = useNavigate();
   const items = useSelector(selectCartItems);
   const subtotal = useSelector(selectCartTotal);
+  const currentUser = useSelector(selectCurrentUser);
 
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
   const tax = +((subtotal) * TAX_RATE).toFixed(2);
   const total = subtotal + shipping + tax;
 
-  const [form, setForm] = useState({
-    cardName: '',
-    cardNumber: '',
-    expiry: '',
-    cvv: '',
-  });
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [orderId, setOrderId] = useState(null);
@@ -42,44 +38,79 @@ function CheckoutPage() {
     return null;
   }
 
-  const handleChange = (e) => {
-    let { name, value } = e.target;
-    if (name === 'cardNumber') {
-      value = value.replace(/\D/g, '').slice(0, 16);
-      value = value.replace(/(.{4})/g, '$1 ').trim();
-    }
-    if (name === 'expiry') {
-      value = value.replace(/\D/g, '').slice(0, 4);
-      if (value.length > 2) value = value.slice(0, 2) + '/' + value.slice(2);
-    }
-    if (name === 'cvv') value = value.replace(/\D/g, '').slice(0, 4);
-    setForm((f) => ({ ...f, [name]: value }));
-  };
-
-  const isFormValid =
-    form.cardName.trim().length > 2 &&
-    form.cardNumber.replace(/\s/g, '').length === 16 &&
-    form.expiry.length === 5 &&
-    form.cvv.length >= 3;
-
+  // ── Razorpay payment flow ──────────────────────────────────
   const handlePayNow = async () => {
-    if (!isFormValid) return;
     setProcessing(true);
     setError('');
+
     try {
-      const payload = {
-        items: items.map((i) => ({ book_id: i.book_id, quantity: i.quantity })),
-        payment_method: 'card',
-      };
-      const res = await apiClient.post('/api/orders/checkout/', payload);
+      // 1. Ensure the Razorpay checkout script is available.
+      const ready = await loadRazorpayScript();
+      if (!ready) {
+        throw new Error('Could not load the payment gateway. Check your connection.');
+      }
+
+      // 2. Create the bookstore order + Razorpay order server-side.
+      const payload = items.map((i) => ({ book_id: i.book_id, quantity: i.quantity }));
+      const res = await paymentsService.createOrder(payload);
       const data = res?.data || res;
-      setOrderId(data.order_id);
-      setSuccess(true);
-      dispatch(clearCartThunk());
+
+      const {
+        order_id,
+        razorpay_order_id,
+        razorpay_key_id,
+        amount,
+        currency,
+      } = data;
+
+      // 3. Open Razorpay Checkout (UPI + other test methods).
+      const rzp = new window.Razorpay({
+        key: razorpay_key_id,
+        amount,
+        currency,
+        order_id: razorpay_order_id,
+        name: 'Folio Bookstore',
+        description: `Order ${String(order_id).slice(0, 8).toUpperCase()}`,
+        prefill: {
+          name: currentUser?.first_name || currentUser?.email?.split('@')[0] || '',
+          email: currentUser?.email || '',
+        },
+        theme: { color: COLORS.primary[500] },
+        method: { upi: true },
+        // 4. On success — verify the signature server-side.
+        handler: async (response) => {
+          try {
+            await paymentsService.verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            setOrderId(order_id);
+            setSuccess(true);
+            dispatch(clearCartThunk());
+          } catch (verifyErr) {
+            setError(verifyErr.message || 'Payment verification failed. If you were charged, contact support.');
+          } finally {
+            setProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setProcessing(false);
+            setError('Payment cancelled. Your order is still pending — you can try again.');
+          },
+        },
+      });
+
+      rzp.on('payment.failed', (resp) => {
+        setProcessing(false);
+        setError(resp?.error?.description || 'Payment failed. Please try again.');
+      });
+
+      rzp.open();
     } catch (err) {
-      setError(err.message || 'Payment failed. Please try again.');
-    } finally {
       setProcessing(false);
+      setError(err.message || 'Could not start payment. Please try again.');
     }
   };
 
@@ -92,7 +123,6 @@ function CheckoutPage() {
         className="flex flex-col items-center justify-center text-center px-6"
         style={{ minHeight: '100vh', backgroundColor: COLORS.background, paddingTop: '100px' }}
       >
-        {/* Animated success ring */}
         <div className="relative mb-8">
           <div
             className="w-28 h-28 rounded-full flex items-center justify-center"
@@ -113,7 +143,7 @@ function CheckoutPage() {
         </div>
 
         <h1 className="text-3xl font-bold mb-2" style={{ color: COLORS.text.primary }}>
-          Order Placed Successfully!
+          Payment Successful!
         </h1>
         <p className="text-base mb-2" style={{ color: COLORS.text.secondary }}>
           Thank you for your purchase. Your books are on their way!
@@ -136,10 +166,7 @@ function CheckoutPage() {
           </MetalButton>
         </div>
 
-        {/* Delivery info */}
-        <div
-          className="mt-10 grid grid-cols-3 gap-6 max-w-md"
-        >
+        <div className="mt-10 grid grid-cols-3 gap-6 max-w-md">
           {[
             { icon: <Truck size={20} />, text: 'Ships within 2-3 days' },
             { icon: <Shield size={20} />, text: 'Payment secured' },
@@ -168,14 +195,13 @@ function CheckoutPage() {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // CHECKOUT FORM
+  // CHECKOUT
   // ═══════════════════════════════════════════════════════════════
   return (
     <div
       className="px-4 sm:px-6 py-8 max-w-5xl mx-auto"
       style={{ minHeight: '100vh', color: COLORS.text.primary, paddingTop: '100px' }}
     >
-      {/* Back button */}
       <button
         onClick={() => step === 2 ? setStep(1) : navigate('/cart')}
         className="flex items-center gap-2 text-sm mb-6 transition-opacity hover:opacity-70"
@@ -184,7 +210,6 @@ function CheckoutPage() {
         <ArrowLeft size={16} /> {step === 2 ? 'Back to Review' : 'Back to Cart'}
       </button>
 
-      {/* Progress indicator */}
       <div className="flex items-center gap-3 mb-8">
         <StepIndicator num={1} label="Review" active={step >= 1} current={step === 1} />
         <div className="flex-1 h-0.5 rounded" style={{ backgroundColor: step >= 2 ? COLORS.secondary[500] : COLORS.surfaceLight }} />
@@ -194,15 +219,11 @@ function CheckoutPage() {
       </div>
 
       <div className="grid lg:grid-cols-5 gap-8">
-        {/* ─── Left: Content (Review or Payment) ─── */}
         <div className="lg:col-span-3">
           {step === 1 ? (
             <ReviewStep items={items} onContinue={() => setStep(2)} />
           ) : (
             <PaymentStep
-              form={form}
-              onChange={handleChange}
-              isFormValid={isFormValid}
               processing={processing}
               error={error}
               total={total}
@@ -211,7 +232,6 @@ function CheckoutPage() {
           )}
         </div>
 
-        {/* ─── Right: Order Summary ─── */}
         <div className="lg:col-span-2">
           <div
             className="rounded-2xl p-5 sticky top-24"
@@ -261,7 +281,6 @@ function CheckoutPage() {
               </div>
             </div>
 
-            {/* Trust badges */}
             <div className="flex justify-around mt-5 pt-4 border-t" style={{ borderColor: COLORS.border }}>
               {[
                 { icon: <Shield size={14} />, text: 'Secure' },
@@ -334,27 +353,26 @@ function ReviewStep({ items, onContinue }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 2: PAYMENT
+// STEP 2: PAYMENT (Razorpay UPI)
 // ═══════════════════════════════════════════════════════════════
-function PaymentStep({ form, onChange, isFormValid, processing, error, total, onPay }) {
+function PaymentStep({ processing, error, total, onPay }) {
   return (
     <div
       className="rounded-2xl p-6"
       style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
     >
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ background: COLORS.gradient.primary }}
           >
-            <CreditCard size={20} color="#fff" />
+            <Smartphone size={20} color="#fff" />
           </div>
           <div>
-            <h2 className="text-lg font-bold">Payment Details</h2>
+            <h2 className="text-lg font-bold">Pay with UPI</h2>
             <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
-              Secure checkout
+              Powered by Razorpay
             </p>
           </div>
         </div>
@@ -362,113 +380,56 @@ function PaymentStep({ form, onChange, isFormValid, processing, error, total, on
           className="text-xs px-3 py-1.5 rounded-full font-medium"
           style={{ backgroundColor: `${COLORS.success}18`, color: COLORS.success, border: `1px solid ${COLORS.success}33` }}
         >
-          🧪 Demo Mode
+          🧪 Test Mode
         </span>
       </div>
 
-      {/* Card visual */}
+      {/* UPI info panel */}
       <div
-        className="rounded-2xl p-5 mb-6 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-          minHeight: '180px',
-        }}
+        className="rounded-2xl p-6 mb-6 flex flex-col items-center text-center gap-3"
+        style={{ backgroundColor: COLORS.surfaceLight, border: `1px dashed ${COLORS.border}` }}
       >
-        <div className="absolute top-0 right-0 w-40 h-40 rounded-full" style={{ background: 'rgba(255,255,255,0.03)', transform: 'translate(30%,-30%)' }} />
-        <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full" style={{ background: 'rgba(255,255,255,0.02)', transform: 'translate(-30%,30%)' }} />
-
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex gap-1">
-            <div className="w-8 h-6 rounded" style={{ backgroundColor: '#e6a817' }} />
-            <div className="w-5 h-6 rounded" style={{ backgroundColor: '#e6a81744' }} />
-          </div>
-          <span className="text-xs tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>VISA</span>
+        <div
+          className="w-14 h-14 rounded-2xl flex items-center justify-center"
+          style={{ background: COLORS.gradient.primary }}
+        >
+          <Smartphone size={26} color="#fff" />
         </div>
-
-        <p className="font-mono text-lg tracking-[0.2em] mb-4" style={{ color: 'rgba(255,255,255,0.9)' }}>
-          {form.cardNumber || '•••• •••• •••• ••••'}
+        <p className="text-sm font-medium" style={{ color: COLORS.text.primary }}>
+          Pay securely via any UPI app
         </p>
-
-        <div className="flex justify-between">
-          <div>
-            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Card Holder</p>
-            <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
-              {form.cardName || 'YOUR NAME'}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Expires</p>
-            <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
-              {form.expiry || 'MM/YY'}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Form fields */}
-      <div className="space-y-4">
-        <InputField
-          label="Cardholder Name"
-          name="cardName"
-          value={form.cardName}
-          onChange={onChange}
-          placeholder="John Doe"
-        />
-        <InputField
-          label="Card Number"
-          name="cardNumber"
-          value={form.cardNumber}
-          onChange={onChange}
-          placeholder="4242 4242 4242 4242"
-          mono
-        />
-        <div className="grid grid-cols-2 gap-4">
-          <InputField
-            label="Expiry Date"
-            name="expiry"
-            value={form.expiry}
-            onChange={onChange}
-            placeholder="MM/YY"
-            mono
-          />
-          <InputField
-            label="CVV"
-            name="cvv"
-            value={form.cvv}
-            onChange={onChange}
-            placeholder="•••"
-            type="password"
-            mono
-          />
-        </div>
+        <p className="text-xs leading-relaxed max-w-xs" style={{ color: COLORS.text.tertiary }}>
+          You'll be redirected to Razorpay's secure checkout to complete your payment
+          using GPay, PhonePe, Paytm or any UPI ID. No card details required.
+        </p>
       </div>
 
       {error && (
         <div
-          className="mt-4 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
+          className="mb-4 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
           style={{ backgroundColor: `${COLORS.error}12`, color: COLORS.error, border: `1px solid ${COLORS.error}33` }}
         >
-          <span>⚠️</span> {error}
+          <XCircle size={16} className="shrink-0" /> {error}
         </div>
       )}
 
       <MetalButton
         variant="gold"
         fullWidth
-        className="mt-6 gap-2"
+        className="gap-2"
         onClick={onPay}
-        disabled={!isFormValid || processing}
-        style={{ opacity: (!isFormValid || processing) ? 0.6 : 1 }}
+        disabled={processing}
+        style={{ opacity: processing ? 0.6 : 1 }}
       >
         {processing ? (
-          <><Loader2 size={18} className="animate-spin" /> Processing Payment…</>
+          <><Loader2 size={18} className="animate-spin" /> Opening secure checkout…</>
         ) : (
           <><Lock size={16} /> Pay {formatCurrency(total)}</>
         )}
       </MetalButton>
 
       <p className="text-xs text-center mt-4 flex items-center justify-center gap-1.5" style={{ color: COLORS.text.tertiary }}>
-        <Lock size={11} /> Demo mode — no real charge. Use any card number.
+        <Lock size={11} /> Test mode — use Razorpay's test UPI ID <span className="font-mono" style={{ color: COLORS.secondary[500] }}>success@razorpay</span>
       </p>
     </div>
   );
@@ -477,31 +438,6 @@ function PaymentStep({ form, onChange, isFormValid, processing, error, total, on
 // ═══════════════════════════════════════════════════════════════
 // SHARED COMPONENTS
 // ═══════════════════════════════════════════════════════════════
-function InputField({ label, name, value, onChange, placeholder, type = 'text', mono }) {
-  return (
-    <div>
-      <label className="text-xs uppercase tracking-wider mb-1.5 block font-medium" style={{ color: COLORS.text.tertiary }}>
-        {label}
-      </label>
-      <input
-        name={name}
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`w-full px-4 py-3.5 rounded-xl text-sm outline-none transition-all 
-          focus:ring-2 focus:ring-offset-0 ${mono ? 'font-mono tracking-wider' : ''}`}
-        style={{
-          backgroundColor: COLORS.surfaceLight,
-          color: COLORS.text.primary,
-          border: `1px solid ${COLORS.border}`,
-          '--tw-ring-color': COLORS.secondary[500] + '44',
-        }}
-      />
-    </div>
-  );
-}
-
 function StepIndicator({ num, label, active, current }) {
   return (
     <div className="flex items-center gap-2">
