@@ -184,17 +184,20 @@ function DiscussionPage() {
         <div className="disc-header">
           <div className="disc-header-top">
             <div className="disc-title-row">
-              <div className="disc-icon" style={{ background: COLORS.gradient.primary }}>
-                <MessageSquare size={26} color="#fff" />
+              <div className="disc-icon" style={{ backgroundColor: COLORS.surfaceLight, border: `1px solid ${COLORS.border}` }}>
+                <MessageSquare size={24} color={COLORS.brass} />
               </div>
               <div>
+                <span className="block text-xs tracking-[0.3em] uppercase mb-1.5" style={{ color: COLORS.brass }}>
+                  The Margins
+                </span>
                 <h1 className="disc-title" style={{ color: COLORS.parchment.text }}>Community Discussions</h1>
                 <p className="disc-subtitle" style={{ color: COLORS.parchment.textSoft }}>Share thoughts, ask questions, connect with readers</p>
               </div>
             </div>
             <button className="new-thread-btn"
               onClick={() => isAuthenticated ? setShowNewThreadModal(true) : emitToast('error', 'You need to login to create a thread.')}
-              style={{ background: COLORS.gradient.primary }}>
+              style={{ backgroundColor: COLORS.cloth, color: '#fdf6e6' }}>
               <Plus size={18} /> New Thread
             </button>
           </div>
