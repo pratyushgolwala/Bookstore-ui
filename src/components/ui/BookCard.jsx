@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ShoppingCart, Check, Quote } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { addItem } from '../../store/slices/cartSlice';
+import { addToCart } from '../../store/slices/cartSlice';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
 import { emitToast } from '../../utils/toastBus';
 import { formatCurrency } from '../../utils/formatters';
@@ -44,23 +44,20 @@ function BookCard({ book, onSelect, variant = 'standard' }) {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const [added, setAdded] = useState(false);
 
-  const quickAdd = (e) => {
+  const quickAdd = async (e) => {
     e.stopPropagation();
     if (!isAuthenticated) {
       emitToast('warning', 'Please log in to add books to your cart.');
       return;
     }
-    dispatch(addItem({
-      id: book.id,
-      title: book.title,
-      price: book.price,
-      quantity: 1,
-      author: book.author,
-      coverImageUrl: book.coverImageUrl,
-    }));
-    emitToast('success', `"${book.title}" added to cart.`);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
+    try {
+      await dispatch(addToCart({ bookId: book.id, quantity: 1 })).unwrap();
+      emitToast('success', `"${book.title}" added to cart.`);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1500);
+    } catch (err) {
+      emitToast('error', err || 'Could not add to cart.');
+    }
   };
 
   const onImgError = (e) => {

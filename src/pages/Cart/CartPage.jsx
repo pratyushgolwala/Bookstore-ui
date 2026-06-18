@@ -9,11 +9,12 @@ import {
 import {
   selectCartItems,
   selectCartTotal,
-  incrementItem,
-  decrementItem,
-  removeItem,
-  clearCart,
-  setQuantity,
+  incrementCartItem,
+  decrementCartItem,
+  removeCartItem,
+  clearCartThunk,
+  setCartItemQuantity,
+  addToCart,
 } from '../../store/slices/cartSlice';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
 import { formatCurrency } from '../../utils/formatters';
@@ -64,7 +65,7 @@ function CartPage() {
   const handleRemove = (id) => {
     setRemovingId(id);
     setTimeout(() => {
-      dispatch(removeItem(id));
+      dispatch(removeCartItem(id));
       setRemovingId(null);
     }, 280);
   };
@@ -198,7 +199,7 @@ function CartPage() {
           </p>
         </div>
         <button
-          onClick={() => dispatch(clearCart())}
+          onClick={() => dispatch(clearCartThunk())}
           className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
           style={{ color: COLORS.error, border: `1px solid ${COLORS.error}33`, backgroundColor: `${COLORS.error}11` }}
         >
@@ -259,9 +260,9 @@ function CartPage() {
               mounted={mounted}
               removing={removingId === item.id}
               onRemove={() => handleRemove(item.id)}
-              onIncrement={() => dispatch(incrementItem(item.id))}
-              onDecrement={() => dispatch(decrementItem(item.id))}
-              onSetQty={(q) => dispatch(setQuantity({ id: item.id, quantity: q }))}
+              onIncrement={() => dispatch(incrementCartItem(item.id))}
+              onDecrement={() => dispatch(decrementCartItem(item.id))}
+              onSetQty={(q) => dispatch(setCartItemQuantity({ itemId: item.id, quantity: q }))}
             />
           ))}
 
@@ -564,14 +565,13 @@ const MOCK_RECS = [
 ];
 
 function RecommendedSection() {
-  const dispatch  = useDispatch();
   const navigate  = useNavigate();
-  const [added, setAdded] = useState({});
 
-  const handleAdd = (book) => {
-    dispatch({ type: 'cart/addItem', payload: { id: book.id, title: book.title, price: book.price, author: book.author, coverImageUrl: `https://picsum.photos/seed/${book.id}/120/180` } });
-    setAdded((p) => ({ ...p, [book.id]: true }));
-    setTimeout(() => setAdded((p) => ({ ...p, [book.id]: false })), 2000);
+  // These are placeholder picks with non-catalog ids, so they can't be added
+  // to the real (backend) cart directly. Send the shopper to search for the
+  // title instead — they can add the real book from there.
+  const handleFind = (book) => {
+    navigate(`/books?search=${encodeURIComponent(book.title)}`);
   };
 
   return (
@@ -616,15 +616,11 @@ function RecommendedSection() {
               <p className="font-bold text-sm mt-1" style={{ color: COLORS.secondary[500] }}>{formatCurrency(book.price)}</p>
             </div>
             <button
-              onClick={() => handleAdd(book)}
+              onClick={() => handleFind(book)}
               className="w-full py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110 active:scale-95"
-              style={
-                added[book.id]
-                  ? { backgroundColor: `${COLORS.success}22`, color: COLORS.success, border: `1px solid ${COLORS.success}44` }
-                  : { background: COLORS.gradient.primary, color: '#fff' }
-              }
+              style={{ background: COLORS.gradient.primary, color: '#fff' }}
             >
-              {added[book.id] ? '✓ Added' : '+ Add to cart'}
+              Find in catalog
             </button>
           </div>
         ))}
