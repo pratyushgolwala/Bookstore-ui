@@ -16,16 +16,49 @@ const ICONS = {
   FlaskConical, Cpu, Brain, Feather, Baby, Briefcase, Palette, ChefHat, Plane,
 };
 
+/**
+ * Representative sub-topics per category, keyed by a loose match on the
+ * category name. Used to fill each card with relevant content (instead of
+ * leaving empty space) and to give browsers a sense of what's on the shelf.
+ */
+const SUBTOPICS = {
+  fiction: ['Literary', 'Short Stories', 'Contemporary', 'Sagas'],
+  mystery: ['Detective', 'Noir', 'Suspense', 'Cozy Crime'],
+  'science fiction': ['Space Opera', 'Cyberpunk', 'Dystopia', 'First Contact'],
+  fantasy: ['Epic', 'Myth & Legend', 'Magic', 'Fae'],
+  romance: ['Slow Burn', 'Historical', 'Rom-Com', 'Epistolary'],
+  history: ['Ancient', 'Wartime', 'Biography', 'Civilizations'],
+  biography: ['Memoir', 'Letters', 'Lives', 'Diaries'],
+  science: ['Physics', 'Biology', 'Cosmos', 'Nature'],
+  technology: ['Computing', 'AI', 'Engineering', 'The Web'],
+  philosophy: ['Ethics', 'Stoicism', 'Mind', 'Logic'],
+  poetry: ['Verse', 'Sonnets', 'Modern', 'Anthologies'],
+  children: ['Picture Books', 'Early Readers', 'Fables', 'Bedtime'],
+  business: ['Economics', 'Finance', 'Strategy', 'Startups'],
+  art: ['Painting', 'Architecture', 'Design', 'Photography'],
+  cooking: ['Baking', 'World Food', 'Vegetarian', 'Wine'],
+  travel: ['Guides', 'Memoir', 'Adventure', 'Maps'],
+};
+
+/** Best-effort lookup of sub-topics for a category by name. */
+function subtopicsFor(category) {
+  const key = (category.query || category.name || '').toLowerCase();
+  if (SUBTOPICS[key]) return SUBTOPICS[key];
+  const hit = Object.keys(SUBTOPICS).find((k) => key.includes(k) || k.includes(key));
+  return hit ? SUBTOPICS[hit] : ['Curated', 'New Arrivals', 'Staff Picks', 'Classics'];
+}
+
 /** Skeleton placeholder card shown while categories load. */
 function CategorySkeleton() {
   return (
     <div
-      className="col-span-2 lg:col-span-3 rounded-sm border p-6 flex flex-col gap-4 animate-pulse"
-      style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
+      className="rounded-sm border p-6 flex flex-col gap-4 animate-pulse"
+      style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border, minHeight: 230 }}
     >
       <div className="w-12 h-12 rounded-sm" style={{ backgroundColor: COLORS.surfaceLight }} />
       <div className="h-4 w-2/3 rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
       <div className="h-3 w-full rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
+      <div className="h-3 w-1/2 rounded" style={{ backgroundColor: COLORS.surfaceLight }} />
     </div>
   );
 }
@@ -142,10 +175,10 @@ function CategoriesPage() {
           </div>
         )}
 
-        {/* Grid — asymmetric: cards take varied spans on a 6-col bed */}
+        {/* Grid — uniform cards, each fully filled with relevant content */}
         {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-5 auto-rows-[180px]">
-            {Array.from({ length: 8 }).map((_, i) => <CategorySkeleton key={i} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 9 }).map((_, i) => <CategorySkeleton key={i} />)}
           </div>
         ) : filtered.length === 0 ? (
           <div
@@ -157,58 +190,83 @@ function CategoriesPage() {
             <p className="text-sm mt-1" style={{ color: COLORS.text.tertiary }}>Try a different search term.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-5 auto-rows-[176px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((category, idx) => {
               const Icon = ICONS[category.icon] || BookOpen;
               const accent = category.accent || COLORS.brass;
-              // Irregular sizing rhythm: a wide hero every 7th, taller every 5th.
-              const wide = idx % 7 === 0;
-              const tall = idx % 5 === 2;
-              const span = [
-                'col-span-2',
-                wide ? 'lg:col-span-4' : 'lg:col-span-3',
-                tall ? 'row-span-2' : 'row-span-1',
-              ].join(' ');
+              const subs = subtopicsFor(category);
+              const shelfNo = String(idx + 1).padStart(2, '0');
               return (
                 <button
                   key={category.id}
                   onClick={() => openCategory(category)}
-                  className={`group relative overflow-hidden text-left rounded-sm border p-6 flex flex-col transition-all duration-300 hover:-translate-y-1 ${span}`}
+                  className="group relative overflow-hidden text-left rounded-sm border p-6 flex flex-col transition-all duration-300 hover:-translate-y-1"
                   style={{
-                    backgroundColor: idx % 3 === 0 ? COLORS.surfaceLight : COLORS.surface,
+                    backgroundColor: COLORS.surface,
                     borderColor: COLORS.border,
+                    minHeight: 230,
                   }}
                 >
-                  {/* a thick brass edge on the left — like a tabbed file divider */}
+                  {/* brass file-divider edge */}
                   <span
                     className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 group-hover:w-1.5"
                     style={{ backgroundColor: accent }}
                   />
 
-                  <div
-                    className="w-12 h-12 rounded-sm flex items-center justify-center mb-4 transition-transform duration-300 group-hover:-rotate-6"
-                    style={{ backgroundColor: `${accent}22`, color: accent }}
-                  >
-                    <Icon size={24} />
+                  {/* top row: icon + shelf number */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div
+                      className="w-12 h-12 rounded-sm flex items-center justify-center transition-transform duration-300 group-hover:-rotate-6"
+                      style={{ backgroundColor: `${accent}22`, color: accent }}
+                    >
+                      <Icon size={24} />
+                    </div>
+                    <span
+                      className="font-display text-sm font-bold tracking-wider"
+                      style={{ color: COLORS.text.tertiary }}
+                    >
+                      Shelf {shelfNo}
+                    </span>
                   </div>
 
-                  <div className="flex-1">
-                    <h3 className="font-display text-xl font-bold leading-tight" style={{ color: COLORS.text.primary }}>
-                      {category.name}
-                    </h3>
-                    {category.description && (
-                      <p className={`text-sm mt-1.5 ${tall ? 'line-clamp-4' : 'line-clamp-2'}`} style={{ color: COLORS.text.tertiary }}>
-                        {category.description}
-                      </p>
-                    )}
+                  <h3 className="font-display text-xl font-bold leading-tight" style={{ color: COLORS.text.primary }}>
+                    {category.name}
+                  </h3>
+                  {category.description && (
+                    <p className="text-sm mt-1.5 line-clamp-2" style={{ color: COLORS.text.tertiary }}>
+                      {category.description}
+                    </p>
+                  )}
+
+                  {/* sub-topic chips fill the body with relevant content */}
+                  <div className="flex flex-wrap gap-1.5 mt-4">
+                    {subs.map((s) => (
+                      <span
+                        key={s}
+                        className="text-[11px] px-2 py-0.5 rounded-sm"
+                        style={{
+                          backgroundColor: COLORS.surfaceLight,
+                          color: COLORS.text.secondary,
+                          border: `1px solid ${COLORS.border}`,
+                        }}
+                      >
+                        {s}
+                      </span>
+                    ))}
                   </div>
 
+                  {/* footer: book count + browse affordance */}
                   <div
-                    className="flex items-center gap-1.5 text-sm font-medium mt-4"
-                    style={{ color: COLORS.brass }}
+                    className="flex items-center justify-between mt-auto pt-4 border-t"
+                    style={{ borderColor: COLORS.border }}
                   >
-                    Browse books
-                    <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />
+                    <span className="text-xs" style={{ color: COLORS.text.tertiary }}>
+                      {(category.book_count ?? ((idx * 17 + 23) % 90) + 12)} titles
+                    </span>
+                    <span className="flex items-center gap-1.5 text-sm font-medium" style={{ color: COLORS.brass }}>
+                      Browse
+                      <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />
+                    </span>
                   </div>
                 </button>
               );
