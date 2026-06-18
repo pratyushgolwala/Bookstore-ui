@@ -77,6 +77,94 @@ async function chat({ message, history = [], session_id = null, timeoutMs = 4500
 }
 
 /**
+ * Stream a chat turn via Server-Sent Events.
+ *
+ * EventSource can't send POST bodies or Authorization headers, so we use the
+ * Fetch streaming API and parse the `data: {json}` frames ourselves.
+ *
+ * @param {{ message: string, history?: Array, session_id?: string|null }} payload
+ * @param {{ onStatus?: (text: string) => void,
+ *           onToken?: (chunk: string) => void,
+ *           onDone?: (fullText: string) => void,
+ *           onError?: (message: string) => void,
+ *           signal?: AbortSignal }} handlers
+ */
+async function chatStream(
+  { message, history = [], session_id = null },
+  { onStatus, onToken, onDone, onError, signal } = {},
+) {
+  const token = getAccessToken();
+
+  let res;
+  try {
+    res = await fetch(`${ASSISTANT_URL}/chat/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ message, history, session_id }),
+      signal,
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    onError?.('Could not reach the assistant. Check your connection and try again.');
+    return;
+  }
+
+  if (res.status === 401) {
+    onError?.('Your session has expired. Please log in again to use the assistant.');
+    return;
+  }
+  if (!res.ok || !res.body) {
+    const json = await res.json().catch(() => null);
+    onError?.(json?.detail || json?.message || `Assistant request failed (${res.status})`);
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  const handleFrame = (frame) => {
+    const line = frame.trim();
+    if (!line.startsWith('data:')) return;
+    let evt;
+    try {
+      evt = JSON.parse(line.slice(5).trim());
+    } catch {
+      return;
+    }
+    if (evt.type === 'status') onStatus?.(evt.data);
+    else if (evt.type === 'token') onToken?.(evt.data);
+    else if (evt.type === 'done') onDone?.(evt.data);
+    else if (evt.type === 'error') onError?.(evt.data);
+  };
+
+  try {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      // SSE frames are separated by a blank line (\n\n).
+      let sep;
+      while ((sep = buffer.indexOf('\n\n')) !== -1) {
+        const frame = buffer.slice(0, sep);
+        buffer = buffer.slice(sep + 2);
+        handleFrame(frame);
+      }
+    }
+    if (buffer.trim()) handleFrame(buffer);
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      onError?.('The connection was interrupted. Please try again.');
+    }
+  }
+}
+
+/**
  * Fetch AI book recommendations.
  *
  * The assistant runs a full tool-calling loop server-side, so this can take
@@ -127,4 +215,4 @@ async function recommend({ query = null, limit = 6, timeoutMs = 45000 } = {}) {
   return res.json();
 }
 
-export const assistantService = { chat, recommend };
+export const assistantService = { chat, chatStream, recommend };
