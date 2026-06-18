@@ -178,10 +178,13 @@ function ReviewsPage() {
         <div className="reviews-header">
           <div className="header-top">
             <div className="header-title-section">
-              <div className="header-icon" style={{ background: COLORS.gradient.accent }}>
-                <BookOpen size={28} color="#fff" />
+              <div className="header-icon" style={{ backgroundColor: COLORS.surfaceLight, border: `1px solid ${COLORS.border}` }}>
+                <BookOpen size={26} color={COLORS.brass} />
               </div>
               <div>
+                <span className="block text-xs tracking-[0.3em] uppercase mb-1.5" style={{ color: COLORS.brass }}>
+                  Reader Notes
+                </span>
                 <h1 className="page-title" style={{ color: COLORS.parchment.text }}>Book Reviews</h1>
                 <p className="page-subtitle" style={{ color: COLORS.parchment.textSoft }}>
                   Read honest reviews from our community
@@ -190,7 +193,7 @@ function ReviewsPage() {
             </div>
             <button className="write-review-btn"
               onClick={() => isAuthenticated ? setShowForm(true) : emitToast('error', 'You need to login to write a review.')}
-              style={{ background: COLORS.gradient.accent }}>
+              style={{ backgroundColor: COLORS.cloth, color: '#fdf6e6' }}>
               <Star size={18} />
               Write a Review
             </button>
@@ -335,7 +338,7 @@ function ReviewsPage() {
                 </div>
 
                 <button className="submit-btn" onClick={handleSubmit} disabled={submitting}
-                  style={{ background: COLORS.gradient.accent, opacity: submitting ? 0.7 : 1 }}>
+                  style={{ backgroundColor: COLORS.cloth, color: '#fdf6e6', opacity: submitting ? 0.7 : 1 }}>
                   {submitting ? 'Submitting…' : 'Submit Review'}
                 </button>
               </div>

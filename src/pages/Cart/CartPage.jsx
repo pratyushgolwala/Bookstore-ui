@@ -94,14 +94,13 @@ function CartPage() {
         style={{ minHeight: '100vh', backgroundColor: COLORS.background, paddingTop: '100px' }}
       >
         <div
-          className="w-28 h-28 rounded-full flex items-center justify-center mb-8"
+          className="w-24 h-24 rounded-sm flex items-center justify-center mb-8"
           style={{
-            background: `radial-gradient(circle, ${COLORS.primary[200]} 0%, ${COLORS.primary[50]} 100%)`,
-            border: `1px solid ${COLORS.primary[300]}`,
-            boxShadow: `0 0 48px ${COLORS.primary[500]}22`,
+            backgroundColor: COLORS.surface,
+            border: `1px solid ${COLORS.border}`,
           }}
         >
-          <Lock size={44} style={{ color: COLORS.primary[700] }} strokeWidth={1.5} />
+          <Lock size={42} style={{ color: COLORS.brass }} strokeWidth={1.5} />
         </div>
 
         <h1 className="font-display text-3xl font-bold mb-3" style={{ color: COLORS.text.primary }}>
@@ -131,19 +130,18 @@ function CartPage() {
         className="flex flex-col items-center justify-center text-center px-6 pb-16"
         style={{ minHeight: '100vh', backgroundColor: COLORS.background, paddingTop: '100px' }}
       >
-        {/* Icon circle */}
+        {/* Icon mark */}
         <div
-          className="w-28 h-28 rounded-full flex items-center justify-center mb-8 relative"
+          className="w-24 h-24 rounded-sm flex items-center justify-center mb-8 relative"
           style={{
-            background: `radial-gradient(circle, ${COLORS.primary[200]} 0%, ${COLORS.primary[50]} 100%)`,
-            border: `1px solid ${COLORS.primary[300]}`,
-            boxShadow: `0 0 48px ${COLORS.primary[500]}22`,
+            backgroundColor: COLORS.surface,
+            border: `1px solid ${COLORS.border}`,
           }}
         >
-          <ShoppingBag size={48} style={{ color: COLORS.primary[700] }} strokeWidth={1.5} />
+          <ShoppingBag size={44} style={{ color: COLORS.brass }} strokeWidth={1.5} />
           <span
-            className="absolute -top-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-            style={{ background: COLORS.gradient.primary, color: '#fff' }}
+            className="absolute -top-2 -right-2 w-7 h-7 rounded-sm flex items-center justify-center text-xs font-bold"
+            style={{ backgroundColor: COLORS.cloth, color: '#fdf6e6' }}
           >0</span>
         </div>
 
