@@ -46,14 +46,13 @@ function WishlistPage() {
         style={{ minHeight: '100vh', backgroundColor: COLORS.parchment.bg, paddingTop: '100px' }}
       >
         <div
-          className="w-28 h-28 rounded-full flex items-center justify-center mb-8"
+          className="w-24 h-24 rounded-sm flex items-center justify-center mb-8"
           style={{
-            background: `radial-gradient(circle, ${COLORS.accent[200]} 0%, ${COLORS.accent[50]} 100%)`,
-            border: `1px solid ${COLORS.accent[300]}`,
-            boxShadow: `0 0 48px ${COLORS.accent[400]}22`,
+            backgroundColor: COLORS.surface,
+            border: `1px solid ${COLORS.border}`,
           }}
         >
-          <Heart size={46} style={{ color: COLORS.accent[400] }} strokeWidth={1.5} />
+          <Heart size={42} style={{ color: COLORS.brass }} strokeWidth={1.5} />
         </div>
         <h1 className="font-display text-3xl font-bold mb-3" style={{ color: COLORS.parchment.text }}>
           Your wishlist is empty
