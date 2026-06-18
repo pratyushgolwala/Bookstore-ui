@@ -254,30 +254,37 @@ function LandingPage() {
   );
 }
 
-/* ─── Leaning stack of book spines — flat fills, hand-set angles ───
-   No gradients, no glow. Each spine is a solid book-cloth color with a
-   foil-stamped title, tilted slightly differently so it reads as a real,
-   slightly untidy pile rather than a generated grid. */
+/* ─── An asymmetric arrangement of book spines — deliberately uneven ───
+   Mixed heights, scattered rotations and offsets so it reads as a real,
+   hand-arranged pile rather than a tidy ladder. Flat fills, no gradients. */
 function SpineStack() {
   const spines = [
-    { color: '#3f5d54', title: 'The Quiet Coast', author: 'A. Maro', rot: '-2.5deg', w: '94%' },
-    { color: '#7a3b2e', title: 'Letters at Dusk', author: 'I. Soren', rot: '1.5deg', w: '100%' },
-    { color: '#2f4858', title: 'On Borrowed Maps', author: 'R. Vale', rot: '-1deg', w: '88%' },
-    { color: '#6b4a2f', title: 'A History of Almost', author: 'D. Okafor', rot: '2.8deg', w: '97%' },
-    { color: '#52414f', title: 'Marginalia', author: 'P. Reyes', rot: '-3.2deg', w: '82%' },
+    { color: '#3f5d54', title: 'The Quiet Coast',      author: 'A. Maro',   rot: '-5deg',  w: '78%',  h: 54, ml: '0',    mt: 0 },
+    { color: '#7a3b2e', title: 'Letters at Dusk',      author: 'I. Soren',  rot: '2.5deg', w: '100%', h: 72, ml: 'auto', mt: -6 },
+    { color: '#2f4858', title: 'On Borrowed Maps',     author: 'R. Vale',   rot: '-1.5deg',w: '66%',  h: 48, ml: '8%',   mt: 4 },
+    { color: '#6b4a2f', title: 'A History of Almost',  author: 'D. Okafor', rot: '4deg',   w: '92%',  h: 66, ml: 'auto', mt: -2 },
+    { color: '#52414f', title: 'Marginalia',           author: 'P. Reyes',  rot: '-6deg',  w: '58%',  h: 44, ml: '2%',   mt: 6 },
+    { color: '#8a5a2b', title: 'Night Trains',         author: 'K. Adler',  rot: '1deg',   w: '84%',  h: 58, ml: 'auto', mt: -4 },
   ];
 
   return (
-    <div className="relative mx-auto" style={{ maxWidth: 380 }}>
-      <div className="flex flex-col gap-2.5">
-        {spines.map((s, i) => (
+    <div className="relative mx-auto" style={{ maxWidth: 400, minHeight: 440 }}>
+      {/* a leaning "shelf" line the books sit against */}
+      <div
+        className="absolute left-0 right-6 bottom-0 h-px"
+        style={{ backgroundColor: COLORS.border, transform: 'rotate(-1.2deg)' }}
+      />
+
+      <div className="flex flex-col gap-3">
+        {spines.map((s) => (
           <div
             key={s.title}
             className="relative flex items-center justify-between px-5"
             style={{
               width: s.w,
-              marginLeft: i % 2 ? 'auto' : 0,
-              height: 62,
+              marginLeft: s.ml,
+              marginTop: s.mt,
+              height: s.h,
               backgroundColor: s.color,
               transform: `rotate(${s.rot})`,
               borderRadius: 3,
@@ -285,7 +292,6 @@ function SpineStack() {
               boxShadow: '0 10px 22px rgba(0,0,0,0.45)',
             }}
           >
-            {/* top & bottom foil lines on the spine */}
             <span
               className="absolute left-0 right-0 top-2 h-px"
               style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}
@@ -310,18 +316,33 @@ function SpineStack() {
         ))}
       </div>
 
-      {/* a single book lying flat on top of the pile, slightly askew */}
+      {/* a single book lying flat, tucked off the top-left corner, askew */}
       <div
-        className="absolute -right-2 -top-7 px-4 py-3"
+        className="absolute -left-4 -top-8 px-4 py-3"
         style={{
           backgroundColor: COLORS.brass,
-          transform: 'rotate(6deg)',
+          transform: 'rotate(-8deg)',
           borderRadius: 3,
           boxShadow: '0 12px 26px rgba(0,0,0,0.5)',
         }}
       >
         <span className="font-display text-xs font-bold" style={{ color: COLORS.ink }}>
           STAFF PICK
+        </span>
+      </div>
+
+      {/* a small note floating low-right to fill the negative space */}
+      <div
+        className="absolute -right-3 bottom-10 px-3 py-2"
+        style={{
+          backgroundColor: COLORS.surface,
+          border: `1px solid ${COLORS.border}`,
+          transform: 'rotate(5deg)',
+          borderRadius: 3,
+        }}
+      >
+        <span className="text-[10px] tracking-[0.2em] uppercase" style={{ color: COLORS.text.tertiary }}>
+          new this week
         </span>
       </div>
     </div>

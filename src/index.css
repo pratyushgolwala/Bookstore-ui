@@ -6,7 +6,7 @@
   html { @apply scroll-smooth; }
   body {
     @apply text-gray-900;
-    background-color: #160e07;
+    background-color: #1a120b;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 

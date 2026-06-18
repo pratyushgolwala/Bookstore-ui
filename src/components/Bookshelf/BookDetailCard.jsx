@@ -109,10 +109,10 @@ export default function BookDetailCard({ book, onClose }) {
                 </Badge>
               </div>
 
-              <h2 className="text-2xl font-bold leading-tight" style={{ color: COLORS.text.primary }}>
+              <h2 className="font-display text-3xl font-bold leading-tight" style={{ color: COLORS.text.primary }}>
                 {book.title}
               </h2>
-              <p className="text-sm" style={{ color: COLORS.text.secondary }}>
+              <p className="text-sm italic" style={{ color: COLORS.text.secondary }}>
                 by <AuthorLink author={book.author} onNavigate={onClose} />
               </p>
 
@@ -137,7 +137,7 @@ export default function BookDetailCard({ book, onClose }) {
               </div>
 
               <div className="mt-auto pt-4 flex items-center justify-between gap-4">
-                <span className="text-3xl font-bold" style={{ color: COLORS.secondary[500] }}>
+                <span className="font-display text-4xl font-bold" style={{ color: COLORS.brass }}>
                   {formatCurrency(book.price)}
                 </span>
                 <MetalButton
