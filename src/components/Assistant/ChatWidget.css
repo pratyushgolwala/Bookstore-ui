@@ -220,6 +220,7 @@
 .cw-status-text {
   font-size: 12.5px;
   font-style: italic;
+  white-space: nowrap;
   animation: cw-pulse 1.4s ease-in-out infinite;
 }
 

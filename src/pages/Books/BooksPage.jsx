@@ -10,7 +10,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import LiquidButton from '../../components/ui/LiquidButton';
-import RecommendationsRail from '../../components/Assistant/RecommendationsRail';
+import BestPicksRail from '../../components/Assistant/BestPicksRail';
 import COLORS from '../../constants/colors';
 
 const BookshelfScene = React.lazy(() => import('../../components/Bookshelf/BookshelfScene'));
@@ -193,8 +193,8 @@ function BooksPage() {
           </div>
         ) : (
           <div className="pb-4">
-            {/* AI-curated rail — reflects the active search term when present */}
-            <RecommendationsRail query={search || null} onSelect={selectBook} />
+            {/* Fast, catalog-driven Best Picks rail (New / Popular / Trending) */}
+            <BestPicksRail onSelect={selectBook} />
 
             {loading ? (
               <LoadingSpinner />
