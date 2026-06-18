@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
   BookOpen, IndianRupee, Star, TrendingUp, Plus, Pencil,
-  Trash2, Eye, EyeOff, PenTool, MessageSquare, AlertCircle,
+  Trash2, Eye, EyeOff, PenTool, MessageSquare, AlertCircle, BarChart3,
 } from 'lucide-react';
 import { authorService } from '../../services/authorService';
 import { formatCurrency } from '../../utils/formatters';
@@ -30,6 +30,8 @@ function AuthorDashboard() {
   const [works, setWorks] = useState([]);
   const [stats, setStats] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsError, setAnalyticsError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [busyId, setBusyId] = useState(null);
@@ -55,9 +57,23 @@ function AuthorDashboard() {
     }
   }, []);
 
+  // Sales analytics comes from the analytics microservice (via Django) and may
+  // be slower or unavailable, so it's loaded separately from the core studio
+  // data and degrades gracefully without blocking the rest of the dashboard.
+  const loadAnalytics = useCallback(async () => {
+    setAnalyticsError(null);
+    try {
+      const env = await authorService.getAnalytics();
+      setAnalytics(env?.data ?? null);
+    } catch (err) {
+      setAnalyticsError(err.message || 'Sales analytics are unavailable right now.');
+    }
+  }, []);
+
   useEffect(() => {
     loadAll();
-  }, [loadAll]);
+    loadAnalytics();
+  }, [loadAll, loadAnalytics]);
 
   const handleSave = async (data) => {
     try {
@@ -202,6 +218,9 @@ function AuthorDashboard() {
           );
         })}
       </div>
+
+      {/* Sales analytics — sourced from the analytics microservice */}
+      <SalesAnalytics analytics={analytics} error={analyticsError} />
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* My published works */}
@@ -352,6 +371,91 @@ function AuthorDashboard() {
           }}
           onSave={handleSave}
         />
+      )}
+    </div>
+  );
+}
+
+/**
+ * SalesAnalytics — catalogue-wide sales figures from the analytics microservice.
+ *
+ * Shows headline totals (revenue, units, orders, this-month revenue) plus a
+ * lightweight daily-revenue bar chart. Degrades to an inline notice if the
+ * analytics service is unreachable, and a zero-state once published.
+ */
+function SalesAnalytics({ analytics, error }) {
+  const summary = analytics?.summary;
+  const daily = analytics?.daily ?? [];
+  const maxRevenue = daily.reduce((m, p) => Math.max(m, Number(p.revenue) || 0), 0);
+
+  const cards = [
+    { label: 'Total Revenue', value: summary ? formatCurrency(summary.total_revenue ?? 0) : '—' },
+    { label: 'This Month', value: summary ? formatCurrency(summary.monthly_revenue ?? 0) : '—' },
+    { label: 'Units Sold', value: summary ? (summary.total_items_sold ?? 0).toLocaleString() : '—' },
+    { label: 'Orders', value: summary ? (summary.total_orders ?? 0).toLocaleString() : '—' },
+  ];
+
+  return (
+    <div className="mb-10">
+      <h2 className="font-display text-2xl font-bold flex items-center gap-2 mb-4">
+        <BarChart3 size={18} style={{ color: COLORS.brass }} />
+        Sales Analytics
+      </h2>
+
+      {error ? (
+        <div
+          className="rounded-xl p-5 text-sm flex items-center gap-2"
+          style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}`, color: COLORS.text.tertiary }}
+        >
+          <AlertCircle size={16} />
+          {error}
+        </div>
+      ) : (
+        <div
+          className="rounded-xl p-5"
+          style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
+        >
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {cards.map((c) => (
+              <div key={c.label}>
+                <p className="font-display text-2xl font-bold">{c.value}</p>
+                <p className="text-xs mt-1 tracking-wide uppercase" style={{ color: COLORS.text.tertiary }}>
+                  {c.label}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Daily revenue mini-chart */}
+          {daily.length > 0 ? (
+            <div>
+              <p className="text-xs tracking-wide uppercase mb-2" style={{ color: COLORS.text.tertiary }}>
+                Daily Revenue
+              </p>
+              <div className="flex items-end gap-1 h-28">
+                {daily.slice(-30).map((p) => {
+                  const pct = maxRevenue > 0 ? (Number(p.revenue) / maxRevenue) * 100 : 0;
+                  return (
+                    <div
+                      key={p.period}
+                      className="flex-1 rounded-t-sm"
+                      title={`${p.period}: ${formatCurrency(Number(p.revenue) || 0)}`}
+                      style={{
+                        height: `${Math.max(pct, 2)}%`,
+                        backgroundColor: COLORS.brass,
+                        opacity: 0.85,
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
+              No sales yet. Revenue will chart here as readers buy your books.
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
