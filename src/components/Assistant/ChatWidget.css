@@ -178,6 +178,32 @@
   border-bottom-left-radius: 4px;
 }
 
+/* ── Rendered markdown inside assistant bubbles ── */
+.cw-md > *:first-child { margin-top: 0; }
+.cw-md > *:last-child { margin-bottom: 0; }
+
+.cw-md-p {
+  margin: 0 0 8px 0;
+}
+
+.cw-md-ol,
+.cw-md-ul {
+  margin: 4px 0 8px 0;
+  padding-left: 20px;
+}
+
+.cw-md-ol { list-style: decimal; }
+.cw-md-ul { list-style: disc; }
+
+.cw-md-li {
+  margin: 3px 0;
+  padding-left: 2px;
+}
+
+.cw-md-li::marker {
+  color: #b98a3e; /* brass */
+}
+
 @keyframes cw-rise {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }

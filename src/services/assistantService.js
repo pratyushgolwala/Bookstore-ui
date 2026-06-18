@@ -62,4 +62,37 @@ async function chat({ message, history = [], session_id = null }) {
   return res.json();
 }
 
-export const assistantService = { chat };
+/**
+ * Fetch AI book recommendations.
+ *
+ * @param {{ query?: string, limit?: number }} payload
+ * @returns {Promise<{ results: Array<{ book_id: string, title: string,
+ *           reason: string|null, score: number }> }>}
+ */
+async function recommend({ query = null, limit = 6 } = {}) {
+  const token = getAccessToken();
+
+  const res = await fetch(`${ASSISTANT_URL}/recommendations`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ query, limit }),
+  });
+
+  if (res.status === 401) {
+    throw new Error('Your session has expired. Please log in again.');
+  }
+  if (res.status === 503) {
+    throw new Error('The assistant is warming up. Please try again in a moment.');
+  }
+  if (!res.ok) {
+    const json = await res.json().catch(() => null);
+    throw new Error(json?.detail || json?.message || `Recommendation request failed (${res.status})`);
+  }
+
+  return res.json();
+}
+
+export const assistantService = { chat, recommend };
