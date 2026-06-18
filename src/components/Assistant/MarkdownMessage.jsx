@@ -1,159 +1,77 @@
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import COLORS from '../../constants/colors';
 
 /**
- * MarkdownMessage — a tiny, dependency-free renderer for the limited markdown
- * the assistant emits: bold (**), italic (*), inline code (`), links, numbered
- * and bulleted lists, and paragraph breaks.
+ * MarkdownMessage — renders the assistant's markdown replies.
  *
- * We deliberately avoid react-markdown to keep the bundle lean; the model's
- * output uses only a small, predictable subset of markdown.
+ * Uses react-markdown + remark-gfm so GitHub-flavoured markdown (tables,
+ * strikethrough, task lists, autolinks) renders correctly — the assistant
+ * frequently returns book lists as markdown tables, which the previous
+ * hand-rolled parser couldn't handle.
+ *
+ * Element renderers map to the existing `cw-md*` classes (see ChatWidget.css)
+ * and inline styles so the look matches the chat bubble. Links open safely in
+ * a new tab.
  */
 
-/* ── Inline parsing: **bold**, *italic*, `code`, [text](url) ── */
-function renderInline(text, keyPrefix) {
-  const nodes = [];
-  let remaining = text;
-  let key = 0;
+const components = {
+  p: ({ children }) => <p className="cw-md-p">{children}</p>,
+  ul: ({ children }) => <ul className="cw-md-ul">{children}</ul>,
+  ol: ({ children }) => <ol className="cw-md-ol">{children}</ol>,
+  li: ({ children }) => <li className="cw-md-li">{children}</li>,
+  strong: ({ children }) => <strong style={{ fontWeight: 700 }}>{children}</strong>,
+  em: ({ children }) => <em>{children}</em>,
+  a: ({ href, children }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ color: COLORS.brass, textDecoration: 'underline' }}
+    >
+      {children}
+    </a>
+  ),
+  code: ({ inline, children }) =>
+    inline ? (
+      <code
+        style={{
+          backgroundColor: 'rgba(0,0,0,0.22)',
+          borderRadius: 4,
+          padding: '1px 5px',
+          fontSize: '0.92em',
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+        }}
+      >
+        {children}
+      </code>
+    ) : (
+      <pre className="cw-md-pre">
+        <code>{children}</code>
+      </pre>
+    ),
+  // GFM tables — the main reason for switching to a real markdown renderer.
+  table: ({ children }) => (
+    <div className="cw-md-table-wrap">
+      <table className="cw-md-table">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead>{children}</thead>,
+  tbody: ({ children }) => <tbody>{children}</tbody>,
+  tr: ({ children }) => <tr>{children}</tr>,
+  th: ({ children }) => <th className="cw-md-th">{children}</th>,
+  td: ({ children }) => <td className="cw-md-td">{children}</td>,
+  blockquote: ({ children }) => (
+    <blockquote className="cw-md-quote">{children}</blockquote>
+  ),
+};
 
-  // Order matters: links first, then bold, then italic, then code.
-  const patterns = [
-    { type: 'link', re: /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/ },
-    { type: 'bold', re: /\*\*([^*]+)\*\*/ },
-    { type: 'bolda', re: /__([^_]+)__/ },
-    { type: 'italic', re: /\*([^*]+)\*/ },
-    { type: 'code', re: /`([^`]+)`/ },
-  ];
-
-  while (remaining) {
-    // Find the earliest-matching pattern in the remaining string.
-    let best = null;
-    for (const p of patterns) {
-      const m = p.re.exec(remaining);
-      if (m && (best === null || m.index < best.match.index)) {
-        best = { ...p, match: m };
-      }
-    }
-
-    if (!best) {
-      nodes.push(remaining);
-      break;
-    }
-
-    const { match, type } = best;
-    if (match.index > 0) {
-      nodes.push(remaining.slice(0, match.index));
-    }
-
-    const content = match[1];
-    const k = `${keyPrefix}-i${key++}`;
-    if (type === 'bold' || type === 'bolda') {
-      nodes.push(<strong key={k} style={{ fontWeight: 700 }}>{content}</strong>);
-    } else if (type === 'italic') {
-      nodes.push(<em key={k}>{content}</em>);
-    } else if (type === 'code') {
-      nodes.push(
-        <code
-          key={k}
-          style={{
-            backgroundColor: 'rgba(0,0,0,0.22)',
-            borderRadius: 4,
-            padding: '1px 5px',
-            fontSize: '0.92em',
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-          }}
-        >
-          {content}
-        </code>,
-      );
-    } else if (type === 'link') {
-      nodes.push(
-        <a
-          key={k}
-          href={match[2]}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: COLORS.brass, textDecoration: 'underline' }}
-        >
-          {content}
-        </a>,
-      );
-    }
-
-    remaining = remaining.slice(match.index + match[0].length);
-  }
-
-  return nodes;
-}
-
-/* ── Block parsing: paragraphs, ordered + unordered lists ── */
 export default function MarkdownMessage({ text }) {
-  const lines = (text || '').split('\n');
-  const blocks = [];
-  let list = null; // { ordered: bool, items: [] }
-
-  const flushList = () => {
-    if (list) {
-      blocks.push({ type: 'list', ...list });
-      list = null;
-    }
-  };
-
-  let para = [];
-  const flushPara = () => {
-    if (para.length) {
-      blocks.push({ type: 'p', text: para.join(' ') });
-      para = [];
-    }
-  };
-
-  for (const raw of lines) {
-    const line = raw.trimEnd();
-    const ordered = /^\s*\d+\.\s+(.*)$/.exec(line);
-    const bullet = /^\s*[-*•]\s+(.*)$/.exec(line);
-
-    if (ordered) {
-      flushPara();
-      if (!list || !list.ordered) { flushList(); list = { ordered: true, items: [] }; }
-      list.items.push(ordered[1]);
-    } else if (bullet) {
-      flushPara();
-      if (!list || list.ordered) { flushList(); list = { ordered: false, items: [] }; }
-      list.items.push(bullet[1]);
-    } else if (line.trim() === '') {
-      flushPara();
-      flushList();
-    } else {
-      flushList();
-      para.push(line.trim());
-    }
-  }
-  flushPara();
-  flushList();
-
   return (
     <div className="cw-md">
-      {blocks.map((b, i) => {
-        if (b.type === 'p') {
-          return (
-            <p key={i} className="cw-md-p">
-              {renderInline(b.text, `p${i}`)}
-            </p>
-          );
-        }
-        if (b.type === 'list') {
-          const ListTag = b.ordered ? 'ol' : 'ul';
-          return (
-            <ListTag key={i} className={b.ordered ? 'cw-md-ol' : 'cw-md-ul'}>
-              {b.items.map((it, j) => (
-                <li key={j} className="cw-md-li">
-                  {renderInline(it, `l${i}-${j}`)}
-                </li>
-              ))}
-            </ListTag>
-          );
-        }
-        return null;
-      })}
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+        {text || ''}
+      </ReactMarkdown>
     </div>
   );
 }
