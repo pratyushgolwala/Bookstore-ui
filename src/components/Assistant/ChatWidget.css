@@ -217,6 +217,18 @@
   padding: 12px 14px;
 }
 
+.cw-status-text {
+  font-size: 12.5px;
+  font-style: italic;
+  white-space: nowrap;
+  animation: cw-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes cw-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
 .cw-typing span {
   width: 6px;
   height: 6px;

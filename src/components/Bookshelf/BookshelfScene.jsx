@@ -1,6 +1,6 @@
-import { useMemo, useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { PerspectiveCamera } from '@react-three/drei';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { PerspectiveCamera, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import BookSpine from './BookSpine';
 import BookshelfFrame from './BookshelfFrame';
@@ -87,6 +87,81 @@ function Backdrop({ centerY, height }) {
 }
 
 /**
+ * CameraRig — a gentle idle parallax: the camera drifts subtly toward the
+ * pointer and breathes in/out, so the shelf feels alive and three-dimensional
+ * instead of a flat static render. Motion is tiny and eased; it never fights
+ * the user. Respects prefers-reduced-motion.
+ */
+function CameraRig({ baseZ, centerY }) {
+  const { camera, pointer } = useThree();
+  const reduced = useRef(
+    typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+
+  useFrame((state) => {
+    if (reduced.current) return;
+    const t = state.clock.elapsedTime;
+    // breathe the dolly distance a touch
+    const breathe = Math.sin(t * 0.35) * 0.35;
+    const targetX = pointer.x * 1.1;
+    const targetY = centerY + pointer.y * 0.7;
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetX, 0.04);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, 0.04);
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, baseZ + breathe, 0.04);
+    camera.lookAt(0, centerY, 0);
+  });
+
+  return null;
+}
+
+/**
+ * WarmSpot — a slow-roaming warm spotlight that sweeps across the shelf like
+ * sun moving through a window, picking out different books over time.
+ *
+ * A SpotLight only aims correctly if its `target` is part of the scene graph,
+ * so we create an explicit target Object3D, add it via <primitive>, and move
+ * both the light and its target every frame. Base lighting is kept low so the
+ * moving pool of light is clearly visible.
+ */
+function WarmSpot({ centerY, width }) {
+  const lightRef = useRef();
+  const target = useMemo(() => new THREE.Object3D(), []);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const sweep = Math.sin(t * 0.45) * (width * 0.42);
+    const l = lightRef.current;
+    if (l) {
+      l.position.x = sweep;
+      l.position.y = centerY + 7;
+      l.position.z = 9;
+      l.target = target;
+    }
+    // target trails slightly behind the light's x so the cone rakes across
+    target.position.set(sweep * 0.78, centerY, 0);
+    target.updateMatrixWorld();
+  });
+
+  return (
+    <>
+      <primitive object={target} />
+      <spotLight
+        ref={lightRef}
+        position={[0, centerY + 7, 9]}
+        angle={0.34}
+        penumbra={0.7}
+        intensity={45}
+        color="#FFCE82"
+        distance={90}
+        decay={1.1}
+      />
+    </>
+  );
+}
+
+/**
  * BookshelfScene — a STATIC, framed wooden bookcase against a subtle
  * library backdrop. No zoom / no pan (pagination handles navigation).
  * Clicking a book pulls it smoothly out of the shelf, then opens the detail card.
@@ -140,11 +215,26 @@ export default function BookshelfScene({
       >
         <PerspectiveCamera makeDefault position={[0, centerY, fitDist]} fov={fov} near={0.1} far={200} />
 
-        {/* Warm library lighting */}
-        <ambientLight intensity={0.85} color="#fff4e6" />
-        <directionalLight position={[5, centerY + 6, 14]} intensity={1.1} color="#FFE8C8" />
-        <directionalLight position={[-5, centerY + 2, 9]} intensity={0.4} color="#cdd4ff" />
-        <pointLight position={[0, centerY + 1, 7]} intensity={0.8} color="#FFC96B" distance={45} decay={2} />
+        {/* Idle parallax + a roaming warm spotlight bring the shelf to life */}
+        <CameraRig baseZ={fitDist} centerY={centerY} />
+
+        {/* Warm library lighting — kept low so the roaming spotlight reads */}
+        <ambientLight intensity={0.28} color="#fff4e6" />
+        <directionalLight position={[5, centerY + 6, 14]} intensity={0.35} color="#FFE8C8" />
+        <directionalLight position={[-5, centerY + 2, 9]} intensity={0.18} color="#cdd4ff" />
+        <pointLight position={[0, centerY + 1, 7]} intensity={0.35} color="#FFC96B" distance={45} decay={2} />
+        <WarmSpot centerY={centerY} width={SHELF_WIDTH} />
+
+        {/* Floating dust motes catching the light — the cozy "wow" detail */}
+        <Sparkles
+          count={70}
+          scale={[SHELF_WIDTH + 4, totalHeight + 2, 4]}
+          position={[0, centerY, 3]}
+          size={2.4}
+          speed={0.3}
+          opacity={0.5}
+          color="#FFE3B0"
+        />
 
         {/* Subtle backdrop */}
         <Backdrop centerY={centerY} height={totalHeight} />

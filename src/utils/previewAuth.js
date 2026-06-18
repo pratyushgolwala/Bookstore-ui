@@ -8,14 +8,17 @@
  *
  * ⚠️  This is a developer convenience for design/QA work. It must NEVER be
  *     enabled in a production build:
- *       - the flag defaults to off
- *       - production .env files do not define VITE_PREVIEW_AUTH
+ *       - hard-gated on import.meta.env.DEV, which is TRUE only on the Vite
+ *         dev server and ALWAYS false in any `vite build` output — so the
+ *         mock can never be bundled active, even with `vite build --mode preview`
+ *       - the flag also has to be explicitly set (VITE_PREVIEW_AUTH=true),
+ *         which only the `dev:preview` script + .env.preview do
  *       - the fake tokens are obviously non-functional placeholders and the
  *         real backend would reject them, so no privilege is actually granted.
  */
 
 export const PREVIEW_AUTH_ENABLED =
-  import.meta.env.VITE_PREVIEW_AUTH === 'true';
+  import.meta.env.DEV && import.meta.env.VITE_PREVIEW_AUTH === 'true';
 
 // Optional role override: VITE_PREVIEW_ROLE=AUTHOR|ADMIN|CUSTOMER
 const PREVIEW_ROLE = import.meta.env.VITE_PREVIEW_ROLE || 'CUSTOMER';

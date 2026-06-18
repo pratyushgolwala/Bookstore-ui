@@ -6,7 +6,7 @@ import {
   removeFromWishlist,
   clearWishlist,
 } from '../../store/slices/wishlistSlice';
-import { addItem } from '../../store/slices/cartSlice';
+import { addToCart } from '../../store/slices/cartSlice';
 import { emitToast } from '../../utils/toastBus';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
@@ -21,16 +21,13 @@ function WishlistPage() {
   const navigate = useNavigate();
   const items = useSelector(selectWishlistItems);
 
-  const handleAddToCart = (book) => {
-    dispatch(addItem({
-      id: book.id,
-      title: book.title,
-      price: book.price,
-      quantity: 1,
-      author: book.author,
-      coverImageUrl: book.coverImageUrl,
-    }));
-    emitToast('success', `"${book.title}" added to cart.`);
+  const handleAddToCart = async (book) => {
+    try {
+      await dispatch(addToCart({ bookId: book.id, quantity: 1 })).unwrap();
+      emitToast('success', `"${book.title}" added to cart.`);
+    } catch (err) {
+      emitToast('error', err || 'Could not add to cart.');
+    }
   };
 
   const handleRemove = (book) => {
