@@ -95,8 +95,7 @@ function DeliverySummary({ orderId }) {
         <span className="flex items-center gap-1.5 text-xs" style={{ color: COLORS.text.secondary }}>
           <Clock size={13} style={{ color: COLORS.brass }} />
           Dispatch by{' '}
-          {eta.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })},{' '}
-          {eta.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+          {eta.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
         </span>
       ) : null}
 
