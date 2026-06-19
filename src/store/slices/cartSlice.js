@@ -148,6 +148,10 @@ const cartSlice = createSlice({
     const fulfilled = (state, action) => {
       state.loading = false;
       state.items = action.payload;
+      // Drop any applied coupon once the cart is emptied.
+      if (action.type === clearCartThunk.fulfilled.type) {
+        state.coupon = null;
+      }
     };
     const pending = (state) => {
       state.loading = true;
@@ -171,11 +175,6 @@ const cartSlice = createSlice({
         .addCase(thunk.pending, pending)
         .addCase(thunk.fulfilled, fulfilled)
         .addCase(thunk.rejected, rejected);
-    });
-
-    // Drop any applied coupon once the cart is emptied.
-    builder.addCase(clearCartThunk.fulfilled, (state) => {
-      state.coupon = null;
     });
   },
 });
