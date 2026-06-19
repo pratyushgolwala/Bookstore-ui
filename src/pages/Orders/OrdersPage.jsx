@@ -11,6 +11,7 @@ import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import MetalButton from '../../components/ui/MetalButton';
 import OrderTracking from '../../components/Tracking/OrderTracking';
+import DeliverySummary from '../../components/Delivery/DeliverySummary';
 
 const STATUS_MAP = {
   pending:    { label: 'Pending',    variant: 'secondary', icon: Clock },
@@ -214,6 +215,7 @@ function OrdersPage() {
                     </button>
                     {tracking === order.id && (
                       <div className="mt-2">
+                        <DeliverySummary orderId={order.id} />
                         <OrderTracking orderId={order.id} />
                       </div>
                     )}
