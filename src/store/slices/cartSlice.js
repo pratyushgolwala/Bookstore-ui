@@ -122,6 +122,7 @@ const initialState = {
   items: [],
   loading: false,
   error: null,
+  coupon: null, // { code, discount_type, discount_value, discount_amount, min_order, message }
 };
 
 const cartSlice = createSlice({
@@ -132,6 +133,15 @@ const cartSlice = createSlice({
     resetCart(state) {
       state.items = [];
       state.error = null;
+      state.coupon = null;
+    },
+    /** Store the validated coupon so it persists across cart → checkout. */
+    setCoupon(state, action) {
+      state.coupon = action.payload;
+    },
+    /** Remove any applied coupon. */
+    clearCoupon(state) {
+      state.coupon = null;
     },
   },
   extraReducers: (builder) => {
@@ -162,10 +172,15 @@ const cartSlice = createSlice({
         .addCase(thunk.fulfilled, fulfilled)
         .addCase(thunk.rejected, rejected);
     });
+
+    // Drop any applied coupon once the cart is emptied.
+    builder.addCase(clearCartThunk.fulfilled, (state) => {
+      state.coupon = null;
+    });
   },
 });
 
-export const { resetCart } = cartSlice.actions;
+export const { resetCart, setCoupon, clearCoupon } = cartSlice.actions;
 export default cartSlice.reducer;
 
 // ── Selectors ──────────────────────────────────────────────────────────────
@@ -175,3 +190,18 @@ export const selectCartCount = (state) =>
   state.cart.items.reduce((sum, i) => sum + i.quantity, 0);
 export const selectCartTotal = (state) =>
   state.cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+export const selectCartCoupon = (state) => state.cart.coupon;
+
+/**
+ * Compute the discount amount for an applied coupon against a given subtotal.
+ * Re-derives from the coupon's type/value so it stays correct as the cart changes.
+ */
+export const computeCouponDiscount = (coupon, subtotal) => {
+  if (!coupon) return 0;
+  const value = parseFloat(coupon.discount_value);
+  if (Number.isNaN(value)) return 0;
+  if (coupon.discount_type === 'percentage') {
+    return +((subtotal * value) / 100).toFixed(2);
+  }
+  return +Math.min(value, subtotal).toFixed(2);
+};

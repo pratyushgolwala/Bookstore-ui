@@ -5,7 +5,7 @@ import {
   CreditCard, Lock, CheckCircle2, ArrowLeft, Loader2, ShoppingBag,
   Shield, Truck, RotateCcw, Sparkles, Gift, MapPin, Smartphone, XCircle,
 } from 'lucide-react';
-import { selectCartItems, selectCartTotal, clearCartThunk } from '../../store/slices/cartSlice';
+import { selectCartItems, selectCartTotal, selectCartCoupon, computeCouponDiscount, clearCartThunk } from '../../store/slices/cartSlice';
 import { selectCurrentUser } from '../../store/slices/authSlice';
 import { ordersService } from '../../services/ordersService';
 import { paymentsService, loadRazorpayScript } from '../../services/paymentsService';
@@ -28,11 +28,13 @@ function CheckoutPage() {
   const navigate = useNavigate();
   const items = useSelector(selectCartItems);
   const subtotal = useSelector(selectCartTotal);
+  const coupon = useSelector(selectCartCoupon);
   const currentUser = useSelector(selectCurrentUser);
 
+  const discount = computeCouponDiscount(coupon, subtotal);
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const tax = +((subtotal) * TAX_RATE).toFixed(2);
-  const total = subtotal + shipping + tax;
+  const tax = +((subtotal - discount) * TAX_RATE).toFixed(2);
+  const total = subtotal - discount + shipping + tax;
 
   const [delivery, setDelivery] = useState(EMPTY_DELIVERY);
   const [processing, setProcessing] = useState(false);
@@ -100,7 +102,7 @@ function CheckoutPage() {
 
       // 2. Create the bookstore order + Razorpay order server-side.
       const payload = items.map((i) => ({ book_id: i.book_id, quantity: i.quantity }));
-      const res = await paymentsService.createOrder(payload);
+      const res = await paymentsService.createOrder(payload, coupon?.code || null);
       const data = res?.data || res;
 
       const {
@@ -329,6 +331,9 @@ function CheckoutPage() {
 
             <div className="mt-4 pt-4 border-t space-y-2" style={{ borderColor: COLORS.border }}>
               <SummaryRow label="Subtotal" value={formatCurrency(subtotal)} />
+              {coupon && discount > 0 && (
+                <SummaryRow label={`Coupon (${coupon.code})`} value={`−${formatCurrency(discount)}`} accent />
+              )}
               <SummaryRow
                 label="Shipping"
                 value={shipping === 0 ? 'Free ✨' : formatCurrency(shipping)}
