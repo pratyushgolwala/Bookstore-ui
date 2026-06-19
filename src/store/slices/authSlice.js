@@ -126,6 +126,18 @@ const authSlice = createSlice({
       localStorage.removeItem('refresh');
       localStorage.removeItem('user');
     },
+    /**
+     * Set auth directly from an external handoff (e.g. Django-admin SSO).
+     * Payload: { access, refresh, user }.
+     */
+    setCredentials(state, action) {
+      const { access, refresh, user } = action.payload || {};
+      if (access)  { state.access  = access;  localStorage.setItem('access', access); }
+      if (refresh) { state.refresh = refresh; localStorage.setItem('refresh', refresh); }
+      if (user)    { state.user    = user;    localStorage.setItem('user', JSON.stringify(user)); }
+      state.pendingEmail = null;
+      state.error = null;
+    },
     clearAuthError(state)   { state.error      = null; },
     clearSuccessMsg(state)  { state.successMsg  = null; },
     setPendingEmail(state, action) { state.pendingEmail = action.payload; },
@@ -198,7 +210,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearAuthError, clearSuccessMsg, setPendingEmail } = authSlice.actions;
+export const { logout, clearAuthError, clearSuccessMsg, setPendingEmail, setCredentials } = authSlice.actions;
 export default authSlice.reducer;
 
 // ─── Selectors ───────────────────────────────────────────────────────────────
