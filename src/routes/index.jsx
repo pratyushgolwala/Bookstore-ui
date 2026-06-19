@@ -18,6 +18,7 @@ const DiscussionPage   = lazyWithReload(() => import('../pages/Discussion/Discus
 const ReviewsPage      = lazyWithReload(() => import('../pages/Reviews/ReviewsPage'));
 const WishlistPage     = lazyWithReload(() => import('../pages/Wishlist/WishlistPage'));
 const SettingsPage     = lazyWithReload(() => import('../pages/Settings/SettingsPage'));
+const TrackingPage     = lazyWithReload(() => import('../pages/Tracking/TrackingPage'));
 const NotFoundPage     = lazyWithReload(() => import('../pages/NotFound/NotFoundPage'));
 const VerifyEmailPage  = lazyWithReload(() => import('../pages/Auth/VerifyEmailPage'));
 
@@ -42,6 +43,7 @@ export function AppRoutes() {
         <Route path="books"    element={<ProtectedRoute><BooksPage /></ProtectedRoute>}    />
         <Route path="cart"     element={<ProtectedRoute><CartPage /></ProtectedRoute>}     />
         <Route path="orders"   element={<ProtectedRoute><OrdersPage /></ProtectedRoute>}   />
+        <Route path="orders/:orderId/track" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
         <Route path="checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
         <Route path="profile"  element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}  />
         <Route path="admin"    element={<ProtectedRoute><AdminPage /></ProtectedRoute>}    />
