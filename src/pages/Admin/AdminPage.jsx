@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   BookOpen, Users, ShoppingCart, IndianRupee,
-  AlertTriangle, Download, RefreshCw, FileText,
+  AlertTriangle, Download, RefreshCw, FileText, Boxes,
 } from 'lucide-react';
 import { analyticsService } from '../../services/analyticsService';
 import { formatCurrency } from '../../utils/formatters';
@@ -12,6 +12,9 @@ function AdminPage() {
   const [summary, setSummary] = useState(null);
   const [inventory, setInventory] = useState(null);
   const [ltv, setLtv] = useState(null);
+  const [slowMovers, setSlowMovers] = useState([]);
+  const [turnover, setTurnover] = useState([]);
+  const [reorder, setReorder] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reportBusy, setReportBusy] = useState(false);
@@ -20,14 +23,20 @@ function AdminPage() {
     setLoading(true);
     setError(null);
     try {
-      const [s, inv, l] = await Promise.all([
+      const [s, inv, l, slow, turn, re] = await Promise.all([
         analyticsService.getSalesSummary(),
         analyticsService.getInventoryHealth(),
         analyticsService.getCustomerLTV({ limit: 5 }),
+        analyticsService.getSlowMovers({ limit: 10 }),
+        analyticsService.getInventoryTurnover({ limit: 10 }),
+        analyticsService.getReorderForecast({ limit: 10 }),
       ]);
       setSummary(s);
       setInventory(inv);
       setLtv(l);
+      setSlowMovers(Array.isArray(slow) ? slow : []);
+      setTurnover(Array.isArray(turn) ? turn : []);
+      setReorder(Array.isArray(re) ? re : []);
     } catch (e) {
       setError(e.message || 'Could not reach the analytics service.');
     } finally {
@@ -234,6 +243,118 @@ function AdminPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Inventory analytics ─────────────────────────────── */}
+      <h2 className="font-display text-2xl font-bold mt-10 mb-4 flex items-center gap-2">
+        <Boxes size={20} style={{ color: COLORS.brass }} />
+        Inventory Analytics
+      </h2>
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Slow movers */}
+        <AnalyticsTable
+          title="Slow Movers"
+          subtitle="In stock, zero sales in the last 90 days"
+          loading={loading}
+          rows={slowMovers}
+          emptyText="No slow-moving titles 🎉"
+          columns={[
+            { key: 'title', label: 'Title', render: (r) => <span className="truncate block max-w-[220px]">{r.title}</span> },
+            { key: 'current_stock', label: 'Stock', align: 'right', render: (r) => r.current_stock },
+            { key: 'units_sold', label: 'Sold', align: 'right', render: (r) => (
+              <Badge variant="accent">{r.units_sold}</Badge>
+            ) },
+          ]}
+        />
+
+        {/* Turnover */}
+        <AnalyticsTable
+          title="Inventory Turnover"
+          subtitle="Units sold relative to current stock"
+          loading={loading}
+          rows={turnover}
+          emptyText="No turnover data yet."
+          columns={[
+            { key: 'title', label: 'Title', render: (r) => <span className="truncate block max-w-[200px]">{r.title}</span> },
+            { key: 'units_sold', label: 'Sold', align: 'right', render: (r) => r.units_sold },
+            { key: 'current_stock', label: 'Stock', align: 'right', render: (r) => r.current_stock },
+            { key: 'turnover_ratio', label: 'Ratio', align: 'right', render: (r) => (
+              <span style={{ color: COLORS.secondary[500] }}>{r.turnover_ratio.toFixed(3)}</span>
+            ) },
+          ]}
+        />
+
+        {/* Reorder forecast */}
+        <AnalyticsTable
+          title="Reorder Forecast"
+          subtitle="Titles approaching their reorder level"
+          loading={loading}
+          rows={reorder}
+          emptyText="Nothing needs reordering right now."
+          className="lg:col-span-2"
+          columns={[
+            { key: 'title', label: 'Title', render: (r) => <span className="truncate block max-w-[280px]">{r.title}</span> },
+            { key: 'current_stock', label: 'Stock', align: 'right', render: (r) => r.current_stock },
+            { key: 'reorder_level', label: 'Reorder At', align: 'right', render: (r) => r.reorder_level },
+            { key: 'avg_daily_sales', label: 'Avg/Day', align: 'right', render: (r) => r.avg_daily_sales.toFixed(2) },
+            { key: 'recommended_reorder_qty', label: 'Suggested Qty', align: 'right', render: (r) => (
+              <Badge variant="primary">{r.recommended_reorder_qty}</Badge>
+            ) },
+          ]}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ─── Reusable analytics table ───────────────────────────────── */
+function AnalyticsTable({ title, subtitle, columns, rows, loading, emptyText, className = '' }) {
+  return (
+    <div
+      className={`rounded-sm p-5 ${className}`}
+      style={{ backgroundColor: COLORS.surface, border: `1px solid ${COLORS.border}` }}
+    >
+      <h3 className="font-display text-xl font-bold">{title}</h3>
+      {subtitle && (
+        <p className="text-xs mb-4" style={{ color: COLORS.text.tertiary }}>{subtitle}</p>
+      )}
+
+      {rows.length === 0 ? (
+        <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
+          {loading ? 'Loading…' : emptyText}
+        </p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ color: COLORS.text.tertiary }}>
+                {columns.map((c) => (
+                  <th
+                    key={c.key}
+                    className={`pb-2 font-medium text-xs uppercase tracking-wide ${c.align === 'right' ? 'text-right' : 'text-left'}`}
+                  >
+                    {c.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.book_id} style={{ borderTop: `1px solid ${COLORS.border}` }}>
+                  {columns.map((c) => (
+                    <td
+                      key={c.key}
+                      className={`py-2 ${c.align === 'right' ? 'text-right' : 'text-left'}`}
+                    >
+                      {c.render(r)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

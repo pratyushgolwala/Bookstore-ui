@@ -10,6 +10,10 @@ import {
   selectCartItems,
   selectCartTotal,
   selectCartLoading,
+  selectCartCoupon,
+  computeCouponDiscount,
+  setCoupon,
+  clearCoupon,
   fetchCart,
   incrementCartItem,
   decrementCartItem,
@@ -19,6 +23,7 @@ import {
   addToCart,
 } from '../../store/slices/cartSlice';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
+import { couponsService } from '../../services/couponsService';
 import { formatCurrency } from '../../utils/formatters';
 import COLORS from '../../constants/colors';
 import Button from '../../components/ui/Button';
@@ -45,12 +50,15 @@ function CartPage() {
   const items    = useSelector(selectCartItems);
   const subtotal = useSelector(selectCartTotal);
   const cartLoading = useSelector(selectCartLoading);
+  const appliedCoupon = useSelector(selectCartCoupon);
 
   const [couponCode, setCouponCode]   = useState('');
-  const [couponApplied, setCouponApplied] = useState(false);
   const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
   const [removingId, setRemovingId]   = useState(null);
   const [mounted, setMounted]         = useState(false);
+
+  const couponApplied = !!appliedCoupon;
 
   // Always pull the latest cart from the backend when landing on this page
   // (covers direct navigation / refresh, and reflects assistant changes).
@@ -65,7 +73,10 @@ function CartPage() {
   }, []);
 
   const shipping     = subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? SHIPPING_FEE : 0;
-  const discount     = couponApplied ? +(subtotal * 0.1).toFixed(2) : 0;
+
+  // Derive the discount from the applied coupon against the *live* subtotal so
+  // it stays correct if the cart changes after the coupon was applied.
+  const discount     = computeCouponDiscount(appliedCoupon, subtotal);
   const tax          = +((subtotal - discount) * TAX_RATE).toFixed(2);
   const total        = subtotal - discount + shipping + tax;
   const freeShipPct  = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
@@ -79,19 +90,27 @@ function CartPage() {
     }, 280);
   };
 
-  const handleApplyCoupon = () => {
-    if (!couponCode.trim()) { setCouponError('Please enter a coupon code.'); return; }
-    if (couponCode.trim().toUpperCase() === 'FOLIO10') {
-      setCouponApplied(true);
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) { setCouponError('Please enter a coupon code.'); return; }
+
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await couponsService.validate(code, subtotal);
+      const data = res?.data ?? res;
+      dispatch(setCoupon(data));
       setCouponError('');
-    } else {
-      setCouponError('Invalid coupon code.');
-      setCouponApplied(false);
+    } catch (err) {
+      dispatch(clearCoupon());
+      setCouponError(err.message || 'Invalid coupon code.');
+    } finally {
+      setCouponLoading(false);
     }
   };
 
   const handleRemoveCoupon = () => {
-    setCouponApplied(false);
+    dispatch(clearCoupon());
     setCouponCode('');
     setCouponError('');
   };
@@ -318,8 +337,8 @@ function CartPage() {
             <div className="space-y-3">
               <SummaryRow label={`Subtotal (${items.reduce((s, i) => s + i.quantity, 0)} items)`} value={formatCurrency(subtotal)} />
               <SummaryRow label="Shipping" value={shipping === 0 ? 'Free 🎉' : formatCurrency(shipping)} />
-              {couponApplied && (
-                <SummaryRow label="Coupon (FOLIO10)" value={`−${formatCurrency(discount)}`} accent />
+              {couponApplied && appliedCoupon && (
+                <SummaryRow label={`Coupon (${appliedCoupon.code})`} value={`−${formatCurrency(discount)}`} accent />
               )}
               <SummaryRow label="Tax (8%)" value={formatCurrency(tax)} />
             </div>
@@ -333,12 +352,17 @@ function CartPage() {
               <p className="text-xs uppercase tracking-wide mb-2 flex items-center gap-1.5" style={{ color: COLORS.text.tertiary }}>
                 <Tag size={12} /> Promo Code
               </p>
-              {couponApplied ? (
+              {couponApplied && appliedCoupon ? (
                 <div
                   className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold"
                   style={{ backgroundColor: `${COLORS.success}15`, border: `1px solid ${COLORS.success}33`, color: COLORS.success }}
                 >
-                  <span>FOLIO10 applied — 10% off</span>
+                  <span>
+                    {appliedCoupon.code} applied
+                    {appliedCoupon.discount_type === 'percentage'
+                      ? ` — ${parseFloat(appliedCoupon.discount_value)}% off`
+                      : ` — ${formatCurrency(parseFloat(appliedCoupon.discount_value))} off`}
+                  </span>
                   <button onClick={handleRemoveCoupon} className="hover:opacity-70">
                     <X size={14} />
                   </button>
@@ -349,7 +373,7 @@ function CartPage() {
                     type="text"
                     value={couponCode}
                     onChange={(e) => { setCouponCode(e.target.value); setCouponError(''); }}
-                    onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                    onKeyDown={(e) => e.key === 'Enter' && !couponLoading && handleApplyCoupon()}
                     placeholder="Enter code…"
                     className="flex-1 px-3 py-2 rounded-lg text-sm outline-none transition-all"
                     style={{
@@ -360,10 +384,11 @@ function CartPage() {
                   />
                   <button
                     onClick={handleApplyCoupon}
-                    className="px-3 py-2 rounded-lg text-sm font-semibold transition-all hover:brightness-110 active:scale-95"
+                    disabled={couponLoading}
+                    className="px-3 py-2 rounded-lg text-sm font-semibold transition-all hover:brightness-110 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
                     style={{ background: COLORS.gradient.primary, color: '#fff' }}
                   >
-                    Apply
+                    {couponLoading ? 'Applying…' : 'Apply'}
                   </button>
                 </div>
               )}
@@ -371,7 +396,7 @@ function CartPage() {
                 <p className="text-xs mt-1.5" style={{ color: COLORS.error }}>{couponError}</p>
               )}
               {!couponApplied && !couponError && (
-                <p className="text-xs mt-1.5" style={{ color: COLORS.text.tertiary }}>Try <span style={{ color: COLORS.secondary[500] }}>FOLIO10</span> for 10% off</p>
+                <p className="text-xs mt-1.5" style={{ color: COLORS.text.tertiary }}>Have a promo code? Enter it above to save.</p>
               )}
             </div>
 
