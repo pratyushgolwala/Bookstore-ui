@@ -19,7 +19,7 @@ function AdminRoute({ children }) {
   const location = useLocation();
   const warned = useRef(false);
 
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = user?.role === 'ADMIN' || user?.is_staff === true || user?.is_superuser === true;
 
   useEffect(() => {
     if (!warned.current && (!isAuthenticated || !isAdmin)) {

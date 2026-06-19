@@ -22,6 +22,7 @@ const SettingsPage     = lazyWithReload(() => import('../pages/Settings/Settings
 const TrackingPage     = lazyWithReload(() => import('../pages/Tracking/TrackingPage'));
 const NotFoundPage     = lazyWithReload(() => import('../pages/NotFound/NotFoundPage'));
 const VerifyEmailPage  = lazyWithReload(() => import('../pages/Auth/VerifyEmailPage'));
+const AdminSSO         = lazyWithReload(() => import('../pages/Auth/AdminSSO'));
 
 export function AppRoutes() {
   return (
@@ -30,6 +31,8 @@ export function AppRoutes() {
       <Route path="login"        element={<Auth3DBook />}     />
       <Route path="register"     element={<Auth3DBook />}     />
       <Route path="verify-email" element={<VerifyEmailPage />} />
+      {/* SSO handoff from the Django admin — reads tokens from the URL hash */}
+      <Route path="admin/sso"    element={<AdminSSO />} />
 
       {/* Main app routes - with MainLayout */}
       <Route element={<MainLayout />}>
