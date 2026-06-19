@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import Auth3DBook from '../components/Auth3DBook/Auth3DBook';
 import ProtectedRoute from '../components/common/ProtectedRoute';
+import AdminRoute from '../components/common/AdminRoute';
 import lazyWithReload from '../utils/lazyWithReload';
 
 const LandingPage      = lazyWithReload(() => import('../pages/Landing/LandingPage'));
@@ -44,7 +45,7 @@ export function AppRoutes() {
         <Route path="orders"   element={<ProtectedRoute><OrdersPage /></ProtectedRoute>}   />
         <Route path="checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
         <Route path="profile"  element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}  />
-        <Route path="admin"    element={<ProtectedRoute><AdminPage /></ProtectedRoute>}    />
+        <Route path="admin"    element={<AdminRoute><AdminPage /></AdminRoute>}    />
         <Route path="author"   element={<ProtectedRoute><AuthorDashboard /></ProtectedRoute>} />
         <Route path="wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path="settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
