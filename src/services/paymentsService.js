@@ -10,10 +10,11 @@ import { apiClient } from './apiClient';
  *   GET  /api/payments/<order_id>/status/ payment status for an order
  */
 export const paymentsService = {
-  createOrder: (items, couponCode = null) =>
+  createOrder: (items, couponCode = null, delivery = null) =>
     apiClient.post('/api/payments/create-order/', {
       items,
       ...(couponCode ? { coupon_code: couponCode } : {}),
+      ...(delivery ? { delivery } : {}),
     }),
 
   verifyPayment: ({ razorpay_order_id, razorpay_payment_id, razorpay_signature }) =>

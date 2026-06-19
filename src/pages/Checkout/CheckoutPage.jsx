@@ -102,7 +102,7 @@ function CheckoutPage() {
 
       // 2. Create the bookstore order + Razorpay order server-side.
       const payload = items.map((i) => ({ book_id: i.book_id, quantity: i.quantity }));
-      const res = await paymentsService.createOrder(payload, coupon?.code || null);
+      const res = await paymentsService.createOrder(payload, coupon?.code || null, delivery);
       const data = res?.data || res;
 
       const {
