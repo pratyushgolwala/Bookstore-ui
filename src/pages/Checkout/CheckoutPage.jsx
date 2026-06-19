@@ -139,6 +139,8 @@ function CheckoutPage() {
             setSuccess(true);
             dispatch(clearCartThunk());
           } catch (verifyErr) {
+            // Verification failed — mark the order failed (no pending limbo).
+            paymentsService.markFailed(razorpay_order_id, 'Signature verification failed').catch(() => {});
             setError(verifyErr.message || 'Payment verification failed. If you were charged, contact support.');
           } finally {
             setProcessing(false);
@@ -147,13 +149,17 @@ function CheckoutPage() {
         modal: {
           ondismiss: () => {
             setProcessing(false);
-            setError('Payment cancelled. Your order is still pending — you can try again.');
+            // User closed the modal — mark the order failed so it doesn't sit pending.
+            paymentsService.markFailed(razorpay_order_id, 'Payment cancelled by user').catch(() => {});
+            setError('Payment cancelled. You can try again whenever you are ready.');
           },
         },
       });
 
       rzp.on('payment.failed', (resp) => {
         setProcessing(false);
+        // Payment failed at the gateway — mark the order failed.
+        paymentsService.markFailed(razorpay_order_id, resp?.error?.description || 'Payment failed').catch(() => {});
         setError(resp?.error?.description || 'Payment failed. Please try again.');
       });
 
