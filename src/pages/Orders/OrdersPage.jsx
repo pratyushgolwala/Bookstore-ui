@@ -10,8 +10,6 @@ import COLORS from '../../constants/colors';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import MetalButton from '../../components/ui/MetalButton';
-import OrderTracking from '../../components/Tracking/OrderTracking';
-import DeliverySummary from '../../components/Delivery/DeliverySummary';
 
 const STATUS_MAP = {
   pending:    { label: 'Pending',    variant: 'secondary', icon: Clock },
@@ -29,7 +27,6 @@ function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expanded, setExpanded] = useState(null);
-  const [tracking, setTracking] = useState(null); // order id whose tracking is shown
 
   async function fetchOrders() {
     setLoading(true);
@@ -196,29 +193,17 @@ function OrdersPage() {
                     </div>
                   ))}
 
-                  {/* Track delivery toggle + timeline */}
+                  {/* Track delivery — opens the full tracking page */}
                   <div className="mt-3 pt-3 border-t" style={{ borderColor: COLORS.border }}>
                     <button
-                      onClick={() => setTracking(tracking === order.id ? null : order.id)}
+                      onClick={() => navigate(`/orders/${order.id}/track`)}
                       className="flex items-center gap-2 text-sm font-semibold transition-opacity hover:opacity-80"
                       style={{ color: COLORS.brass }}
                     >
                       <Truck size={15} />
-                      {tracking === order.id ? 'Hide tracking' : 'Track delivery'}
-                      <ChevronRight
-                        size={15}
-                        style={{
-                          transform: tracking === order.id ? 'rotate(90deg)' : 'none',
-                          transition: 'transform .2s',
-                        }}
-                      />
+                      Track delivery
+                      <ChevronRight size={15} />
                     </button>
-                    {tracking === order.id && (
-                      <div className="mt-2">
-                        <DeliverySummary orderId={order.id} />
-                        <OrderTracking orderId={order.id} />
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
