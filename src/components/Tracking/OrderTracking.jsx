@@ -4,6 +4,7 @@ import {
   Loader2, AlertCircle, RefreshCw,
 } from 'lucide-react';
 import { trackingService } from '../../services/trackingService';
+import DeliveryMap from './DeliveryMap';
 import COLORS from '../../constants/colors';
 
 /**
@@ -147,6 +148,16 @@ function OrderTracking({ orderId, destinationAddress = null }) {
           </span>
         )}
       </div>
+
+      {/* Live route map (mock coordinates, real Google map tiles) */}
+      {state?.origin_point && state?.destination_point && (
+        <DeliveryMap
+          origin={state.origin_point}
+          destination={state.destination_point}
+          current={state.current_point}
+          status={state.status}
+        />
+      )}
 
       {/* Vertical stage timeline */}
       <ol className="relative">
