@@ -23,6 +23,9 @@ export const paymentsService = {
       razorpay_signature,
     }),
 
+  markFailed: (razorpay_order_id, reason) =>
+    apiClient.post('/api/payments/mark-failed/', { razorpay_order_id, reason }),
+
   getStatus: (orderId) => apiClient.get(`/api/payments/${orderId}/status/`),
 };
 

@@ -14,6 +14,7 @@ import MetalButton from '../../components/ui/MetalButton';
 const STATUS_MAP = {
   pending:    { label: 'Pending',    variant: 'secondary', icon: Clock },
   confirmed:  { label: 'Confirmed',  variant: 'primary',   icon: CheckCircle },
+  failed:     { label: 'Failed',     variant: 'accent',    icon: XCircle },
   processing: { label: 'Processing', variant: 'secondary', icon: Clock },
   shipped:    { label: 'Shipped',    variant: 'primary',   icon: Truck },
   delivered:  { label: 'Delivered',  variant: 'success',   icon: CheckCircle },
