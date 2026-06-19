@@ -234,10 +234,18 @@ function DiscussionPage() {
         setThreads(prev => prev.filter(t => t.id !== id));
         if (selectedThread?.id === id) setSelectedThread(null);
       } else {
-        await discussionsService.deletePost(id);
-        emitToast('success', 'Reply deleted.');
-        if (selectedThread?.id) await openThread(selectedThread.id);
-        fetchThreads(); // refresh list so reply count updates
+        // Optimistically remove from the live list for instant feedback. The
+        // backend also broadcasts `post_deleted` over WS so other viewers update.
+        setWsMessages(prev => prev.filter(p => p.id !== id));
+        try {
+          await discussionsService.deletePost(id);
+          emitToast('success', 'Reply deleted.');
+          fetchThreads(); // refresh list so reply count updates
+        } catch (err) {
+          // Restore the true state if the delete failed (e.g. permission).
+          if (selectedThread?.id) await openThread(selectedThread.id);
+          throw err;
+        }
       }
     } catch (err) {
       emitToast('error', err.message || `Failed to delete ${type}`);
