@@ -9,6 +9,7 @@ import { initApiClient } from './services/apiClient';
 import { initAnalyticsClient } from './services/analyticsService';
 import { initAssistantClient } from './services/assistantService';
 import { initTrackingClient } from './services/trackingService';
+import { initDeliveryClient } from './services/deliveryService';
 import './index.css';
 
 // Wire the Redux store into the API client so it can attach tokens
@@ -20,6 +21,8 @@ initAnalyticsClient(store);
 initAssistantClient(store);
 // The tracking client shares the same store for JWT access tokens.
 initTrackingClient(store);
+// The delivery (classification/dispatch) client shares the same store too.
+initDeliveryClient(store);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
