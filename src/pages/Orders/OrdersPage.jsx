@@ -10,6 +10,7 @@ import COLORS from '../../constants/colors';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import MetalButton from '../../components/ui/MetalButton';
+import OrderTracking from '../../components/Tracking/OrderTracking';
 
 const STATUS_MAP = {
   pending:    { label: 'Pending',    variant: 'secondary', icon: Clock },
@@ -27,6 +28,7 @@ function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expanded, setExpanded] = useState(null);
+  const [tracking, setTracking] = useState(null); // order id whose tracking is shown
 
   async function fetchOrders() {
     setLoading(true);
@@ -180,7 +182,7 @@ function OrdersPage() {
                 />
               </button>
 
-              {open && items.length > 0 && (
+              {open && (
                 <div className="px-4 pb-4 pt-1 border-t" style={{ borderColor: COLORS.border }}>
                   {items.map((it) => (
                     <div key={it.id || it.book} className="flex justify-between py-2 text-sm">
@@ -192,6 +194,30 @@ function OrdersPage() {
                       </span>
                     </div>
                   ))}
+
+                  {/* Track delivery toggle + timeline */}
+                  <div className="mt-3 pt-3 border-t" style={{ borderColor: COLORS.border }}>
+                    <button
+                      onClick={() => setTracking(tracking === order.id ? null : order.id)}
+                      className="flex items-center gap-2 text-sm font-semibold transition-opacity hover:opacity-80"
+                      style={{ color: COLORS.brass }}
+                    >
+                      <Truck size={15} />
+                      {tracking === order.id ? 'Hide tracking' : 'Track delivery'}
+                      <ChevronRight
+                        size={15}
+                        style={{
+                          transform: tracking === order.id ? 'rotate(90deg)' : 'none',
+                          transition: 'transform .2s',
+                        }}
+                      />
+                    </button>
+                    {tracking === order.id && (
+                      <div className="mt-2">
+                        <OrderTracking orderId={order.id} />
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
