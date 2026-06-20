@@ -100,13 +100,23 @@ function MainLayout() {
             <div className="lg:col-span-2">
               <FooterCol
                 title="Help"
-                links={['Help Center', 'Contact Us', 'FAQs']}
+                links={[
+                  { label: 'Help Center', to: '/discussions' },
+                  { label: 'Contact Us', href: 'mailto:hello@folio.example' },
+                  { label: 'Reviews', to: '/reviews' },
+                ]}
+                onNavigate={navigate}
               />
             </div>
             <div className="lg:col-span-2">
               <FooterCol
-                title="Fine Print"
-                links={['Terms', 'Privacy', 'Cookies']}
+                title="Browse"
+                links={[
+                  { label: 'All Books', to: '/books' },
+                  { label: 'Categories', to: '/categories' },
+                  { label: 'Authors', to: '/authors' },
+                ]}
+                onNavigate={navigate}
               />
             </div>
           </div>
@@ -152,12 +162,15 @@ function FooterCol({ title, links, onNavigate }) {
         {links.map((link) => {
           const label = typeof link === 'string' ? link : link.label;
           const to = typeof link === 'string' ? null : link.to;
+          const href = typeof link === 'string' ? null : link.href;
           return (
             <li key={label}>
               <a
-                href={to || '#'}
+                href={href || to || '#'}
                 onClick={(e) => {
-                  if (to && onNavigate) {
+                  // Router navigation for internal `to` links; let real hrefs
+                  // (e.g. mailto:) behave natively.
+                  if (to && !href && onNavigate) {
                     e.preventDefault();
                     onNavigate(to);
                   }

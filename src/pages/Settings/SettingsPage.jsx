@@ -3,9 +3,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   User, Mail, Phone, Shield, Bell, Volume2, VolumeX,
-  Save, LogOut, BookOpen, Check,
+  Save, LogOut, Check,
 } from 'lucide-react';
-import { selectCurrentUser, logout } from '../../store/slices/authSlice';
+import { selectCurrentUser, logout, setCredentials } from '../../store/slices/authSlice';
+import { userService } from '../../services/userService';
 import { emitToast } from '../../utils/toastBus';
 import COLORS from '../../constants/colors';
 import Button from '../../components/ui/Button';
@@ -13,8 +14,8 @@ import Button from '../../components/ui/Button';
 /**
  * SettingsPage — view and edit account details + preferences.
  *
- * Profile edits are stored locally (the backend has no profile-update
- * endpoint yet); when one lands, swap the save handler for an API call.
+ * Profile edits (name, phone) are persisted to the backend via PATCH /user/me/
+ * and mirrored into the Redux auth user so the rest of the app updates too.
  */
 function SettingsPage() {
   const dispatch = useDispatch();
@@ -27,21 +28,17 @@ function SettingsPage() {
     email: '',
     phone: '',
   });
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [muted, setMuted] = useState(false);
 
-  // Seed the form from the current user + persisted overrides
+  // Seed the form from the current user.
   useEffect(() => {
-    let overrides = {};
-    try {
-      overrides = JSON.parse(localStorage.getItem('profileOverrides') || '{}');
-    } catch { /* ignore */ }
-
     setForm({
-      first_name: overrides.first_name ?? user?.first_name ?? '',
-      last_name:  overrides.last_name  ?? user?.last_name  ?? '',
+      first_name: user?.first_name ?? '',
+      last_name:  user?.last_name  ?? '',
       email:      user?.email ?? '',
-      phone:      overrides.phone ?? user?.phone ?? '',
+      phone:      user?.phone ?? '',
     });
 
     try {
@@ -54,18 +51,27 @@ function SettingsPage() {
     setSaved(false);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
-      localStorage.setItem('profileOverrides', JSON.stringify({
+      const res = await userService.updateProfile({
         first_name: form.first_name,
         last_name: form.last_name,
         phone: form.phone,
-      }));
-    } catch { /* ignore */ }
-    setSaved(true);
-    emitToast('success', 'Your settings have been saved.');
-    setTimeout(() => setSaved(false), 2000);
+      });
+      // Mirror the updated profile into Redux + localStorage so the navbar,
+      // profile page, etc. reflect the change immediately.
+      const updated = res?.data ?? res;
+      dispatch(setCredentials({ user: { ...user, ...updated } }));
+      setSaved(true);
+      emitToast('success', 'Your profile has been saved.');
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      emitToast('error', err.message || 'Could not save your profile.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggleMute = () => {
@@ -154,8 +160,8 @@ function SettingsPage() {
           <Field label="Phone" icon={<Phone size={15} />} value={form.phone} onChange={handleChange('phone')} placeholder="+1 555 000 0000" />
         </div>
 
-        <Button type="submit" className="mt-6" leftIcon={saved ? <Check size={16} /> : <Save size={16} />}>
-          {saved ? 'Saved' : 'Save Changes'}
+        <Button type="submit" className="mt-6" disabled={saving} leftIcon={saved ? <Check size={16} /> : <Save size={16} />}>
+          {saving ? 'Saving…' : saved ? 'Saved' : 'Save Changes'}
         </Button>
       </form>
 

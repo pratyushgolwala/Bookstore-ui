@@ -56,8 +56,8 @@ function ProfilePage() {
       {/* Quick links */}
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
         <QuickLink icon={<Package size={20} />} label="My Orders" onClick={() => navigate('/orders')} />
-        <QuickLink icon={<Heart size={20} />} label="Wishlist" onClick={() => navigate('/books')} />
-        <QuickLink icon={<Settings size={20} />} label="Settings" onClick={() => {}} />
+        <QuickLink icon={<Heart size={20} />} label="Wishlist" onClick={() => navigate('/wishlist')} />
+        <QuickLink icon={<Settings size={20} />} label="Settings" onClick={() => navigate('/settings')} />
       </div>
 
       {/* Account details form */}
@@ -70,10 +70,17 @@ function ProfilePage() {
           <Field label="Full Name" value={displayName} icon={<User size={15} />} />
           <Field label="Email" value={email} icon={<Mail size={15} />} />
           <Field label="Role" value={role} icon={<Shield size={15} />} />
-          <Field label="Member Since" value="2024" icon={<User size={15} />} />
+          {user?.phone && <Field label="Phone" value={user.phone} icon={<User size={15} />} />}
         </div>
 
-        <div className="mt-6 pt-6 border-t flex justify-end" style={{ borderColor: COLORS.border }}>
+        <div className="mt-6 pt-6 border-t flex flex-col sm:flex-row gap-3 sm:justify-between" style={{ borderColor: COLORS.border }}>
+          <Button
+            variant="outline"
+            leftIcon={<Settings size={16} />}
+            onClick={() => navigate('/settings')}
+          >
+            Edit Profile
+          </Button>
           <Button
             variant="danger"
             leftIcon={<LogOut size={16} />}
