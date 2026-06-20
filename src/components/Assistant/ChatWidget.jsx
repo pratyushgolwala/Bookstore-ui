@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { MessageSquareText, X, Send, Sparkles, RotateCcw, Square } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import { assistantService } from '../../services/assistantService';
@@ -36,6 +37,7 @@ const SUGGESTIONS = [
 function ChatWidget() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([GREETING]);
@@ -118,6 +120,13 @@ function ChatWidget() {
             setStatus('');
             appendToAssistant(chunk);
           },
+          onAction: (action) => {
+            // The assistant asked the app to navigate (e.g. open tracking).
+            if (action?.target === 'order_tracking' && action.order_id) {
+              navigate(`/orders/${action.order_id}/track`);
+              setOpen(false);
+            }
+          },
           onDone: () => {
             setStatus('');
             setSending(false);
@@ -143,7 +152,7 @@ function ChatWidget() {
       setSending(false);
       setStatus('');
     },
-    [input, sending, messages, sessionId, dispatch],
+    [input, sending, messages, sessionId, dispatch, navigate],
   );
 
   const handleKeyDown = (e) => {

@@ -91,7 +91,7 @@ async function chat({ message, history = [], session_id = null, timeoutMs = 4500
  */
 async function chatStream(
   { message, history = [], session_id = null },
-  { onStatus, onToken, onDone, onError, signal } = {},
+  { onStatus, onToken, onDone, onError, onAction, signal } = {},
 ) {
   const token = getAccessToken();
 
@@ -138,6 +138,7 @@ async function chatStream(
     if (evt.type === 'status') onStatus?.(evt.data);
     else if (evt.type === 'token') onToken?.(evt.data);
     else if (evt.type === 'done') onDone?.(evt.data);
+    else if (evt.type === 'action') onAction?.(evt.data);
     else if (evt.type === 'error') onError?.(evt.data);
   };
 
