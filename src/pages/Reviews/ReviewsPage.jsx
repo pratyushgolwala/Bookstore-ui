@@ -5,6 +5,7 @@ import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 import { reviewsService } from '../../services/reviewsService';
+import BookTitleAutocomplete from '../../components/Reviews/BookTitleAutocomplete';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import './ReviewsPage.css';
 
