@@ -36,15 +36,15 @@ export function AppRoutes() {
 
       {/* Main app routes - with MainLayout */}
       <Route element={<MainLayout />}>
-        {/* Public */}
+        {/* Public — guests may browse, search and read freely */}
         <Route index element={<LandingPage />} />
+        <Route path="books"       element={<BooksPage />} />
         <Route path="categories"  element={<CategoriesPage />} />
         <Route path="authors"     element={<AuthorsPage />} />
         <Route path="discussions" element={<DiscussionPage />} />
         <Route path="reviews"     element={<ReviewsPage />} />
 
-        {/* Protected — require login */}
-        <Route path="books"    element={<ProtectedRoute><BooksPage /></ProtectedRoute>}    />
+        {/* Protected — require login (write operations / personal data) */}
         <Route path="cart"     element={<ProtectedRoute><CartPage /></ProtectedRoute>}     />
         <Route path="orders"   element={<ProtectedRoute><OrdersPage /></ProtectedRoute>}   />
         <Route path="orders/:orderId/track" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />

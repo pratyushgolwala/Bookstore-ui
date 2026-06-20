@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import EmailValidationPage from './pages/EmailValidationPage';
 import PasswordEntryPage from './pages/PasswordEntryPage';
@@ -13,6 +13,7 @@ import styles from './Auth3DBook.module.css';
  */
 function LoginBookFlow({ toast }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const [page, setPage] = useState('email');
   const [email, setEmail] = useState('');
@@ -127,8 +128,12 @@ function LoginBookFlow({ toast }) {
       toast.success(`Welcome back, ${data.data.user.full_name || 'there'}!`);
 
       const role = data.data.user.role;
+      // Return the user to the page they came from (set when a guest action or
+      // a protected route triggered the login), falling back to role homes.
+      const returnTo = location.state?.from;
       setTimeout(() => {
-        if (role === 'ADMIN') navigate('/admin');
+        if (returnTo) navigate(returnTo);
+        else if (role === 'ADMIN') navigate('/admin');
         else if (role === 'AUTHOR') navigate('/author');
         else navigate('/books');
       }, 800);

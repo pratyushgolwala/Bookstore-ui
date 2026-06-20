@@ -1,8 +1,8 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { Heart } from 'lucide-react';
 import { toggleWishlist, selectIsWishlisted } from '../../store/slices/wishlistSlice';
-import { selectIsAuthenticated } from '../../store/slices/authSlice';
 import { emitToast } from '../../utils/toastBus';
+import useAuthGate from '../../hooks/useAuthGate';
 import COLORS from '../../constants/colors';
 
 /**
@@ -14,20 +14,19 @@ import COLORS from '../../constants/colors';
  */
 function WishlistButton({ book, size = 18, className = '' }) {
   const dispatch = useDispatch();
-  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const requireAuth = useAuthGate();
   const wishlisted = useSelector(selectIsWishlisted(book?.id));
 
   const handleClick = (e) => {
     e.stopPropagation();
-    if (!isAuthenticated) {
-      emitToast('warning', 'Please log in to use your wishlist.');
-      return;
-    }
-    dispatch(toggleWishlist(book));
-    emitToast(
-      wishlisted ? 'info' : 'success',
-      wishlisted ? `Removed from wishlist.` : `"${book.title}" added to wishlist.`,
-    );
+    // Guests get the "Sign in to continue" gate; signed-in users toggle.
+    requireAuth(() => {
+      dispatch(toggleWishlist(book));
+      emitToast(
+        wishlisted ? 'info' : 'success',
+        wishlisted ? `Removed from wishlist.` : `"${book.title}" added to wishlist.`,
+      );
+    });
   };
 
   return (

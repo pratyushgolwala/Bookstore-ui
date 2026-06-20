@@ -5,6 +5,7 @@ import { ArrowRight, BookOpen, Truck, ShieldCheck } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import MetalButton from '../../components/ui/MetalButton';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
+import { openAuthGate } from '../../utils/authGateBus';
 
 /**
  * LandingPage — Folio's storefront window.
@@ -27,6 +28,18 @@ function LandingPage() {
       else navigate('/books', { replace: true });
     }
   }, [isAuthenticated, currentUser, navigate]);
+
+  // "Shelve your own work" — publishing requires an account. Guests get the
+  // sign-in gate (returning to the author dashboard after auth); authed users
+  // go straight there. (In practice the redirect above means only guests see
+  // this page, but we keep the guard correct regardless.)
+  const handleShelveYourWork = () => {
+    if (isAuthenticated) {
+      navigate('/author');
+    } else {
+      openAuthGate({ from: '/author' });
+    }
+  };
 
   return (
     <div className="w-full" style={{ backgroundColor: COLORS.background, paddingTop: '68px' }}>
@@ -81,7 +94,7 @@ function LandingPage() {
                   Browse the shelves <ArrowRight size={17} />
                 </MetalButton>
                 <button
-                  onClick={() => navigate('/register')}
+                  onClick={handleShelveYourWork}
                   className="text-sm font-semibold tracking-wide self-center transition-colors"
                   style={{ color: COLORS.text.secondary }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = COLORS.brass)}
