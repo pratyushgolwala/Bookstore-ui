@@ -1,0 +1,15 @@
+/**
+ * AuthGateModal z-index overrides.
+ *
+ * The app-wide "Sign in to continue" gate can be triggered from inside other
+ * modals (e.g. the BookDetailCard, which sits at z-[200]). It must always sit
+ * ABOVE every other overlay, so we bump its z-index well past any in-app modal.
+ * Scoped to the gate's own classes so the navbar AuthPopup is unaffected.
+ */
+.auth-gate-backdrop {
+  z-index: 1000 !important;
+}
+
+.auth-gate-popup {
+  z-index: 1001 !important;
+}
