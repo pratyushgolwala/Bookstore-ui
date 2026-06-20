@@ -154,6 +154,7 @@ function OrderTracking({ orderId, destinationAddress = null }) {
         <DeliveryMap
           origin={state.origin_point}
           destination={state.destination_point}
+          destinationAddress={state.destination_address || state.destination}
           current={state.current_point}
           status={state.status}
         />
