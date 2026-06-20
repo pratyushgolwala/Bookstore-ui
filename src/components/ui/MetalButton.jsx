@@ -47,11 +47,11 @@ const colorVariants = {
     textShadow: '[text-shadow:_0_-1px_0_rgb(146_64_14_/_100%)]',
   },
   gold: {
-    outer: 'bg-gradient-to-b from-[#917100] to-[#EAD98F]',
-    inner: 'bg-gradient-to-b from-[#FFFDDD] via-[#856807] to-[#FFF1B3]',
-    button: 'bg-gradient-to-b from-[#FFEBA1] to-[#9B873F]',
-    textColor: 'text-[#3a2c05]',
-    textShadow: '[text-shadow:_0_1px_0_rgb(255_253_221_/_60%)]',
+    outer: 'bg-gradient-to-b from-[#5e4708] to-[#f0d98a]',
+    inner: 'bg-gradient-to-b from-[#fff6c4] via-[#6b520a] to-[#ffe7a0]',
+    button: 'bg-gradient-to-b from-[#ffe8a3] via-[#dcb453] to-[#a17b2c]',
+    textColor: 'text-[#3a2606]',
+    textShadow: '[text-shadow:_0_1px_0_rgb(255_247_204_/_55%)]',
   },
   bronze: {
     outer: 'bg-gradient-to-b from-[#864813] to-[#E9B486]',
