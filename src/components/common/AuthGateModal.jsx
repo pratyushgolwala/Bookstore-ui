@@ -4,6 +4,7 @@ import { X, BookMarked } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import { subscribeAuthGate } from '../../utils/authGateBus';
 import '../auth-popup/AuthPopup.css';
+import './AuthGateModal.css';
 
 /**
  * AuthGateModal — the single, app-wide "Sign in to continue" dialog.
@@ -54,13 +55,13 @@ function AuthGateModal() {
   return (
     <>
       <div
-        className={`auth-popup-backdrop ${isOpen ? 'open' : ''}`}
+        className={`auth-popup-backdrop auth-gate-backdrop ${isOpen ? 'open' : ''}`}
         onClick={close}
         style={{ backgroundColor: 'rgba(15, 15, 15, 0.5)' }}
       />
 
       <div
-        className={`auth-popup ${isOpen ? 'open' : ''}`}
+        className={`auth-popup auth-gate-popup ${isOpen ? 'open' : ''}`}
         style={{
           background: `linear-gradient(135deg, ${COLORS.surface} 0%, ${COLORS.surfaceLight} 100%)`,
           border: `1px solid ${COLORS.border}`,
