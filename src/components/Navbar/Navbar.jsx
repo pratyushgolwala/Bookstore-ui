@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  BookMarked, Menu, X, User, LogOut, ShoppingCart,
+  Menu, X, User, LogOut, ShoppingCart,
   Heart, Settings, Library, LogIn, Bell, Check,
 } from 'lucide-react';
 import COLORS from '../../constants/colors';
@@ -40,6 +40,23 @@ function Navbar() {
 
   const lastScrollY = useRef(0);
   const prevCartCount = useRef(cartCount);
+  const notifRef = useRef(null);
+
+  // Close the notifications dropdown on outside click / Escape (it opens on
+  // click now, so it needs an explicit dismiss path — works on touch too).
+  useEffect(() => {
+    if (!notifOpen) return undefined;
+    const onDown = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setNotifOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [notifOpen]);
 
   useEffect(() => {
     if (cartCount !== prevCartCount.current) {
@@ -224,12 +241,13 @@ function Navbar() {
           <div className="navbar-right">
             {/* Notification Bell — authenticated only */}
             {isAuthenticated && (
-              <div
-                className="nav-item-wrapper"
-                onMouseEnter={() => setNotifOpen(true)}
-                onMouseLeave={() => setNotifOpen(false)}
-              >
-                <button className="notif-btn" aria-label="Notifications">
+              <div className="nav-item-wrapper" ref={notifRef}>
+                <button
+                  className="notif-btn"
+                  aria-label="Notifications"
+                  aria-expanded={notifOpen}
+                  onClick={() => { setNotifOpen((o) => !o); setAccountMenuOpen(false); }}
+                >
                   <Bell size={18} />
                   {unreadCount > 0 && (
                     <span className="notif-badge">
