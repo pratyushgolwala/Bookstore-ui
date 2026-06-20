@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Lock, CheckCircle2, ArrowLeft, Loader2, ShoppingBag,
-  Shield, Truck, RotateCcw, Sparkles, Gift, MapPin, Smartphone, XCircle,
+  Shield, Truck, RotateCcw, Mail, BookOpen, MapPin, Smartphone, XCircle,
 } from 'lucide-react';
 import { selectCartItems, selectCartTotal, selectCartCoupon, computeCouponDiscount, clearCartThunk } from '../../store/slices/cartSlice';
 import { selectCurrentUser } from '../../store/slices/authSlice';
@@ -174,76 +174,168 @@ function CheckoutPage() {
   // SUCCESS SCREEN
   // ═══════════════════════════════════════════════════════════════
   if (success) {
+    const firstName = currentUser?.first_name?.trim();
+    const journey = [
+      { label: 'Confirmed', done: true },
+      { label: 'Wrapped', done: false },
+      { label: 'On its way', done: false },
+    ];
     return (
       <div
-        className="flex flex-col items-center justify-center text-center px-6"
-        style={{ minHeight: '100vh', backgroundColor: COLORS.background, paddingTop: '100px' }}
+        className="flex items-center justify-center px-4"
+        style={{ minHeight: '100vh', backgroundColor: COLORS.parchment.bg, paddingTop: '100px', paddingBottom: '48px' }}
       >
-        <div className="relative mb-8">
-          <div
-            className="w-28 h-28 rounded-full flex items-center justify-center"
-            style={{
-              background: `radial-gradient(circle, ${COLORS.success}22 0%, transparent 70%)`,
-              border: `3px solid ${COLORS.success}`,
-              animation: 'pulse 2s ease-in-out infinite',
-            }}
-          >
-            <CheckCircle2 size={56} style={{ color: COLORS.success }} />
-          </div>
-          <div
-            className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: COLORS.gradient.primary }}
-          >
-            <Sparkles size={16} color="#fff" />
-          </div>
-        </div>
-
-        <h1 className="text-3xl font-bold mb-2" style={{ color: COLORS.text.primary }}>
-          Payment Successful!
-        </h1>
-        <p className="text-base mb-2" style={{ color: COLORS.text.secondary }}>
-          Thank you for your purchase. Your books are on their way!
-        </p>
         <div
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-8"
-          style={{ backgroundColor: COLORS.surfaceLight, color: COLORS.text.tertiary }}
+          className="succ-card relative w-full"
+          style={{
+            maxWidth: 460,
+            backgroundColor: COLORS.parchment.surface,
+            border: `1px solid ${COLORS.brass}33`,
+            borderRadius: 6,
+            padding: '2.75rem 2rem 2rem',
+            boxShadow: '0 30px 80px -24px rgba(0,0,0,0.65)',
+          }}
         >
-          Order ID: <span className="font-mono font-semibold" style={{ color: COLORS.secondary[500] }}>
-            {orderId?.slice(0, 8).toUpperCase()}
-          </span>
-        </div>
+          {/* Inner double-rule frame — letterpress feel */}
+          <div
+            aria-hidden="true"
+            className="absolute pointer-events-none"
+            style={{ inset: 10, border: `1px solid ${COLORS.brass}22`, borderRadius: 3 }}
+          />
 
-        <div className="flex gap-3 flex-wrap justify-center">
-          <MetalButton variant="gold" onClick={() => navigate('/orders')} className="gap-2">
-            <ShoppingBag size={16} /> View My Orders
-          </MetalButton>
-          <MetalButton variant="silver" onClick={() => navigate('/books')} className="gap-2">
-            Continue Shopping
-          </MetalButton>
-        </div>
-
-        <div className="mt-10 grid grid-cols-3 gap-6 max-w-md">
-          {[
-            { icon: <Truck size={20} />, text: 'Ships within 2-3 days' },
-            { icon: <Shield size={20} />, text: 'Payment secured' },
-            { icon: <Gift size={20} />, text: 'Reward points earned' },
-          ].map(({ icon, text }) => (
-            <div key={text} className="flex flex-col items-center gap-2 text-center">
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: COLORS.surfaceLight, color: COLORS.primary[600] }}
-              >
-                {icon}
-              </div>
-              <span className="text-xs" style={{ color: COLORS.text.tertiary }}>{text}</span>
+          {/* Wax seal */}
+          <div className="relative flex justify-center">
+            <div
+              className="succ-seal flex items-center justify-center"
+              style={{
+                width: 76, height: 76, borderRadius: '50%',
+                backgroundColor: COLORS.cloth,
+                border: `2px solid ${COLORS.brass}`,
+                boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.14), inset 0 -4px 9px rgba(0,0,0,0.4), 0 10px 22px -8px rgba(0,0,0,0.7)',
+              }}
+            >
+              <CheckCircle2 size={32} color={COLORS.secondary[600]} strokeWidth={2.2} />
             </div>
-          ))}
+          </div>
+
+          {/* Eyebrow */}
+          <p
+            className="succ-rise text-center"
+            style={{ marginTop: '1.4rem', fontSize: 11, letterSpacing: '0.34em', textTransform: 'uppercase', color: COLORS.brass, animationDelay: '.05s' }}
+          >
+            Order Confirmed
+          </p>
+
+          {/* Headline */}
+          <h1
+            className="succ-rise font-display text-center"
+            style={{ fontSize: '1.95rem', lineHeight: 1.15, fontWeight: 700, color: COLORS.text.primary, marginTop: '.45rem', animationDelay: '.12s' }}
+          >
+            {firstName ? `Thank you, ${firstName}.` : 'Thank you for your order.'}
+          </h1>
+
+          {/* Flourish */}
+          <div
+            className="succ-rise flex items-center justify-center gap-2"
+            style={{ margin: '.75rem 0', animationDelay: '.18s' }}
+          >
+            <span style={{ height: 1, width: 30, background: `${COLORS.brass}55` }} />
+            <span style={{ fontSize: 11, color: `${COLORS.brass}cc` }}>❋</span>
+            <span style={{ height: 1, width: 30, background: `${COLORS.brass}55` }} />
+          </div>
+
+          {/* Humane note */}
+          <p
+            className="succ-rise text-center"
+            style={{ fontSize: '.93rem', lineHeight: 1.65, color: COLORS.text.secondary, maxWidth: 340, margin: '0 auto', animationDelay: '.24s' }}
+          >
+            Your books are being wrapped with care and will set off from our reading
+            room shortly. A small parcel of good stories is on its way to you.
+          </p>
+
+          {/* Receipt — order reference between perforations */}
+          <div className="succ-rise" style={{ marginTop: '1.7rem', animationDelay: '.3s' }}>
+            <div style={{ borderTop: `1px dashed ${COLORS.brass}44` }} />
+            <div className="flex items-center justify-between" style={{ padding: '.9rem .25rem' }}>
+              <span style={{ fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: COLORS.text.tertiary }}>
+                Order Reference
+              </span>
+              <span className="font-mono" style={{ fontSize: '.95rem', fontWeight: 700, color: COLORS.brass, letterSpacing: '.08em' }}>
+                {orderId?.slice(0, 8).toUpperCase()}
+              </span>
+            </div>
+            <div style={{ borderTop: `1px dashed ${COLORS.brass}44` }} />
+          </div>
+
+          {/* Journey */}
+          <div
+            className="succ-rise"
+            style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', marginTop: '1.5rem', animationDelay: '.36s' }}
+          >
+            {journey.map((s, i) => (
+              <Fragment key={s.label}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 74 }}>
+                  <span
+                    style={{
+                      width: 13, height: 13, borderRadius: '50%',
+                      backgroundColor: s.done ? COLORS.cloth : 'transparent',
+                      border: `2px solid ${s.done ? COLORS.cloth : `${COLORS.brass}66`}`,
+                    }}
+                  />
+                  <span
+                    style={{ marginTop: 7, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.08em', color: s.done ? COLORS.text.secondary : COLORS.text.tertiary }}
+                  >
+                    {s.label}
+                  </span>
+                </div>
+                {i < journey.length - 1 && (
+                  <span style={{ flex: '0 0 26px', marginTop: 6, borderTop: `2px dotted ${COLORS.brass}55` }} />
+                )}
+              </Fragment>
+            ))}
+          </div>
+
+          {/* Email line */}
+          <p
+            className="succ-rise flex items-center justify-center gap-1.5 text-center"
+            style={{ marginTop: '1.3rem', fontSize: '.78rem', color: COLORS.text.tertiary, animationDelay: '.42s' }}
+          >
+            <Mail size={13} /> A confirmation note is on its way to your inbox
+          </p>
+
+          {/* Actions */}
+          <div className="succ-rise flex flex-col gap-2.5" style={{ marginTop: '1.6rem', animationDelay: '.48s' }}>
+            <MetalButton variant="gold" fullWidth className="gap-2" onClick={() => navigate('/orders')}>
+              <ShoppingBag size={16} /> View my orders
+            </MetalButton>
+            <button
+              onClick={() => navigate('/books')}
+              className="flex items-center justify-center gap-2 w-full transition-opacity hover:opacity-75"
+              style={{
+                padding: '.7rem 1rem', borderRadius: 8, fontSize: '.9rem', fontWeight: 600,
+                color: COLORS.text.secondary, background: 'transparent', border: `1px solid ${COLORS.border}`,
+              }}
+            >
+              <BookOpen size={15} /> Keep browsing the shelves
+            </button>
+          </div>
         </div>
 
         <style>{`
-          @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(122, 158, 91, 0.4); }
-            50% { box-shadow: 0 0 0 16px rgba(122, 158, 91, 0); }
+          @keyframes succ-seal {
+            0%   { transform: scale(1.6) rotate(-26deg); opacity: 0; }
+            60%  { transform: scale(0.94) rotate(-6deg); opacity: 1; }
+            100% { transform: scale(1) rotate(-8deg); }
+          }
+          @keyframes succ-rise {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          .succ-seal { animation: succ-seal .6s cubic-bezier(.34,1.56,.64,1) both; }
+          .succ-rise { opacity: 0; animation: succ-rise .5s ease forwards; }
+          .succ-card { animation: succ-rise .5s ease both; }
+          @media (prefers-reduced-motion: reduce) {
+            .succ-seal, .succ-rise, .succ-card { animation: none; opacity: 1; transform: none; }
           }
         `}</style>
       </div>

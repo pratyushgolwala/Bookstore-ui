@@ -112,6 +112,8 @@ function BookTitleAutocomplete({ value, onChange, placeholder }) {
             backgroundColor: COLORS.surfaceLight,
             color: COLORS.text.primary,
             borderColor: COLORS.border,
+            width: '100%',
+            boxSizing: 'border-box',
             paddingRight: '2.4rem',
           }}
         />
