@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { Star, BookOpen, ThumbsUp, Search, ChevronDown, X, Trash2 } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
+import useAuthGate from '../../hooks/useAuthGate';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 import { reviewsService } from '../../services/reviewsService';
 import BookTitleAutocomplete from '../../components/Reviews/BookTitleAutocomplete';
@@ -49,6 +50,9 @@ function CustomDropdown({ options, value, onChange, placeholder }) {
 function ReviewsPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const currentUser     = useSelector(selectCurrentUser);
+  const requireAuth     = useAuthGate();
+  // Opens the themed "Sign in to continue" modal, returning here after login.
+  const openReviewGate  = () => requireAuth(() => {});
 
   const [reviews, setReviews]           = useState([]);
   const [showForm, setShowForm]         = useState(false);
@@ -97,7 +101,7 @@ function ReviewsPage() {
   };
 
   const handleSubmit = async () => {
-    if (!isAuthenticated) { emitToast('error', 'You need to login to post a review.'); return; }
+    if (!isAuthenticated) { openReviewGate(); return; }
     if (!newReview.book_title.trim()) { emitToast('warning', 'Please enter a book title.'); return; }
     if (!newReview.body.trim())       { emitToast('warning', 'Please write your review.'); return; }
 
@@ -116,7 +120,7 @@ function ReviewsPage() {
   };
 
   const handleToggleHelpful = async (reviewId) => {
-    if (!isAuthenticated) { emitToast('error', 'You need to login to mark reviews as helpful.'); return; }
+    if (!isAuthenticated) { openReviewGate(); return; }
     try {
       const res = await reviewsService.toggleHelpful(reviewId);
       // Response: { status: {...}, data: { is_helpful, helpful_count } }
@@ -201,7 +205,7 @@ function ReviewsPage() {
               </div>
             </div>
             <button className="write-review-btn"
-              onClick={() => isAuthenticated ? setShowForm(true) : emitToast('error', 'You need to login to write a review.')}
+              onClick={() => isAuthenticated ? setShowForm(true) : openReviewGate()}
               style={{ backgroundColor: COLORS.cloth, color: '#fdf6e6' }}>
               <Star size={18} />
               Write a Review

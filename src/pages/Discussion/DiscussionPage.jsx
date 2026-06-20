@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import COLORS from '../../constants/colors';
 import { emitToast } from '../../utils/toastBus';
+import useAuthGate from '../../hooks/useAuthGate';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 import { discussionsService } from '../../services/discussionsService';
 import { useDiscussionWebSocket } from '../../hooks/useDiscussionWebSocket';
@@ -53,6 +54,9 @@ function DiscussionPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const currentUser     = useSelector(selectCurrentUser);
   const accessToken     = useSelector((state) => state.auth.access);
+  const requireAuth     = useAuthGate();
+  // Opens the themed "Sign in to continue" modal, returning here after login.
+  const openDiscussionGate = () => requireAuth(() => {});
 
   const [threads, setThreads]               = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
@@ -170,7 +174,7 @@ function DiscussionPage() {
   };
 
   const handleCreateThread = async () => {
-    if (!isAuthenticated) { emitToast('error', 'You need to login to create a thread.'); return; }
+    if (!isAuthenticated) { openDiscussionGate(); return; }
     if (!newThreadTitle.trim()) { emitToast('warning', 'Please enter a thread title.'); return; }
     try {
       setSubmitting(true);
@@ -189,7 +193,7 @@ function DiscussionPage() {
   };
 
   const handleAddPost = async () => {
-    if (!isAuthenticated) { emitToast('error', 'You need to login to reply.'); return; }
+    if (!isAuthenticated) { openDiscussionGate(); return; }
     if (!newPostContent.trim()) { emitToast('warning', 'Please write something.'); return; }
 
     // Prefer the live WebSocket path so the reply is broadcast to everyone in
@@ -293,7 +297,7 @@ function DiscussionPage() {
               </div>
             </div>
             <button className="new-thread-btn"
-              onClick={() => isAuthenticated ? setShowNewThreadModal(true) : emitToast('error', 'You need to login to create a thread.')}
+              onClick={() => isAuthenticated ? setShowNewThreadModal(true) : openDiscussionGate()}
               style={{ backgroundColor: COLORS.cloth, color: '#fdf6e6' }}>
               <Plus size={18} /> New Thread
             </button>

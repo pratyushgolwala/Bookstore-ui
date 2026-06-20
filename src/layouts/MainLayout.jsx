@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import Navbar from '../components/Navbar/Navbar';
 import ToastHost from '../components/Toast/ToastHost';
 import ChatWidget from '../components/Assistant/ChatWidget';
+import AuthGateModal from '../components/common/AuthGateModal';
 import { selectCurrentUser } from '../store/slices/authSlice';
 import { fetchCart, resetCart } from '../store/slices/cartSlice';
 import { hydrateWishlist, resetWishlist } from '../store/slices/wishlistSlice';
@@ -16,6 +17,7 @@ import COLORS from '../constants/colors';
  */
 function MainLayout() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const currentUser = useSelector(selectCurrentUser);
   const prevUserId = useRef(null);
 
@@ -83,7 +85,16 @@ function MainLayout() {
             <div className="lg:col-span-2 lg:col-start-7">
               <FooterCol
                 title="The Shop"
-                links={['Browse Books', 'For Authors', 'About Us']}
+                links={[
+                  // Browse the catalog — public, no auth required.
+                  { label: 'Browse Books', to: '/books' },
+                  // "For Authors" routes to sign up (no dedicated author
+                  // registration page exists, so use the normal signup).
+                  { label: 'For Authors', to: '/register' },
+                  // About Us → Landing / Home.
+                  { label: 'About Us', to: '/' },
+                ]}
+                onNavigate={navigate}
               />
             </div>
             <div className="lg:col-span-2">
@@ -116,14 +127,19 @@ function MainLayout() {
       {/* Global toast notifications — available on all pages via toastBus */}
       <ToastHost />
 
+      {/* App-wide "Sign in to continue" gate for guest actions */}
+      <AuthGateModal />
+
       {/* Floating AI assistant — shown to logged-in users on all pages */}
       <ChatWidget />
     </div>
   );
 }
 
-/* Small editorial footer column — links styled as a quiet list. */
-function FooterCol({ title, links }) {
+/* Small editorial footer column — links styled as a quiet list.
+ * Accepts either plain string labels (decorative, href="#") or
+ * { label, to } objects that navigate via the router. */
+function FooterCol({ title, links, onNavigate }) {
   return (
     <div>
       <h4
@@ -133,17 +149,27 @@ function FooterCol({ title, links }) {
         {title}
       </h4>
       <ul className="space-y-2.5 text-sm">
-        {links.map((label) => (
-          <li key={label}>
-            <a
-              href="#"
-              className="transition-colors hover:text-cream"
-              style={{ color: COLORS.text.secondary }}
-            >
-              {label}
-            </a>
-          </li>
-        ))}
+        {links.map((link) => {
+          const label = typeof link === 'string' ? link : link.label;
+          const to = typeof link === 'string' ? null : link.to;
+          return (
+            <li key={label}>
+              <a
+                href={to || '#'}
+                onClick={(e) => {
+                  if (to && onNavigate) {
+                    e.preventDefault();
+                    onNavigate(to);
+                  }
+                }}
+                className="transition-colors hover:text-cream"
+                style={{ color: COLORS.text.secondary }}
+              >
+                {label}
+              </a>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
