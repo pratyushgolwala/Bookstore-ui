@@ -401,19 +401,15 @@ function CartPage() {
             </div>
 
             {/* Checkout button */}
-            <button
+            <MetalButton
+              variant="gold"
+              fullWidth
+              className="mt-5 gap-2"
               onClick={() => navigate('/checkout')}
-              className="mt-5 w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm tracking-wide transition-all hover:brightness-110 active:scale-[0.98]"
-              style={{
-                backgroundColor: COLORS.cloth,
-                color: '#fdf6e6',
-                border: `1px solid ${COLORS.brass}66`,
-                boxShadow: '0 6px 18px rgba(122,59,46,0.35)',
-              }}
             >
               Proceed to Checkout
               <ArrowRight size={18} />
-            </button>
+            </MetalButton>
 
             {/* Trust row */}
             <div
