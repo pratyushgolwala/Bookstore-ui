@@ -305,11 +305,12 @@ function ReviewsPage() {
               <div className="modal-body">
                 <div className="form-field">
                   <label style={{ color: COLORS.text.secondary }}>Book Title</label>
-                  <input type="text" placeholder="e.g. The Midnight Library"
+                  <BookTitleAutocomplete
                     value={newReview.book_title}
-                    onChange={e => setNewReview({ ...newReview, book_title: e.target.value })}
-                    style={{ backgroundColor: COLORS.surfaceLight, color: COLORS.text.primary, borderColor: COLORS.border }} />
-                  <span className="field-hint" style={{ color: COLORS.text.tertiary }}>Enter the book title as it appears in our store</span>
+                    onChange={(title) => setNewReview((r) => ({ ...r, book_title: title }))}
+                    placeholder="e.g. The Midnight Library"
+                  />
+                  <span className="field-hint" style={{ color: COLORS.text.tertiary }}>Start typing to find the book, then pick it from the list</span>
                 </div>
 
                 <div className="form-field">
