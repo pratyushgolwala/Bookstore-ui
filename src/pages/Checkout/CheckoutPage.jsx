@@ -415,9 +415,9 @@ function ReviewStep({ items, onContinue }) {
         ))}
       </div>
 
-      <MetalButton variant="gold" fullWidth className="mt-6 gap-2" onClick={onContinue}>
+      <CtaButton className="mt-6" onClick={onContinue}>
         Continue to Delivery <MapPin size={16} />
-      </MetalButton>
+      </CtaButton>
     </div>
   );
 }
@@ -466,16 +466,9 @@ function DeliveryStep({ delivery, onChange, isValid, onContinue }) {
         <InputField label="Delivery Notes (optional)" name="notes" value={delivery.notes} onChange={onChange} placeholder="Leave at the door, call on arrival…" />
       </div>
 
-      <MetalButton
-        variant="gold"
-        fullWidth
-        className="mt-6 gap-2"
-        onClick={onContinue}
-        disabled={!isValid}
-        style={{ opacity: isValid ? 1 : 0.6 }}
-      >
+      <CtaButton className="mt-6" onClick={onContinue} disabled={!isValid}>
         Continue to Payment <CreditCard size={16} />
-      </MetalButton>
+      </CtaButton>
       {!isValid && (
         <p className="text-xs text-center mt-3" style={{ color: COLORS.text.tertiary }}>
           Please fill name, email, address, city, state and postal code.
@@ -546,20 +539,13 @@ function PaymentStep({ processing, error, total, onPay }) {
         </div>
       )}
 
-      <MetalButton
-        variant="gold"
-        fullWidth
-        className="gap-2"
-        onClick={onPay}
-        disabled={processing}
-        style={{ opacity: processing ? 0.6 : 1 }}
-      >
+      <CtaButton onClick={onPay} disabled={processing}>
         {processing ? (
           <><Loader2 size={18} className="animate-spin" /> Opening secure checkout…</>
         ) : (
           <><Lock size={16} /> Pay {formatCurrency(total)}</>
         )}
-      </MetalButton>
+      </CtaButton>
 
       <p className="text-xs text-center mt-4 flex items-center justify-center gap-1.5" style={{ color: COLORS.text.tertiary }}>
         <Lock size={11} /> Test mode — use Razorpay's test UPI ID <span className="font-mono" style={{ color: COLORS.secondary[500] }}>success@razorpay</span>
@@ -616,6 +602,19 @@ function StepIndicator({ num, label, active, current }) {
         {label}
       </span>
     </div>
+  );
+}
+
+function CtaButton({ children, onClick, disabled = false, className = '' }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`w-full flex items-center justify-center gap-2 h-12 rounded-xl font-semibold text-base tracking-wide transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100 ${className}`}
+      style={{ backgroundColor: COLORS.brass, color: COLORS.ink, boxShadow: '0 8px 20px rgba(185,138,62,0.30)' }}
+    >
+      {children}
+    </button>
   );
 }
 

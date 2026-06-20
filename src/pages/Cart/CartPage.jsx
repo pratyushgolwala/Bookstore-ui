@@ -401,15 +401,18 @@ function CartPage() {
             </div>
 
             {/* Checkout button */}
-            <MetalButton
-              variant="gold"
-              fullWidth
-              className="mt-5 gap-2"
+            <button
               onClick={() => navigate('/checkout')}
+              className="mt-5 w-full flex items-center justify-center gap-2 h-12 rounded-xl font-semibold text-base tracking-wide transition-all hover:brightness-105 active:scale-[0.98]"
+              style={{
+                backgroundColor: COLORS.brass,
+                color: COLORS.ink,
+                boxShadow: '0 8px 20px rgba(185,138,62,0.30)',
+              }}
             >
               Proceed to Checkout
               <ArrowRight size={18} />
-            </MetalButton>
+            </button>
 
             {/* Trust row */}
             <div
